@@ -1,82 +1,53 @@
 package security
 
 import (
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/x509"
-	"encoding/asn1"
-	"encoding/gob"
-	"encoding/pem"
-	"fmt"
-	"os"
+				"os"
+				"encoding/pem"
+				"crypto/x509"
+				"fmt"
+				"io/ioutil"
+				"crypto/rsa"
+				"crypto/rand"
 )
 
 func InitializeRsaVault() bool {
-	if _, err := os.Stat("/src/go/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
-  		return false
-	}
-
-	reader := rand.Reader
-	bitSize := 2048
-
-	key, err := rsa.GenerateKey(reader, bitSize)
-	checkError(err)
-
-	publicKey := key.PublicKey
-
-	saveGobKey("/src/go/kalaxia-game-api/rsa_vault/private.key", key)
-	savePEMKey("/src/go/kalaxia-game-api/rsa_vault/private.pem", key)
-
-	saveGobKey("/src/go/kalaxia-game-api/rsa_vault/public.key", publicKey)
-	savePublicPEMKey("/src/go/kalaxia-game-api/rsa_vault/public.pem", publicKey)
-
-	return true
+		if _, err := os.Stat("/src/go/kalaxia-game-api/rsa_vault/private.key"); os.IsExist(err) {
+	  		return false
+		}
+		// generate private key
+		privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
+		if err != nil {
+			panic(err)
+		}
+		// extract public key
+		publickey := &privatekey.PublicKey
+		pubkey, _ := x509.MarshalPKIXPublicKey(publickey);
+		// save private key
+		pkey := x509.MarshalPKCS1PrivateKey(privatekey)
+		ioutil.WriteFile("/go/src/kalaxia-game-api/rsa_vault/private.key", pkey, 0777)
+		fmt.Println("private key saved to private.key")
+		// save public key in PEM file
+		pemfile, _ := os.Create("/go/src/kalaxia-game-api/rsa_vault/public.pub")
+		var pemkey = &pem.Block{
+								 Type : "PUBLIC KEY",
+								 Bytes : pubkey}
+		pem.Encode(pemfile, pemkey)
+		pemfile.Close()
+		return true
 }
 
-func saveGobKey(fileName string, key interface{}) {
-	outFile, err := os.Create(fileName)
-	checkError(err)
-	defer outFile.Close()
-
-	encoder := gob.NewEncoder(outFile)
-	err = encoder.Encode(key)
-	checkError(err)
-}
-
-func savePEMKey(fileName string, key *rsa.PrivateKey) {
-	outFile, err := os.Create(fileName)
-	checkError(err)
-	defer outFile.Close()
-
-	var privateKey = &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(key),
+func Decrypt(data []byte) []byte {
+	pkey, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/private.key")
+	if (err != nil) {
+		panic(err)
 	}
-
-	err = pem.Encode(outFile, privateKey)
-	checkError(err)
-}
-
-func savePublicPEMKey(fileName string, pubkey rsa.PublicKey) {
-	asn1Bytes, err := asn1.Marshal(pubkey)
-	checkError(err)
-
-	var pemkey = &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: asn1Bytes,
+	privatekey, err := x509.ParsePKCS1PrivateKey(pkey)
+	if (err != nil) {
+		panic(err)
 	}
-
-	pemfile, err := os.Create(fileName)
-	checkError(err)
-	defer pemfile.Close()
-
-	err = pem.Encode(pemfile, pemkey)
-	checkError(err)
-}
-
-func checkError(err error) {
-	if err != nil {
-		fmt.Println("Fatal error ", err.Error())
-		os.Exit(1)
+	finalData, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, data)
+	if (err != nil) {
+		panic(err)
 	}
+	return finalData
 }
