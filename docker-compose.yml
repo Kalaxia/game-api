@@ -11,4 +11,4 @@ services:
         networks:
             - api
         volumes:
-            - ".:/src/go/kalaxia-game-api"
+            - ".:/go/src/kalaxia-game-api"
