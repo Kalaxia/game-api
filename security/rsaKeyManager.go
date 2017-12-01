@@ -11,7 +11,7 @@ import (
 )
 
 func InitializeRsaVault() bool {
-		if _, err := os.Stat("/src/go/kalaxia-game-api/rsa_vault/private.key"); os.IsExist(err) {
+		if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
 	  		return false
 		}
 		// generate private key
@@ -36,6 +36,27 @@ func InitializeRsaVault() bool {
 		return true
 }
 
+func Encrypt(data []byte) []byte {
+	portalPEM, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/portal_rsa.pub")
+	if (err != nil) {
+		panic(err)
+	}
+	block, _ := pem.Decode([]byte(portalPEM))
+	if block == nil {
+		panic("failed to parse PEM block containing the public key")
+	}
+	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		panic("failed to parse DER encoded public key: " + err.Error())
+	}
+	rsaPublicKey, _ := publicKey.(*rsa.PublicKey)
+	encryptedData, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, data)
+	if err != nil {
+		panic(err)
+	}
+	return encryptedData
+}
+
 func Decrypt(data []byte) []byte {
 	pkey, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/private.key")
 	if (err != nil) {
@@ -45,9 +66,9 @@ func Decrypt(data []byte) []byte {
 	if (err != nil) {
 		panic(err)
 	}
-	finalData, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, data)
+	decryptedData, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, data)
 	if (err != nil) {
 		panic(err)
 	}
-	return finalData
+	return decryptedData
 }
