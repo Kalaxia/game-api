@@ -1,11 +1,14 @@
 package main
 
 import (
+	"os"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 
 	"kalaxia-game-api/controller"
+	"kalaxia-game-api/handler"
 )
 
 type(
@@ -14,6 +17,7 @@ type(
 		Method      string
 		Pattern     string
 		HandlerFunc http.HandlerFunc
+		IsProtected bool
 	}
 	Routes []Route
 )
@@ -21,16 +25,24 @@ type(
 func NewRouter() *mux.Router {
     router := mux.NewRouter().StrictSlash(true)
     for _, route := range routes {
-			router.HandleFunc(route.Pattern, route.HandlerFunc).Methods(route.Method)
+			router.Handle(route.Pattern, handlers.LoggingHandler(os.Stdout, handler.JwtHandler(http.HandlerFunc(route.HandlerFunc), route.IsProtected))).Methods(route.Method)
     }
     return router
 }
 
 var routes = Routes{
 		Route{
-				"Authenticate player",
+				"Authenticate",
 				"POST",
-				"/auth",
-				controller.AuthenticatePlayer,
+				"/api/auth",
+				controller.Authenticate,
+				false,
+		},
+		Route{
+				"Get Current Player",
+				"GET",
+				"/api/me",
+				controller.GetCurrentPlayer,
+				true,
 		},
 }
