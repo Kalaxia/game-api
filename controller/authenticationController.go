@@ -15,7 +15,7 @@ import (
  * If the user is not registered, we create a player account.
  * In any case, a JWT is returned, used by the player to authenticate
  */
-func AuthenticatePlayer(w http.ResponseWriter, r *http.Request) {
+func Authenticate(w http.ResponseWriter, r *http.Request) {
   var body []byte
   var err error
 	if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
