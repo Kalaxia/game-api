@@ -39,6 +39,13 @@ var routes = Routes{
 				false,
 		},
 		Route{
+				"Create Server",
+				"POST",
+				"/api/servers",
+				controller.CreateServer,
+				false,
+		},
+		Route{
 				"Get Current Player",
 				"GET",
 				"/api/me",
