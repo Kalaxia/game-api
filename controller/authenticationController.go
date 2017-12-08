@@ -6,6 +6,9 @@ import (
   "encoding/json"
 	"io"
 	"io/ioutil"
+  "time"
+  "kalaxia-game-api/manager"
+  "kalaxia-game-api/model/player"
   "kalaxia-game-api/security"
   "github.com/dgrijalva/jwt-go"
 )
@@ -25,18 +28,34 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
     panic(err)
   }
   jsonData := security.Decrypt(body)
-  var data map[string]interface{}
+  var data map[string]string
   if err = json.Unmarshal(jsonData, &data); err != nil {
     panic(err)
   }
-  token := getNewJWT(data)
-  //json.NewEncoder(w).Encode(JwtToken{Token: tokenString})
+  server := manager.GetServerBySignature(data["signature"])
+  if server == nil {
+    w.WriteHeader(http.StatusNotFound)
+    return
+  }
+  player := manager.GetPlayerByUsername(data["username"])
+  if player == nil {
+    player = manager.CreatePlayer(data["username"], server)
+  }
+  if server.Id != player.Server.Id {
+    w.WriteHeader(http.StatusBadRequest)
+    w.Write([]byte("Invalid server data"))
+    return
+  }
+  token := getNewJWT(player)
   w.Write(security.Encrypt([]byte(token)))
 }
 
-func getNewJWT(data map[string]interface{}) string {
+func getNewJWT(player *model.Player) string {
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-        "username": data["username"],
+        "id": player.Id,
+        "pseudo": player.Pseudo,
+        "server_id": player.Server.Id,
+        "created_at": time.Now(),
     })
     tokenString, error := token.SignedString([]byte("secret"))
     if error != nil {
