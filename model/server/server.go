@@ -12,5 +12,11 @@ type(
 )
 
 func (s Server) String() string {
-  return fmt.Sprintf("Server<Id=%d Name=%q>", s.Id, s.Name)
+  return fmt.Sprintf(
+    "Server<Id=%d Name=%q Type=%q Signature=%q>",
+    s.Id,
+    s.Name,
+    s.Type,
+    s.Signature,
+  )
 }
