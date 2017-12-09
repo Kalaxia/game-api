@@ -2,6 +2,7 @@ package handler
 
 import(
   "fmt"
+  "os"
   "net/http"
   "strings"
 
@@ -27,18 +28,18 @@ func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
           w.Write([]byte("The Authorization header format is invalid"))
           return
         }
-        token, error := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
+        token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
             if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
                 return nil, fmt.Errorf("There was an error")
             }
-            return []byte("secret"), nil
+            return []byte(os.Getenv("JWT_SECRET")), nil
         })
-        if error != nil {
-            fmt.Println(error.Error())
+        if err != nil {
+            panic(err)
             return
         }
         if token.Valid {
-            context.Set(req, "decoded", token.Claims)
+            context.Set(req, "jwt", token.Claims)
             next(w, req)
         } else {
             w.WriteHeader(http.StatusInternalServerError)
