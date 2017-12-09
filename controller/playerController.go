@@ -2,13 +2,14 @@ package controller
 
 import (
   "net/http"
-
-  "github.com/dgrijalva/jwt-go"
+  "encoding/json"
   "github.com/gorilla/context"
 )
 
 func GetCurrentPlayer(w http.ResponseWriter, r *http.Request) {
-  claims := context.Get(r, "decoded")
-  data := claims.(jwt.MapClaims)
-  w.Write([]byte("Hello " + data["pseudo"].(string) + " !"))
+  player := context.Get(r, "player")
+  w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(player); err != nil {
+    panic(err)
+  }
 }
