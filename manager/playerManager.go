@@ -7,6 +7,14 @@ import(
   serverModel "kalaxia-game-api/model/server"
 )
 
+func GetPlayer(id int16) *playerModel.Player {
+  player := playerModel.Player{Id: id}
+  if err := db.Select(&player); err != nil {
+    return nil
+  }
+  return &player
+}
+
 func GetPlayerByUsername(username string) *playerModel.Player {
   player := playerModel.Player{Username: username}
   if err := db.Model(&player).Column("player.*", "Server").Where("username = ?", username).Select(); err != nil {
