@@ -58,4 +58,11 @@ var routes = Routes{
 				controller.GetCurrentPlayer,
 				true,
 		},
+		Route{
+				"Get Map",
+				"GET",
+				"/api/map",
+				controller.GetMap,
+				true,
+		},
 }
