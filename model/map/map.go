@@ -6,11 +6,12 @@ import(
 
 type(
   Map struct {
-    TableName struct{} `sql:"map__maps"`
+    TableName struct{} `json:"-" sql:"map__maps"`
 
-    Id uint16
-    ServerId int16
-    Server *model.Server
-    Size uint16
+    Id uint16 `json:"-"`
+    ServerId int16 `json:"-"`
+    Server *model.Server `json:"-"`
+    Systems []System `json:"systems" sql:"-"`
+    Size uint16 `json:"size"`
   }
 )

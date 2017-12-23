@@ -10,7 +10,7 @@ const PLANET_TYPE_VOLCANIC = "volcanic"
 
 type(
   Planet struct {
-    TableName struct{} `sql:"map__planets"`
+    TableName struct{} `json:"-" sql:"map__planets"`
 
     Id uint16 `json:"id"`
     Name string `json:"name"`

@@ -2,7 +2,7 @@ package model
 
 type(
   System struct {
-    TableName struct{} `sql:"map__systems"`
+    TableName struct{} `json:"-" sql:"map__systems"`
 
     Id uint16 `json:"id"`
     MapId uint16 `json:"-"`
@@ -12,9 +12,8 @@ type(
     Y uint16 `json:"coord_y"`
     Orbits SystemOrbits `json:"orbits"`
   }
-  Systems []*Systems
   SystemOrbit struct {
-    TableName struct{} `sql:"map__system_orbits"`
+    TableName struct{} `json:"-" sql:"map__system_orbits"`
 
     Id uint16 `json:"id"`
     Radius uint16 `json:"radius"`
