@@ -1,3 +1,10 @@
+## [0.1.1] - 2017-12-23
+### Added
+- Map model structures
+- Map model migration scripts
+- Map generation after server creation
+- Map systems retrieval route
+
 ## [0.1.0] - 2017-12-08
 ### Added
 - RSA keypair generation
