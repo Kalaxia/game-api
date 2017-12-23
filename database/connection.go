@@ -1,4 +1,4 @@
-package manager
+package database
 
 import(
   "fmt"
@@ -6,7 +6,7 @@ import(
   "github.com/go-pg/pg"
 )
 
-var db *pg.DB
+var Connection *pg.DB
 
 func init() {
   options := &pg.Options{
@@ -16,6 +16,6 @@ func init() {
     Password: os.Getenv("POSTGRES_PASSWORD"),
     Database: os.Getenv("POSTGRES_DB"),
   }
-  db = pg.Connect(options)
+  Connection = pg.Connect(options)
   fmt.Println("Database connection initialized")
 }

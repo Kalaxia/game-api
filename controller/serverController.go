@@ -19,11 +19,16 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
     panic(err)
   }
   jsonData := security.Decrypt(body)
-  var data map[string]string
+  var data map[string]interface{}
   if err = json.Unmarshal(jsonData, &data); err != nil {
     panic(err)
   }
-  manager.CreateServer(data["name"], data["type"], data["signature"])
+  manager.CreateServer(
+    data["name"].(string),
+    data["type"].(string),
+    data["signature"].(string),
+    uint16(data["map_size"].(float64)),
+  )
   w.WriteHeader(http.StatusCreated)
   w.Write([]byte(""))
 }

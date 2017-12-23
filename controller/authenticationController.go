@@ -6,6 +6,7 @@ import (
   "encoding/json"
 	"io"
 	"io/ioutil"
+  "os"
   "time"
   "kalaxia-game-api/manager"
   "kalaxia-game-api/model/player"
@@ -55,9 +56,9 @@ func getNewJWT(player *model.Player) string {
         "id": player.Id,
         "pseudo": player.Pseudo,
         "server_id": player.Server.Id,
-        "created_at": time.Now(),
+        "created_at": time.Now().Format(time.RFC3339),
     })
-    tokenString, error := token.SignedString([]byte("secret"))
+    tokenString, error := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
     if error != nil {
         fmt.Println(error)
     }
