@@ -5,4 +5,4 @@ CREATE TABLE IF NOT EXISTS players(
   server_id int references servers(id),
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL
-)
+);
