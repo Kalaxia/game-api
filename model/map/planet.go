@@ -20,5 +20,4 @@ type(
     OrbitId uint16 `json:"-"`
     Orbit *SystemOrbit `json:"orbit"`
   }
-  Planets []*Planet
 )

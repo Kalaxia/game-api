@@ -65,4 +65,11 @@ var routes = Routes{
 				controller.GetMap,
 				true,
 		},
+		Route{
+				"Get Map",
+				"GET",
+				"/api/systems/{id}",
+				controller.GetSystem,
+				true,
+		},
 }

@@ -44,7 +44,7 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
     if err := database.Connection.Insert(orbit); err != nil {
       panic(err)
     }
-    system.Orbits = append(system.Orbits, orbit)
+    system.Orbits = append(system.Orbits, *orbit)
     generatePlanet(system, orbit)
   }
 }
@@ -61,6 +61,7 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
   if err := database.Connection.Insert(planet); err != nil {
     panic(err)
   }
+  system.Planets = append(system.Planets, *planet)
   return planet
 }
 
