@@ -12,3 +12,11 @@ func GetSystemPlanets(id uint16) []model.Planet {
   }
   return planets
 }
+
+func GetPlanet(id uint16) *model.Planet {
+  planet := model.Planet{Id: id}
+  if err := database.Connection.Select(&planet); err != nil {
+    return nil
+  }
+  return &planet
+}

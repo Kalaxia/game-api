@@ -66,10 +66,17 @@ var routes = Routes{
 				true,
 		},
 		Route{
-				"Get Map",
+				"Get System",
 				"GET",
 				"/api/systems/{id}",
 				controller.GetSystem,
+				true,
+		},
+		Route{
+				"Get Planet",
+				"GET",
+				"/api/planets/{id}",
+				controller.GetPlanet,
 				true,
 		},
 }
