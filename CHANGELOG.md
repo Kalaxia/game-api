@@ -1,3 +1,12 @@
+## [0.1.2] - 2017-12-25
+### Added
+- System retrieval route
+- Planet retrieval route
+- Planet types choice at map generation
+
+### Fixed
+- Registration of same player on multiple servers
+
 ## [0.1.1] - 2017-12-23
 ### Added
 - Map model structures
