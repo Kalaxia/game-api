@@ -35,9 +35,9 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
     panic(err)
   }
   nbOrbits := rand.Intn(5) + MIN_PLANETS_PER_SYSTEM
-  for i := 0; i < nbOrbits; i++ {
+  for i := 1; i <= nbOrbits; i++ {
     orbit := &model.SystemOrbit{
-      Radius: uint16(i * 1000 + rand.Intn(500)),
+      Radius: uint16(i * 100 + rand.Intn(100)),
       System: system,
       SystemId: system.Id,
     }
@@ -66,5 +66,21 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
 }
 
 func choosePlanetType(orbit *model.SystemOrbit) string {
-  return model.PLANET_TYPE_ROCKY
+  coeff := int(orbit.Radius) * rand.Intn(3) + rand.Intn(100)
+  switch {
+    case coeff < 300:
+      return model.PLANET_TYPE_VOLCANIC
+    case coeff < 400:
+      return model.PLANET_TYPE_ROCKY
+    case coeff < 500:
+      return model.PLANET_TYPE_DESERT
+    case coeff < 600:
+      return model.PLANET_TYPE_TROPICAL
+    case coeff < 700:
+      return model.PLANET_TYPE_TEMPERATE
+    case coeff < 800:
+      return model.PLANET_TYPE_OCEANIC
+    default:
+      return model.PLANET_TYPE_ARCTIC
+  }
 }
