@@ -15,9 +15,16 @@ func GetPlayer(id int16) *playerModel.Player {
   return &player
 }
 
-func GetPlayerByUsername(username string) *playerModel.Player {
+func GetPlayerByUsername(username string, server *serverModel.Server) *playerModel.Player {
   player := playerModel.Player{Username: username}
-  if err := database.Connection.Model(&player).Column("player.*", "Server").Where("username = ?", username).Select(); err != nil {
+  err := database.
+    Connection.
+    Model(&player).
+    Column("player.*", "Server").
+    Where("username = ?", username).
+    Where("server_id = ?", server.Id).
+    Select()
+  if err != nil {
     return nil
   }
   return &player

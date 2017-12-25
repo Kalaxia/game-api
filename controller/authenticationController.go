@@ -38,7 +38,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(http.StatusNotFound)
     return
   }
-  player := manager.GetPlayerByUsername(data["username"])
+  player := manager.GetPlayerByUsername(data["username"], server)
   if player == nil {
     player = manager.CreatePlayer(data["username"], server)
   }
