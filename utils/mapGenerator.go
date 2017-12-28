@@ -10,14 +10,14 @@ const MIN_PLANETS_PER_SYSTEM = 3
 
 func GenerateMapSystems(gameMap *model.Map) {
   generationProbability := 0
-  for i := uint16(0); i < gameMap.Size; i++ {
-    for j := uint16(0); j < gameMap.Size; j++ {
+  for x := uint16(0); x < gameMap.Size; x++ {
+    for y := uint16(0); y < gameMap.Size; y++ {
       random := rand.Intn(100)
       if random > generationProbability {
         generationProbability += 1
         continue
       }
-      generateSystem(gameMap, i, j)
+      go generateSystem(gameMap, x, y)
       generationProbability = 0
     }
     generationProbability = 0
@@ -36,16 +36,18 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
   }
   nbOrbits := rand.Intn(5) + MIN_PLANETS_PER_SYSTEM
   for i := 1; i <= nbOrbits; i++ {
-    orbit := &model.SystemOrbit{
-      Radius: uint16(i * 100 + rand.Intn(100)),
-      System: system,
-      SystemId: system.Id,
-    }
-    if err := database.Connection.Insert(orbit); err != nil {
-      panic(err)
-    }
-    system.Orbits = append(system.Orbits, *orbit)
-    generatePlanet(system, orbit)
+    go func(i int, system *model.System) {
+      orbit := &model.SystemOrbit{
+        Radius: uint16(i * 100 + rand.Intn(100)),
+        System: system,
+        SystemId: system.Id,
+      }
+      if err := database.Connection.Insert(orbit); err != nil {
+        panic(err)
+      }
+      system.Orbits = append(system.Orbits, *orbit)
+      generatePlanet(system, orbit)
+    } (i, system)
   }
 }
 
