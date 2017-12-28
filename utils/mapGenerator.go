@@ -1,14 +1,21 @@
 package utils
 
 import(
+  "encoding/json"
+  "io/ioutil"
   "math/rand"
   "kalaxia-game-api/database"
-  "kalaxia-game-api/model/map"
+  mapModel"kalaxia-game-api/model/map"
+  resourceModel"kalaxia-game-api/model/resource"
 )
 
 const MIN_PLANETS_PER_SYSTEM = 3
 
-func GenerateMapSystems(gameMap *model.Map) {
+var planetsData mapModel.PlanetsData
+var resourcesData resourceModel.ResourcesData
+
+func GenerateMapSystems(gameMap *mapModel.Map) {
+  initializeConfiguration()
   generationProbability := 0
   for x := uint16(0); x < gameMap.Size; x++ {
     for y := uint16(0); y < gameMap.Size; y++ {
@@ -24,8 +31,25 @@ func GenerateMapSystems(gameMap *model.Map) {
   }
 }
 
-func generateSystem(gameMap *model.Map, x uint16, y uint16) {
-  system := &model.System{
+func initializeConfiguration() {
+  planetsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/planet_types.json")
+  if err != nil {
+    panic(err)
+  }
+  resourcesDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/resources.json")
+  if err != nil {
+    panic(err)
+  }
+  if err := json.Unmarshal(planetsDataJSON, &planetsData); err != nil {
+    panic(err)
+  }
+  if err := json.Unmarshal(resourcesDataJSON, &resourcesData); err != nil {
+    panic(err)
+  }
+}
+
+func generateSystem(gameMap *mapModel.Map, x uint16, y uint16) {
+  system := &mapModel.System{
     Map: gameMap,
     MapId: gameMap.Id,
     X: x,
@@ -36,8 +60,8 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
   }
   nbOrbits := rand.Intn(5) + MIN_PLANETS_PER_SYSTEM
   for i := 1; i <= nbOrbits; i++ {
-    go func(i int, system *model.System) {
-      orbit := &model.SystemOrbit{
+    go func(i int, system *mapModel.System) {
+      orbit := &mapModel.SystemOrbit{
         Radius: uint16(i * 100 + rand.Intn(100)),
         System: system,
         SystemId: system.Id,
@@ -51,10 +75,11 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
   }
 }
 
-func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Planet {
-  planet := &model.Planet{
+func generatePlanet(system *mapModel.System, orbit *mapModel.SystemOrbit) *mapModel.Planet {
+  planetType := choosePlanetType(orbit)
+  planet := &mapModel.Planet{
     Name: "Régalion V",
-    Type: choosePlanetType(orbit),
+    Type: planetType,
     System: system,
     SystemId: system.Id,
     Orbit: orbit,
@@ -63,26 +88,51 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
   if err := database.Connection.Insert(planet); err != nil {
     panic(err)
   }
+  planet.Resources = choosePlanetResources(planet, planetType)
   system.Planets = append(system.Planets, *planet)
   return planet
 }
 
-func choosePlanetType(orbit *model.SystemOrbit) string {
+func choosePlanetType(orbit *mapModel.SystemOrbit) string {
   coeff := int(orbit.Radius) * rand.Intn(3) + rand.Intn(100)
   switch {
     case coeff < 300:
-      return model.PLANET_TYPE_VOLCANIC
+      return mapModel.PLANET_TYPE_VOLCANIC
     case coeff < 400:
-      return model.PLANET_TYPE_ROCKY
+      return mapModel.PLANET_TYPE_ROCKY
     case coeff < 500:
-      return model.PLANET_TYPE_DESERT
+      return mapModel.PLANET_TYPE_DESERT
     case coeff < 600:
-      return model.PLANET_TYPE_TROPICAL
+      return mapModel.PLANET_TYPE_TROPICAL
     case coeff < 700:
-      return model.PLANET_TYPE_TEMPERATE
+      return mapModel.PLANET_TYPE_TEMPERATE
     case coeff < 800:
-      return model.PLANET_TYPE_OCEANIC
+      return mapModel.PLANET_TYPE_OCEANIC
     default:
-      return model.PLANET_TYPE_ARCTIC
+      return mapModel.PLANET_TYPE_ARCTIC
   }
+}
+
+func choosePlanetResources(planet *mapModel.Planet, planetType string) []mapModel.PlanetResource {
+  resources := make([]mapModel.PlanetResource, 0)
+  for name, density := range planetsData[planetType].Resources {
+    go generatePlanetResource(&resources, name, density, planet)
+  }
+  return resources
+}
+
+func generatePlanetResource(resources *[]mapModel.PlanetResource, name string, density uint8, planet *mapModel.Planet) {
+  finalDensity := density + uint8(rand.Intn(30)) - uint8(rand.Intn(30))
+  if finalDensity <= 0 { return }
+  if finalDensity > 100 { finalDensity = 100 }
+  planetResource := &mapModel.PlanetResource{
+    Name: name,
+    Density: finalDensity,
+    Planet: planet,
+    PlanetId: planet.Id,
+  }
+  if err := database.Connection.Insert(planetResource); err != nil {
+    panic(err)
+  }
+  *resources = append(*resources, *planetResource)
 }
