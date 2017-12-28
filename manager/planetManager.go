@@ -7,7 +7,12 @@ import(
 
 func GetSystemPlanets(id uint16) []model.Planet {
   var planets []model.Planet
-  if err := database.Connection.Model(&planets).Where("system_id = ?", id).Select(); err != nil {
+  if err := database.
+      Connection.
+      Model(&planets).
+      Column("planet.*", "Orbit").
+      Where("planet.system_id = ?", id).
+      Select(); err != nil {
     panic(err)
   }
   return planets

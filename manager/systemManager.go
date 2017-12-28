@@ -19,7 +19,6 @@ func GetSystem(id uint16) *model.System {
     return nil
   }
   system.Planets = GetSystemPlanets(id)
-  system.Orbits = GetSystemOrbits(id)
   return &system
 }
 
