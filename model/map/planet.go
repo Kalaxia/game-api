@@ -19,5 +19,18 @@ type(
     System *System `json:"system"`
     OrbitId uint16 `json:"-"`
     Orbit *SystemOrbit `json:"orbit"`
+    Resources []PlanetResource `json:"resources"`
   }
+  PlanetResource struct {
+    TableName struct{} `json:"-" sql:"map__planet_resources"`
+
+    Name string `json:"name"`
+    Density uint8 `json:"density"`
+    PlanetId uint16 `json:"-"`
+    Planet *Planet `json:"planet"`
+  }
+  PlanetData struct {
+    Resources map[string]uint8
+  }
+  PlanetsData map[string]PlanetData
 )
