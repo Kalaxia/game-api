@@ -1,0 +1,57 @@
+{
+  "arctic": {
+    "resources" : {
+      "A": 60,
+      "B": 50,
+      "D": 30,
+      "F": 70
+    }
+  },
+  "desert": {
+    "resources" : {
+      "B": 35,
+      "C": 75,
+      "D": 35,
+      "E": 50
+    }
+  },
+  "oceanic": {
+    "resources" : {
+      "A": 50,
+      "B": 55,
+      "D": 25,
+      "E": 80
+    }
+  },
+  "temperate": {
+    "resources" : {
+      "A": 65,
+      "B": 55,
+      "C": 45,
+      "E": 50
+    }
+  },
+  "tropical": {
+    "resources" : {
+      "C": 75,
+      "E": 65,
+      "F": 60
+    }
+  },
+  "rocky": {
+    "resources" : {
+      "B": 80,
+      "C": 20,
+      "E": 25,
+      "F": 60
+    }
+  },
+  "volcanic": {
+    "resources" : {
+      "A": 45,
+      "D": 50,
+      "E": 45,
+      "F": 70
+    }
+  }
+}
