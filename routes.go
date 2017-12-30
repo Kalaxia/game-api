@@ -79,4 +79,11 @@ var routes = Routes{
 				controller.GetPlanet,
 				true,
 		},
+		Route{
+				"Get Factions",
+				"GET",
+				"/api/factions",
+				controller.GetFactions,
+				true,
+		},
 }

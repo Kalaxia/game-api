@@ -6,6 +6,15 @@ import(
   serverModel "kalaxia-game-api/model/server"
 )
 
+func GetServerFactions(serverId uint16) []*factionModel.Faction {
+  factions := make([]*factionModel.Faction, 0)
+  if err := database.Connection.Model(&factions).Where("server_id = ?", serverId).Select(); err != nil {
+    return nil
+  }
+  return factions
+}
+
+
 func CreateServerFactions(server *serverModel.Server, factions []interface{}) []*factionModel.Faction {
   results := make([]*factionModel.Faction, 0)
   for _, factionData := range factions {
