@@ -7,7 +7,7 @@ import(
   serverModel "kalaxia-game-api/model/server"
 )
 
-func GetPlayer(id int16) *playerModel.Player {
+func GetPlayer(id uint16) *playerModel.Player {
   player := playerModel.Player{Id: id}
   if err := database.Connection.Select(&player); err != nil {
     return nil

@@ -23,12 +23,13 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
   if err = json.Unmarshal(jsonData, &data); err != nil {
     panic(err)
   }
-  manager.CreateServer(
+  server := manager.CreateServer(
     data["name"].(string),
     data["type"].(string),
     data["signature"].(string),
     uint16(data["map_size"].(float64)),
   )
+  manager.CreateServerFactions(server, data["factions"].([]interface{}))
   w.WriteHeader(http.StatusCreated)
   w.Write([]byte(""))
 }

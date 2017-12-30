@@ -13,15 +13,15 @@ func GetServerBySignature(signature string) *model.Server {
   return &server
 }
 
-func CreateServer(name string, serverType string, signature string, mapSize uint16) model.Server {
-  server := model.Server{
+func CreateServer(name string, serverType string, signature string, mapSize uint16) *model.Server {
+  server := &model.Server{
     Name: name,
     Type: serverType,
     Signature: signature,
   }
-  if err := database.Connection.Insert(&server); err != nil {
+  if err := database.Connection.Insert(server); err != nil {
     panic(err)
   }
-  GenerateMap(&server, mapSize)
+  GenerateMap(server, mapSize)
   return server
 }

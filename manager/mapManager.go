@@ -20,7 +20,7 @@ func GenerateMap(server *serverModel.Server, size uint16) *mapModel.Map {
   return gameMap
 }
 
-func GetMapByServerId(serverId int16) *mapModel.Map {
+func GetMapByServerId(serverId uint16) *mapModel.Map {
   gameMap := &mapModel.Map{ServerId: serverId}
   if err := database.Connection.Model(gameMap).Where("server_id = ?", serverId).Select(); err != nil {
     return nil
