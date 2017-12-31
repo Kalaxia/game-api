@@ -86,4 +86,11 @@ var routes = Routes{
 				controller.GetFactions,
 				true,
 		},
+		Route{
+				"Get Faction Planet Choices",
+				"GET",
+				"/api/factions/{id}/planet-choices",
+				controller.GetFactionPlanetChoices,
+				true,
+		},
 }
