@@ -23,8 +23,8 @@ func GetPlanet(id uint16) *model.Planet {
   if err := database.
     Connection.
     Model(&planet).
-    Column("planet.*", "Resources").
-    Where("id = ?", id).
+    Column("planet.*", "Player", "Resources").
+    Where("planet.id = ?", id).
     Select(); err != nil {
     return nil
   }
