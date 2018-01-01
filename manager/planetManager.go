@@ -36,7 +36,7 @@ func GetPlanet(id uint16) *model.Planet {
   if err := database.
     Connection.
     Model(&planet).
-    Column("planet.*", "Player", "Resources").
+    Column("planet.*", "Player", "Resources", "System").
     Where("planet.id = ?", id).
     Select(); err != nil {
     return nil
