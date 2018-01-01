@@ -1,3 +1,14 @@
+## [0.1.3] - 2018-01-01
+### Added
+- Optimize server map generation with goroutines
+- Planet resources
+- Player first connection course
+- Factions model
+- Player binding to a planet
+- Player binding to a faction
+- Faction retrieval route
+- Player planets retrieval
+
 ## [0.1.2] - 2017-12-25
 ### Added
 - System retrieval route
