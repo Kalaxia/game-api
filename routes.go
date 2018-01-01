@@ -59,6 +59,13 @@ var routes = Routes{
 				true,
 		},
 		Route{
+				"Get Player Planets",
+				"GET",
+				"/api/players/{id}/planets",
+				controller.GetPlayerPlanets,
+				true,
+		},
+		Route{
 				"Register Player",
 				"POST",
 				"/api/players",

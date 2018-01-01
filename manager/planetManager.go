@@ -18,6 +18,19 @@ func GetSystemPlanets(id uint16) []model.Planet {
   return planets
 }
 
+func GetPlayerPlanets(id uint16) []model.Planet {
+  var planets []model.Planet
+  if err := database.
+      Connection.
+      Model(&planets).
+      Column("planet.*", "Resources").
+      Where("planet.player_id = ?", id).
+      Select(); err != nil {
+    panic(err)
+  }
+  return planets
+}
+
 func GetPlanet(id uint16) *model.Planet {
   var planet model.Planet
   if err := database.

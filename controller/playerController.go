@@ -6,6 +6,7 @@ import (
   "net/http"
   "encoding/json"
   "github.com/gorilla/context"
+  "github.com/gorilla/mux"
   "kalaxia-game-api/manager"
   "kalaxia-game-api/model/player"
   "strconv"
@@ -15,6 +16,17 @@ func GetCurrentPlayer(w http.ResponseWriter, r *http.Request) {
   player := context.Get(r, "player")
   w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(player); err != nil {
+    panic(err)
+  }
+}
+
+func GetPlayerPlanets(w http.ResponseWriter, r *http.Request) {
+  vars := mux.Vars(r)
+  id, _ := strconv.ParseUint(vars["id"], 10, 16)
+
+  planets := manager.GetPlayerPlanets(uint16(id))
+  w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(&planets); err != nil {
     panic(err)
   }
 }
