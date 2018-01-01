@@ -32,10 +32,15 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
   if err = json.Unmarshal(body, &data); err != nil {
     panic(err)
   }
+  player := context.Get(r, "player").(*model.Player)
+  if player.IsActive == true {
+    w.WriteHeader(http.StatusForbidden)
+    return
+  }
   factionId, _ := strconv.ParseUint(data["faction_id"], 10, 16)
   planetId, _ := strconv.ParseUint(data["planet_id"], 10, 16)
   manager.RegisterPlayer(
-    context.Get(r, "player").(*model.Player),
+    player,
     uint16(factionId),
     uint16(planetId),
   )

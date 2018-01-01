@@ -9,8 +9,8 @@ import(
 )
 
 func GetPlayer(id uint16) *playerModel.Player {
-  player := playerModel.Player{Id: id}
-  if err := database.Connection.Model(&player).Column("player.*", "Faction").Select(); err != nil {
+  var player playerModel.Player
+  if err := database.Connection.Model(&player).Column("player.*", "Faction").Where("player.id = ?", id).Select(); err != nil {
     return nil
   }
   return &player
