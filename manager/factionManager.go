@@ -7,6 +7,14 @@ import(
   serverModel "kalaxia-game-api/model/server"
 )
 
+func GetFaction(id uint16) *factionModel.Faction {
+  faction := &factionModel.Faction{Id: id}
+  if err := database.Connection.Select(faction); err != nil {
+    return nil
+  }
+  return faction
+}
+
 func GetServerFactions(serverId uint16) []*factionModel.Faction {
   factions := make([]*factionModel.Faction, 0)
   if err := database.Connection.Model(&factions).Where("server_id = ?", serverId).Select(); err != nil {
@@ -29,7 +37,6 @@ func GetFactionPlanetChoices(factionId uint16) []*mapModel.Planet {
       FROM map__maps m
       LEFT JOIN map__systems s ON s.map_id = m.id
       LEFT JOIN map__planets p ON p.system_id = s.id
-      LEFT JOIN map__planet_resources pr ON pr.planet_id = p.id
       WHERE p.player_id IS NULL AND m.server_id = ?
       LIMIT 4`, faction.ServerId); err != nil {
     return planets

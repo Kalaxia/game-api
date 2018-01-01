@@ -59,6 +59,13 @@ var routes = Routes{
 				true,
 		},
 		Route{
+				"Register Player",
+				"POST",
+				"/api/players",
+				controller.RegisterPlayer,
+				true,
+		},
+		Route{
 				"Get Map",
 				"GET",
 				"/api/map",
