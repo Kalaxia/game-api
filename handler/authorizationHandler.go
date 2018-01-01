@@ -22,7 +22,7 @@ func AuthorizationHandler(next http.HandlerFunc) http.HandlerFunc {
             w.WriteHeader(http.StatusUnauthorized)
             w.Write([]byte("Expired JWT"))
         }
-        player := manager.GetPlayer(int16(data["id"].(float64)))
+        player := manager.GetPlayer(uint16(data["id"].(float64)))
         if player != nil {
             context.Set(req, "player", player)
             next(w, req)
