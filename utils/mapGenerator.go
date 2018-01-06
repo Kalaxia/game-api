@@ -5,16 +5,20 @@ import(
   "io/ioutil"
   "math/rand"
   "kalaxia-game-api/database"
-  mapModel"kalaxia-game-api/model/map"
-  resourceModel"kalaxia-game-api/model/resource"
+  mapModel "kalaxia-game-api/model/map"
+  resourceModel "kalaxia-game-api/model/resource"
+  factionModel "kalaxia-game-api/model/faction"
+  diplomacyModel "kalaxia-game-api/model/diplomacy"
 )
 
 const MIN_PLANETS_PER_SYSTEM = 3
 
 var planetsData mapModel.PlanetsData
 var resourcesData resourceModel.ResourcesData
+var factions []*factionModel.Faction
 
-func GenerateMapSystems(gameMap *mapModel.Map) {
+func GenerateMapSystems(gameMap *mapModel.Map, gameFactions []*factionModel.Faction) {
+  factions = gameFactions
   initializeConfiguration()
   generationProbability := 0
   for x := uint16(0); x < gameMap.Size; x++ {
@@ -90,6 +94,7 @@ func generatePlanet(system *mapModel.System, orbit *mapModel.SystemOrbit) *mapMo
   }
   planet.Resources = choosePlanetResources(planet, planetType)
   system.Planets = append(system.Planets, *planet)
+  choosePlanetRelations(planet)
   return planet
 }
 
@@ -135,4 +140,31 @@ func generatePlanetResource(resources *[]mapModel.PlanetResource, name string, d
     panic(err)
   }
   *resources = append(*resources, *planetResource)
+}
+
+func choosePlanetRelations(planet *mapModel.Planet) []diplomacyModel.DiplomaticRelation {
+  relations := make([]diplomacyModel.DiplomaticRelation, 0)
+  for _, faction := range factions {
+    generatePlanetRelation(planet, faction, &relations)
+  }
+  return relations
+}
+
+func generatePlanetRelation(planet *mapModel.Planet, faction *factionModel.Faction, relations *[]diplomacyModel.DiplomaticRelation) {
+  score := rand.Intn(500) - rand.Intn(500)
+
+  if score > -50 && score < 50 {
+    score = 0
+  }
+  relation := &diplomacyModel.DiplomaticRelation{
+    Planet: planet,
+    PlanetId: planet.Id,
+    Faction: faction,
+    FactionId: faction.Id,
+    Score: score,
+  }
+  if err := database.Connection.Insert(relation); err != nil {
+    panic(err)
+  }
+  *relations = append(*relations, *relation)
 }
