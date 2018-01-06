@@ -1,13 +1,17 @@
 package security
 
 import (
-				"os"
-				"encoding/pem"
-				"crypto/x509"
-				"fmt"
-				"io/ioutil"
-				"crypto/rsa"
-				"crypto/rand"
+		"fmt"
+		"encoding/base64"
+		"encoding/pem"
+		"io/ioutil"
+		"os"
+		"bytes"
+		"crypto/aes"
+		"crypto/cipher"
+		"crypto/rsa"
+		"crypto/rand"
+		"crypto/x509"
 )
 
 func InitializeRsaVault() bool {
@@ -36,7 +40,7 @@ func InitializeRsaVault() bool {
 		return true
 }
 
-func Encrypt(data []byte) []byte {
+func Encrypt(data []byte) ([]byte, string, string) {
 	portalPEM, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/portal_rsa.pub")
 	if (err != nil) {
 		panic(err)
@@ -50,14 +54,47 @@ func Encrypt(data []byte) []byte {
 		panic("failed to parse DER encoded public key: " + err.Error())
 	}
 	rsaPublicKey, _ := publicKey.(*rsa.PublicKey)
-	encryptedData, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, data)
+
+	data, key, iv := encryptAesPayload(data)
+
+	cipherKey, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, key)
 	if err != nil {
 		panic(err)
 	}
-	return encryptedData
+	cipherIv, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, iv)
+	if err != nil {
+		panic(err)
+	}
+	return data, base64.StdEncoding.EncodeToString(cipherKey), base64.StdEncoding.EncodeToString(cipherIv)
 }
 
-func Decrypt(data []byte) []byte {
+func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
+		key := make([]byte, 32)
+		iv := make([]byte, 16)
+		_, err := rand.Read(key)
+		if err != nil {
+			panic(err)
+		}
+		_, err = rand.Read(iv)
+		if err != nil {
+			panic(err)
+		}
+		// CBC mode works on blocks so plaintexts may need to be padded to the
+		// next whole block. If the block is incomplete, we add padding to it
+		if len(data) % aes.BlockSize != 0 {
+			data = pkcs7Pad(data)
+		}
+		block, err := aes.NewCipher(key)
+		if err != nil {
+			panic(err)
+		}
+		mode := cipher.NewCBCEncrypter(block, iv)
+		mode.CryptBlocks(data, data)
+
+		return data, key, iv
+}
+
+func Decrypt(encryptedKey string, encryptedIv string, data []byte) []byte {
 	pkey, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/private.key")
 	if (err != nil) {
 		panic(err)
@@ -66,9 +103,44 @@ func Decrypt(data []byte) []byte {
 	if (err != nil) {
 		panic(err)
 	}
-	decryptedData, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, data)
+	key, err := base64.StdEncoding.DecodeString(encryptedKey)
 	if (err != nil) {
 		panic(err)
 	}
-	return decryptedData
+	iv, err := base64.StdEncoding.DecodeString(encryptedIv)
+	if (err != nil) {
+		panic(err)
+	}
+	aesKey, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, key)
+	if (err != nil) {
+		panic(err)
+	}
+	aesIv, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, iv)
+	if (err != nil) {
+		panic(err)
+	}
+	block, err := aes.NewCipher(aesKey)
+	if err != nil {
+		panic(err)
+	}
+	mode := cipher.NewCBCDecrypter(block, aesIv)
+	// CryptBlocks can work in-place if the two arguments are the same.
+	mode.CryptBlocks(data, data)
+ 	return pkcs7Unpad(data)
+}
+
+// Appends padding.
+func pkcs7Pad(data []byte) []byte {
+    padlen := 1
+    for ((len(data) + padlen) % aes.BlockSize) != 0 {
+        padlen = padlen + 1
+    }
+
+    pad := bytes.Repeat([]byte{byte(padlen)}, padlen)
+    return append(data, pad...)
+}
+
+// Returns slice of the original data without padding.
+func pkcs7Unpad(data []byte) []byte {
+    return data[:len(data) - int(data[len(data)-1])]
 }

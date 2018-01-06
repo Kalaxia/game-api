@@ -18,7 +18,7 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
 	if err = r.Body.Close(); err != nil {
     panic(err)
   }
-  jsonData := security.Decrypt(body)
+  jsonData := security.Decrypt(r.Header.Get("Application-Key"), r.Header.Get("Application-Iv"), body)
   var data map[string]interface{}
   if err = json.Unmarshal(jsonData, &data); err != nil {
     panic(err)

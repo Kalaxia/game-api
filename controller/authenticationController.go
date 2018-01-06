@@ -28,7 +28,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	if err = r.Body.Close(); err != nil {
     panic(err)
   }
-  jsonData := security.Decrypt(body)
+  jsonData := security.Decrypt(r.Header.Get("Application-Key"), r.Header.Get("Application-Iv"), body)
   var data map[string]string
   if err = json.Unmarshal(jsonData, &data); err != nil {
     panic(err)
@@ -48,7 +48,10 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
     return
   }
   token := getNewJWT(player)
-  w.Write(security.Encrypt([]byte(token)))
+  cipherData, key, iv := security.Encrypt([]byte(token))
+  w.Header().Set("Application-Key", key)
+  w.Header().Set("Application-Iv", iv)
+  w.Write(cipherData)
 }
 
 func getNewJWT(player *model.Player) string {
