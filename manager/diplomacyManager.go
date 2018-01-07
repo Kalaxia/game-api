@@ -21,18 +21,24 @@ func GetPlanetRelations(planetId uint16) []model.DiplomaticRelation {
 }
 
 func IncreasePlayerRelation(planet *mapModel.Planet, player *playerModel.Player, score int) {
-  var relation *model.DiplomaticRelation
+  var relation model.DiplomaticRelation
   if err := database.
     Connection.
-    Model(relation).
-    Where("diplomatic_relation.planet_id = ?", planet.Id).
-    Where("diplomatic_relation.player_id = ?", player.Id).
+    Model(&relation).
+    Where("planet_id = ?", planet.Id).
+    Where("player_id = ?", player.Id).
     Select(); err != nil {
     createPlayerRelation(planet, player, score)
     return
   }
   relation.Score += score
-  if err := database.Connection.Update(relation); err != nil {
+  if _, err := database.
+    Connection.
+    Model(&relation).
+    Set("score = ?score").
+    Where("planet_id = ?", planet.Id).
+    Where("player_id = ?", player.Id).
+    Update(); err != nil {
     panic(err)
   }
 }
