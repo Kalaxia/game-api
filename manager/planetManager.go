@@ -41,5 +41,11 @@ func GetPlanet(id uint16) *model.Planet {
     Select(); err != nil {
     return nil
   }
+  relations := GetPlanetRelations(planet.Id)
+  r := make([]interface{}, len(relations))
+  for i, v := range relations {
+      r[i] = v
+  }
+  planet.Relations = r
   return &planet
 }
