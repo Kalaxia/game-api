@@ -27,9 +27,9 @@ func CreateServer(w http.ResponseWriter, r *http.Request) {
     data["name"].(string),
     data["type"].(string),
     data["signature"].(string),
-    uint16(data["map_size"].(float64)),
   )
-  manager.CreateServerFactions(server, data["factions"].([]interface{}))
+  factions := manager.CreateServerFactions(server, data["factions"].([]interface{}))
+  manager.GenerateMap(server, factions, uint16(data["map_size"].(float64)))
   w.WriteHeader(http.StatusCreated)
   w.Write([]byte(""))
 }

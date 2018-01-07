@@ -3,11 +3,12 @@ package manager
 import(
   "kalaxia-game-api/database"
   serverModel "kalaxia-game-api/model/server"
+  factionModel "kalaxia-game-api/model/faction"
   mapModel "kalaxia-game-api/model/map"
   "kalaxia-game-api/utils"
 )
 
-func GenerateMap(server *serverModel.Server, size uint16) *mapModel.Map {
+func GenerateMap(server *serverModel.Server, factions []*factionModel.Faction, size uint16) *mapModel.Map {
   gameMap := &mapModel.Map{
     Server: server,
     ServerId: server.Id,
@@ -16,7 +17,7 @@ func GenerateMap(server *serverModel.Server, size uint16) *mapModel.Map {
   if err := database.Connection.Insert(gameMap); err != nil {
     panic(err)
   }
-  utils.GenerateMapSystems(gameMap)
+  utils.GenerateMapSystems(gameMap, factions)
   return gameMap
 }
 

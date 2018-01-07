@@ -23,8 +23,6 @@ func GetServerFactions(serverId uint16) []*factionModel.Faction {
   return factions
 }
 
-// @TODO this function is random for now.
-// It will rely on diplomatic relations when it will be implemented
 func GetFactionPlanetChoices(factionId uint16) []*mapModel.Planet {
   planets := make([]*mapModel.Planet, 0)
   faction := &factionModel.Faction{ Id: factionId }
@@ -37,8 +35,10 @@ func GetFactionPlanetChoices(factionId uint16) []*mapModel.Planet {
       FROM map__maps m
       LEFT JOIN map__systems s ON s.map_id = m.id
       LEFT JOIN map__planets p ON p.system_id = s.id
-      WHERE p.player_id IS NULL AND m.server_id = ?
-      LIMIT 4`, faction.ServerId); err != nil {
+      LEFT JOIN diplomacy__relations d ON d.planet_id = p.id
+      WHERE p.player_id IS NULL AND m.server_id = ? AND d.faction_id = ?
+      ORDER BY d.score DESC
+      LIMIT 4`, faction.ServerId, faction.Id); err != nil {
     return planets
   }
   for _, planet := range planets {
@@ -50,6 +50,12 @@ func GetFactionPlanetChoices(factionId uint16) []*mapModel.Planet {
         Select(); err != nil {
         panic(err)
       }
+      relations := GetPlanetRelations(planet.Id)
+      r := make([]interface{}, len(relations))
+      for i, v := range relations {
+          r[i] = v
+      }
+      planet.Relations = r
   }
   return planets
 }

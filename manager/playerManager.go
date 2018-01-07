@@ -60,6 +60,7 @@ func RegisterPlayer(player *playerModel.Player, factionId uint16, planetId uint1
   player.FactionId = faction.Id
   player.Faction = faction
   player.IsActive = true
+  IncreasePlayerRelation(planet, player, 150)
   if err := database.Connection.Update(player); err != nil {
     panic(err)
   }
