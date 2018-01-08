@@ -67,6 +67,7 @@ func CreateServerFactions(server *serverModel.Server, factions []interface{}) []
     faction := &factionModel.Faction{
       Name: data["name"].(string),
       Description: data["description"].(string),
+      Color: data["color"].(string),
       ServerId: server.Id,
       Server: server,
     }
