@@ -1,3 +1,10 @@
+## [0.1.4] - 2018-01-08
+### Added
+- Hybrid encryption for portal communications
+- Diplomatic relations initialization at game creation
+- Initial player relations with starter planet
+- Faction colors
+
 ## [0.1.3] - 2018-01-01
 ### Added
 - Optimize server map generation with goroutines
