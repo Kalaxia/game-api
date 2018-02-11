@@ -1,0 +1,14 @@
+{
+  "bat.prod": {
+    "color": "#FFB000"
+  },
+  "bat.shipyard": {
+    "color": "#FFB000"
+  },
+  "bat.techno": {
+    "color": "#FFB000"
+  },
+  "bat.trade": {
+    "color": "#FFB000"
+  }
+}

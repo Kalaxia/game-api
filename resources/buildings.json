@@ -1,0 +1,138 @@
+{
+  "bat.prod.a": {
+    "type": "bat.prod",
+    "parent": null,
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 1000
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.a",
+        "amount": 200
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.c",
+        "amount": 50
+      }
+    ]
+  },
+  "bat.prod.b": {
+    "type": "bat.prod",
+    "parent": null,
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 850
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.a",
+        "amount": 250
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.e",
+        "amount": 85
+      }
+    ]
+  },
+  "bat.shipyard.a": {
+    "type": "bat.shipyard",
+    "parent": null,
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 1800
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.a",
+        "amount": 225
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.b",
+        "amount": 450
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.f",
+        "amount": 80
+      }
+    ]
+  },
+  "bat.shipyard.b": {
+    "type": "bat.shipyard",
+    "parent": "bat.shipyard.a",
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 1800
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.a",
+        "amount": 225
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.b",
+        "amount": 450
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.f",
+        "amount": 80
+      }
+    ]
+  },
+  "bat.trade.a": {
+    "type": "bat.trade",
+    "parent": null,
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 700
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.a",
+        "amount": 250
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.e",
+        "amount": 85
+      }
+    ]
+  },
+  "bat.techno.a": {
+    "type": "bat.techno",
+    "parent": null,
+    "duration": 1800,
+    "price": [
+      {
+        "type": "credits",
+        "amount": 1500
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.d",
+        "amount": 125
+      },
+      {
+        "type": "resource",
+        "resource_type": "resources.e",
+        "amount": 100
+      }
+    ]
+  }
+}
