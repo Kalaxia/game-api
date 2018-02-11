@@ -51,7 +51,7 @@ func RegisterPlayer(player *playerModel.Player, factionId uint16, planetId uint1
   if faction == nil {
     panic(errors.New("faction not found"))
   }
-  planet := GetPlanet(planetId)
+  planet := GetPlanet(planetId, uint16(player.Id))
   if planet == nil {
     panic(errors.New("planet not found"))
   }
