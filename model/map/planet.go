@@ -27,6 +27,9 @@ type(
     Player *playerModel.Player `json:"player"`
     Resources []PlanetResource `json:"resources"`
     Relations []interface{} `json:"relations" sql:"-"`
+    Buildings []interface{} `json:"buildings" sql:"-"`
+    NbBuildings uint8 `json:"nb_buildings" sql:"-"`
+    AvailableBuildings []interface{} `json:"available_buildings" sql:"-"`
   }
   PlanetResource struct {
     TableName struct{} `json:"-" sql:"map__planet_resources"`
