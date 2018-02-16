@@ -47,7 +47,7 @@ func GetPlanet(id uint16, playerId uint16) *model.Planet {
       r[i] = v
   }
   planet.Relations = r
-  if playerId == planet.Player.Id {
+  if planet.Player != nil && playerId == planet.Player.Id {
     getPlanetOwnerData(&planet)
   }
   return &planet
