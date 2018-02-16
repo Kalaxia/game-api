@@ -1,3 +1,8 @@
+## [0.1.5] - 2018-02-16
+### Added
+- Scheduling component
+- Planet buildings
+
 ## [0.1.4] - 2018-01-08
 ### Added
 - Hybrid encryption for portal communications
