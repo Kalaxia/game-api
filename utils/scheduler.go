@@ -37,7 +37,7 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
 func (s *Scheduling) RemoveTask(id string) {
     _, isset := s.Queue[id]
     if !isset {
-        panic(errors.New("Unknown scheduler id"))
+        panic(errors.New("unknown scheduler id"))
     }
     delete(s.Queue, id)
 }
@@ -45,7 +45,7 @@ func (s *Scheduling) RemoveTask(id string) {
 func (s *Scheduling) CancelTask(id string) {
     task, isset := s.Queue[id]
     if !isset {
-        panic(errors.New("Unknown scheduler id"))
+        panic(errors.New("unknown scheduler id"))
     }
     task.Timer.Stop()
     delete(s.Queue, id)

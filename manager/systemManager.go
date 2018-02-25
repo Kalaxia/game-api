@@ -21,11 +21,3 @@ func GetSystem(id uint16) *model.System {
     system.Planets = GetSystemPlanets(id)
     return &system
 }
-
-func GetSystemOrbits(id uint16) []model.SystemOrbit {
-    var systemOrbits []model.SystemOrbit
-    if err := database.Connection.Model(&systemOrbits).Where("system_id = ?", id).Select(); err != nil {
-        panic(err)
-    }
-    return systemOrbits
-}
