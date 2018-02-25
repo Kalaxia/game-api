@@ -20,6 +20,17 @@ func GetCurrentPlayer(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func GetPlayer(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    id, _ := strconv.ParseUint(vars["id"], 10, 16)
+
+    player := manager.GetPlayer(uint16(id))
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(&player); err != nil {
+        panic(err)
+    }
+}
+
 func GetPlayerPlanets(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
     id, _ := strconv.ParseUint(vars["id"], 10, 16)
