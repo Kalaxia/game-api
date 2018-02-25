@@ -17,8 +17,8 @@ func AuthorizationHandler(next http.HandlerFunc) http.HandlerFunc {
             return
         }
         data := claims.(jwt.MapClaims)
-        created_at, _ := time.Parse(time.RFC3339, data["created_at"].(string))
-        if created_at.Add(time.Hour * time.Duration(2)).Before(time.Now()) {
+        createdAt, _ := time.Parse(time.RFC3339, data["created_at"].(string))
+        if createdAt.Add(time.Hour * time.Duration(2)).Before(time.Now()) {
             w.WriteHeader(http.StatusUnauthorized)
             w.Write([]byte("Expired JWT"))
         }

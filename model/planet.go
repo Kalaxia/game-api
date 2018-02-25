@@ -1,12 +1,12 @@
 package model
 
-const PLANET_TYPE_ARCTIC = "arctic"
-const PLANET_TYPE_DESERT = "desert"
-const PLANET_TYPE_OCEANIC = "oceanic"
-const PLANET_TYPE_TEMPERATE = "temperate"
-const PLANET_TYPE_TROPICAL = "tropical"
-const PLANET_TYPE_ROCKY = "rocky"
-const PLANET_TYPE_VOLCANIC = "volcanic"
+const PlanetTypeArtic = "arctic"
+const PlanetTypeDesert = "desert"
+const PlanetTypeOceanic = "oceanic"
+const PlanetTypeTemperate = "temperate"
+const PlanetTypeTropical = "tropical"
+const PlanetTypeRocky = "rocky"
+const PlanetTypeVolcanic = "volcanic"
 
 type(
   Planet struct {

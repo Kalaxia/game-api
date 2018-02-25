@@ -37,6 +37,7 @@ func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan
     return buildings, getAvailableBuildings(buildings)
 }
 
+// FIXME some building must need other buildings
 func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
     availableBuildings := make([]model.BuildingPlan, 0)
 
@@ -52,11 +53,11 @@ func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
 func CreateBuilding(planet *model.Planet, name string) model.Building {
     buildingPlan, isset := buildingPlansData[name]
     if !isset {
-        panic(errors.New("Unknown building plan"))
+        panic(errors.New("unknown building plan"))
     }
     buildingType, isset := buildingTypesData[buildingPlan.Type]
     if !isset {
-        panic(errors.New("Unknown building type"))
+        panic(errors.New("unknown building type"))
     }
     building := model.Building{
         Name: name,
@@ -67,7 +68,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
         TypeName: buildingPlan.Type,
         Planet: planet,
         PlanetId: planet.Id,
-        Status: model.BUILDING_STATUS_CONSTRUCTING,
+        Status: model.BuildingStatusConstructing,
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
     }
@@ -87,7 +88,7 @@ func FinishConstruction(id uint32) {
     if err := database.Connection.Select(&building); err != nil {
         panic(err)
     }
-    building.Status = model.BUILDING_STATUS_OPERATIONAL
+    building.Status = model.BuildingStatusOperational
     if err := database.Connection.Update(&building); err != nil {
         panic(err)
     }
@@ -117,7 +118,7 @@ func getConstructingBuildings() []model.Building {
     _ = database.
         Connection.
         Model(&buildings).
-        Where("status = ?", model.BUILDING_STATUS_CONSTRUCTING).
+        Where("status = ?", model.BuildingStatusConstructing).
         Select()
     return buildings
 }

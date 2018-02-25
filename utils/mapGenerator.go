@@ -99,19 +99,19 @@ func choosePlanetType(orbit *model.SystemOrbit) string {
     coeff := int(orbit.Radius) * rand.Intn(3) + rand.Intn(100)
     switch {
         case coeff < 300:
-            return model.PLANET_TYPE_VOLCANIC
+            return model.PlanetTypeVolcanic
         case coeff < 400:
-            return model.PLANET_TYPE_ROCKY
+            return model.PlanetTypeRocky
         case coeff < 500:
-            return model.PLANET_TYPE_DESERT
+            return model.PlanetTypeDesert
         case coeff < 600:
-            return model.PLANET_TYPE_TROPICAL
+            return model.PlanetTypeTropical
         case coeff < 700:
-            return model.PLANET_TYPE_TEMPERATE
+            return model.PlanetTypeTemperate
         case coeff < 800:
-            return model.PLANET_TYPE_OCEANIC
+            return model.PlanetTypeOceanic
         default:
-            return model.PLANET_TYPE_ARCTIC
+            return model.PlanetTypeArtic
     }
 }
 
