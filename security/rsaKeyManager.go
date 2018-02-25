@@ -1,43 +1,44 @@
 package security
 
 import (
-		"fmt"
-		"encoding/base64"
-		"encoding/pem"
-		"io/ioutil"
-		"os"
-		"bytes"
-		"crypto/aes"
-		"crypto/cipher"
-		"crypto/rsa"
-		"crypto/rand"
-		"crypto/x509"
+	"fmt"
+	"encoding/base64"
+	"encoding/pem"
+	"io/ioutil"
+	"os"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rsa"
+	"crypto/rand"
+	"crypto/x509"
 )
 
 func InitializeRsaVault() bool {
-		if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
-	  		return false
-		}
-		// generate private key
-		privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
-		if err != nil {
-			panic(err)
-		}
-		// extract public key
-		publickey := &privatekey.PublicKey
-		pubkey, _ := x509.MarshalPKIXPublicKey(publickey);
-		// save private key
-		pkey := x509.MarshalPKCS1PrivateKey(privatekey)
-		ioutil.WriteFile("/go/src/kalaxia-game-api/rsa_vault/private.key", pkey, 0777)
-		fmt.Println("private key saved to private.key")
-		// save public key in PEM file
-		pemfile, _ := os.Create("/go/src/kalaxia-game-api/rsa_vault/public.pub")
-		var pemkey = &pem.Block{
-								 Type : "PUBLIC KEY",
-								 Bytes : pubkey}
-		pem.Encode(pemfile, pemkey)
-		pemfile.Close()
-		return true
+	if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
+  		return false
+	}
+	// generate private key
+	privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		panic(err)
+	}
+	// extract public key
+	publickey := &privatekey.PublicKey
+	pubkey, _ := x509.MarshalPKIXPublicKey(publickey);
+	// save private key
+	pkey := x509.MarshalPKCS1PrivateKey(privatekey)
+	ioutil.WriteFile("/go/src/kalaxia-game-api/rsa_vault/private.key", pkey, 0777)
+	fmt.Println("private key saved to private.key")
+	// save public key in PEM file
+	pemfile, _ := os.Create("/go/src/kalaxia-game-api/rsa_vault/public.pub")
+	var pemkey = &pem.Block{
+		 Type : "PUBLIC KEY",
+		 Bytes : pubkey,
+ 	}
+	pem.Encode(pemfile, pemkey)
+	pemfile.Close()
+	return true
 }
 
 func Encrypt(data []byte) ([]byte, string, string) {
@@ -69,29 +70,29 @@ func Encrypt(data []byte) ([]byte, string, string) {
 }
 
 func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
-		key := make([]byte, 32)
-		iv := make([]byte, 16)
-		_, err := rand.Read(key)
-		if err != nil {
-			panic(err)
-		}
-		_, err = rand.Read(iv)
-		if err != nil {
-			panic(err)
-		}
-		// CBC mode works on blocks so plaintexts may need to be padded to the
-		// next whole block. If the block is incomplete, we add padding to it
-		if len(data) % aes.BlockSize != 0 {
-			data = pkcs7Pad(data)
-		}
-		block, err := aes.NewCipher(key)
-		if err != nil {
-			panic(err)
-		}
-		mode := cipher.NewCBCEncrypter(block, iv)
-		mode.CryptBlocks(data, data)
+	key := make([]byte, 32)
+	iv := make([]byte, 16)
+	_, err := rand.Read(key)
+	if err != nil {
+		panic(err)
+	}
+	_, err = rand.Read(iv)
+	if err != nil {
+		panic(err)
+	}
+	// CBC mode works on blocks so plaintexts may need to be padded to the
+	// next whole block. If the block is incomplete, we add padding to it
+	if len(data) % aes.BlockSize != 0 {
+		data = pkcs7Pad(data)
+	}
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		panic(err)
+	}
+	mode := cipher.NewCBCEncrypter(block, iv)
+	mode.CryptBlocks(data, data)
 
-		return data, key, iv
+	return data, key, iv
 }
 
 func Decrypt(encryptedKey string, encryptedIv string, data []byte) []byte {

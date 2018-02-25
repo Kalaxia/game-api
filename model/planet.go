@@ -1,9 +1,5 @@
 package model
 
-import(
-  playerModel "kalaxia-game-api/model/player"
-)
-
 const PLANET_TYPE_ARCTIC = "arctic"
 const PLANET_TYPE_DESERT = "desert"
 const PLANET_TYPE_OCEANIC = "oceanic"
@@ -24,7 +20,7 @@ type(
     OrbitId uint16 `json:"-"`
     Orbit *SystemOrbit `json:"orbit"`
     PlayerId uint16 `json:"-"`
-    Player *playerModel.Player `json:"player"`
+    Player *Player `json:"player"`
     Resources []PlanetResource `json:"resources"`
     Relations []interface{} `json:"relations" sql:"-"`
     Buildings []interface{} `json:"buildings" sql:"-"`

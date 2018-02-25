@@ -1,15 +1,15 @@
 package controller
 
 import (
-  "io"
-  "io/ioutil"
-  "net/http"
-  "encoding/json"
-  "github.com/gorilla/context"
-  "github.com/gorilla/mux"
-  "kalaxia-game-api/manager"
-  "kalaxia-game-api/model/player"
-  "strconv"
+    "io"
+    "io/ioutil"
+    "net/http"
+    "encoding/json"
+    "github.com/gorilla/context"
+    "github.com/gorilla/mux"
+    "kalaxia-game-api/manager"
+    "kalaxia-game-api/model"
+    "strconv"
 )
 
 func CreateBuilding(w http.ResponseWriter, r *http.Request) {
@@ -26,10 +26,10 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
 
     var body []byte
     var err error
-	if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
+    if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
         panic(err)
     }
-	if err = r.Body.Close(); err != nil {
+    if err = r.Body.Close(); err != nil {
         panic(err)
     }
     var data map[string]string
