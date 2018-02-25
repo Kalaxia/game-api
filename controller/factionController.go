@@ -31,3 +31,14 @@ func GetFactionPlanetChoices(w http.ResponseWriter, r *http.Request) {
         panic(err)
     }
 }
+
+func GetFactionMembers(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+
+    id, _ := strconv.ParseUint(vars["id"], 10, 16)
+    members := manager.GetFactionMembers(uint16(id))
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(&members); err != nil {
+        panic(err)
+    }
+}

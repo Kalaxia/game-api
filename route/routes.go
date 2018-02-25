@@ -80,6 +80,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Player",
+		"GET",
+		"/api/players/{id}",
+		controller.GetPlayer,
+		true,
+	},
+	Route{
 		"Get Map",
 		"GET",
 		"/api/map",
@@ -112,6 +119,13 @@ var routes = Routes{
 		"GET",
 		"/api/factions/{id}/planet-choices",
 		controller.GetFactionPlanetChoices,
+		true,
+	},
+	Route{
+		"Get Faction Members",
+		"GET",
+		"/api/factions/{id}/members",
+		controller.GetFactionMembers,
 		true,
 	},
 }
