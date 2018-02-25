@@ -97,27 +97,27 @@ func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
 
 func Decrypt(encryptedKey string, encryptedIv string, data []byte) []byte {
 	pkey, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/private.key")
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	privatekey, err := x509.ParsePKCS1PrivateKey(pkey)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	key, err := base64.StdEncoding.DecodeString(encryptedKey)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	iv, err := base64.StdEncoding.DecodeString(encryptedIv)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	aesKey, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, key)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	aesIv, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, iv)
-	if (err != nil) {
+	if err != nil {
 		panic(err)
 	}
 	block, err := aes.NewCipher(aesKey)

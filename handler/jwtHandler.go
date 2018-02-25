@@ -12,7 +12,7 @@ import(
 
 func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-        if (isProtected == false) {
+        if isProtected == false {
           next(w, req)
           return
         }
@@ -30,7 +30,7 @@ func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
         }
         token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
             if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, fmt.Errorf("There was an error")
+                return nil, fmt.Errorf("there was an error")
             }
             return []byte(os.Getenv("JWT_SECRET")), nil
         })

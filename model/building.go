@@ -4,9 +4,9 @@ import(
     "time"
 )
 
-const BUILDING_STATUS_CONSTRUCTING = "constructing"
-const BUILDING_STATUS_OPERATIONAL = "operational"
-const BUILDING_STATUS_DESTROYING = "destroying"
+const BuildingStatusConstructing = "constructing"
+const BuildingStatusOperational = "operational"
+const BuildingStatusDestroying = "destroying"
 
 type(
   Building struct {
