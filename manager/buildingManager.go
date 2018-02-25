@@ -14,11 +14,11 @@ var buildingPlansData model.BuildingPlansData
 var buildingTypesData model.BuildingTypesData
 
 func init() {
-    buildingsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/buildings.json")
+    buildingsDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/buildings.json")
     if err != nil {
         panic(err)
     }
-    buildingTypesJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/building_types.json")
+    buildingTypesJSON, err := ioutil.ReadFile("..//kalaxia-game-api/resources/building_types.json")
     if err != nil {
         panic(err)
     }

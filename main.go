@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"log"
 	"kalaxia-game-api/security"
+	"kalaxia-game-api/route"
 )
 
 func main() {
@@ -13,6 +14,6 @@ func main() {
 	} else {
 		fmt.Println("The RSA keys are already generated")
 	}
-  router := NewRouter()
+  router := route.NewRouter()
   log.Fatal(http.ListenAndServe(":80", router))
 }
