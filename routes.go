@@ -7,7 +7,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
 
-	"kalaxia-game-api/controller"
+	"kalaxia-game-api/base"
+	"kalaxia-game-api/faction"
+	"kalaxia-game-api/galaxy"
+	"kalaxia-game-api/player"
+	"kalaxia-game-api/server"
 	"kalaxia-game-api/handler"
 )
 
@@ -41,77 +45,77 @@ var routes = Routes{
 		"Authenticate",
 		"POST",
 		"/api/auth",
-		controller.Authenticate,
+		player.AuthenticateAction,
 		false,
 	},
 	Route{
 		"Create Server",
 		"POST",
 		"/api/servers",
-		controller.CreateServer,
+		server.CreateServerAction,
 		false,
 	},
 	Route{
 		"Get Current Player",
 		"GET",
 		"/api/me",
-		controller.GetCurrentPlayer,
+		player.GetCurrentPlayerAction,
 		true,
 	},
 	Route{
 		"Get Player Planets",
 		"GET",
 		"/api/players/{id}/planets",
-		controller.GetPlayerPlanets,
+		galaxy.GetPlayerPlanetsAction,
 		true,
 	},
 	Route{
 		"Launch Building Construction",
 		"POST",
 		"/api/planets/{id}/buildings",
-		controller.CreateBuilding,
+		base.CreateBuildingAction,
 		true,
 	},
 	Route{
 		"Register Player",
 		"POST",
 		"/api/players",
-		controller.RegisterPlayer,
+		player.RegisterPlayerAction,
 		true,
 	},
 	Route{
 		"Get Map",
 		"GET",
 		"/api/map",
-		controller.GetMap,
+		galaxy.GetMapAction,
 		true,
 	},
 	Route{
 		"Get System",
 		"GET",
 		"/api/systems/{id}",
-		controller.GetSystem,
+		galaxy.GetSystemAction,
 		true,
 	},
 	Route{
 		"Get Planet",
 		"GET",
 		"/api/planets/{id}",
-		controller.GetPlanet,
+		galaxy.GetPlanetAction,
 		true,
 	},
 	Route{
 		"Get Factions",
 		"GET",
 		"/api/factions",
-		controller.GetFactions,
+		faction.GetFactionsAction,
 		true,
 	},
 	Route{
 		"Get Faction Planet Choices",
 		"GET",
 		"/api/factions/{id}/planet-choices",
-		controller.GetFactionPlanetChoices,
+		faction.GetFactionPlanetChoicesAction,
 		true,
 	},
 }

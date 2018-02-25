@@ -3,7 +3,7 @@ package handler
 import(
   "net/http"
   "time"
-  "kalaxia-game-api/manager"
+  "kalaxia-game-api/player"
   "github.com/dgrijalva/jwt-go"
   "github.com/gorilla/context"
 )
@@ -22,7 +22,7 @@ func AuthorizationHandler(next http.HandlerFunc) http.HandlerFunc {
             w.WriteHeader(http.StatusUnauthorized)
             w.Write([]byte("Expired JWT"))
         }
-        player := manager.GetPlayer(uint16(data["id"].(float64)))
+        player := player.GetPlayer(uint16(data["id"].(float64)))
         if player != nil {
             context.Set(req, "player", player)
             next(w, req)

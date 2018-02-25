@@ -1,43 +1,44 @@
-package security
+package server
 
 import (
-		"fmt"
-		"encoding/base64"
-		"encoding/pem"
-		"io/ioutil"
-		"os"
-		"bytes"
-		"crypto/aes"
-		"crypto/cipher"
-		"crypto/rsa"
-		"crypto/rand"
-		"crypto/x509"
+	"fmt"
+	"encoding/base64"
+	"encoding/pem"
+	"io/ioutil"
+	"os"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rsa"
+	"crypto/rand"
+	"crypto/x509"
 )
 
 func InitializeRsaVault() bool {
-		if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
-	  		return false
-		}
-		// generate private key
-		privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
-		if err != nil {
-			panic(err)
-		}
-		// extract public key
-		publickey := &privatekey.PublicKey
-		pubkey, _ := x509.MarshalPKIXPublicKey(publickey);
-		// save private key
-		pkey := x509.MarshalPKCS1PrivateKey(privatekey)
-		ioutil.WriteFile("/go/src/kalaxia-game-api/rsa_vault/private.key", pkey, 0777)
-		fmt.Println("private key saved to private.key")
-		// save public key in PEM file
-		pemfile, _ := os.Create("/go/src/kalaxia-game-api/rsa_vault/public.pub")
-		var pemkey = &pem.Block{
-								 Type : "PUBLIC KEY",
-								 Bytes : pubkey}
-		pem.Encode(pemfile, pemkey)
-		pemfile.Close()
-		return true
+	if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
+  		return false
+	}
+	// generate private key
+	privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
+	if err != nil {
+		panic(err)
+	}
+	// extract public key
+	publickey := &privatekey.PublicKey
+	pubkey, _ := x509.MarshalPKIXPublicKey(publickey);
+	// save private key
+	pkey := x509.MarshalPKCS1PrivateKey(privatekey)
+	ioutil.WriteFile("/go/src/kalaxia-game-api/rsa_vault/private.key", pkey, 0777)
+	fmt.Println("private key saved to private.key")
+	// save public key in PEM file
+	pemfile, _ := os.Create("/go/src/kalaxia-game-api/rsa_vault/public.pub")
+	var pemkey = &pem.Block{
+		Type : "PUBLIC KEY",
+		Bytes : pubkey,
+	}
+	pem.Encode(pemfile, pemkey)
+	pemfile.Close()
+	return true
 }
 
 func Encrypt(data []byte) ([]byte, string, string) {

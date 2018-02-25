@@ -1,4 +1,4 @@
-package controller
+package base
 
 import (
   "io"
@@ -7,17 +7,17 @@ import (
   "encoding/json"
   "github.com/gorilla/context"
   "github.com/gorilla/mux"
-  "kalaxia-game-api/manager"
-  "kalaxia-game-api/model/player"
+  "kalaxia-game-api/galaxy"
+  "kalaxia-game-api/player"
   "strconv"
 )
 
-func CreateBuilding(w http.ResponseWriter, r *http.Request) {
+func CreateBuildingAction(w http.ResponseWriter, r *http.Request) {
     vars := mux.Vars(r)
-    player := context.Get(r, "player").(*model.Player)
+    player := context.Get(r, "player").(*player.Player)
 
     id, _ := strconv.ParseUint(vars["id"], 10, 16)
-    planet := manager.GetPlanet(uint16(id), player.Id)
+    planet := galaxy.GetPlanet(uint16(id), player.Id)
 
     if uint16(id) != planet.Id {
         w.WriteHeader(http.StatusForbidden)
@@ -36,7 +36,7 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     if err = json.Unmarshal(body, &data); err != nil {
         panic(err)
     }
-    building := manager.CreateBuilding(planet, data["name"])
+    building := CreateBuilding(planet, data["name"])
 
     w.Header().Set("Content-Type", "application/json")
     if err := json.NewEncoder(w).Encode(&building); err != nil {

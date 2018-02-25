@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"log"
-	"kalaxia-game-api/security"
+	"kalaxia-game-api/server"
 )
 
 func main() {
-	if security.InitializeRsaVault() {
+	if server.InitializeRsaVault() {
 		fmt.Println("The RSA keys were generated")
 	} else {
 		fmt.Println("The RSA keys are already generated")
