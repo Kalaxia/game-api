@@ -1,9 +1,5 @@
 package model
 
-import(
-  serverModel "kalaxia-game-api/model/server"
-)
-
 type(
   Faction struct {
     TableName struct{} `json:"-" sql:"faction__factions"`
@@ -13,6 +9,6 @@ type(
     Description string `json:"description"`
     Color string `json:"color"`
     ServerId uint16 `json:"-"`
-    Server *serverModel.Server `json:"-"`
+    Server *Server `json:"-"`
   }
 )

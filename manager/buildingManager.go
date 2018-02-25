@@ -6,8 +6,7 @@ import(
     "encoding/json"
     "io/ioutil"
     "kalaxia-game-api/database"
-    "kalaxia-game-api/model/building"
-    mapModel "kalaxia-game-api/model/map"
+    "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
 )
 
@@ -15,42 +14,42 @@ var buildingPlansData model.BuildingPlansData
 var buildingTypesData model.BuildingTypesData
 
 func init() {
-  buildingsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/buildings.json")
-  if err != nil {
-    panic(err)
-  }
-  buildingTypesJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/building_types.json")
-  if err != nil {
-    panic(err)
-  }
-  if err := json.Unmarshal(buildingsDataJSON, &buildingPlansData); err != nil {
-    panic(err)
-  }
-  if err := json.Unmarshal(buildingTypesJSON, &buildingTypesData); err != nil {
-    panic(err)
-  }
-  scheduleConstructions()
+    buildingsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/buildings.json")
+    if err != nil {
+        panic(err)
+    }
+    buildingTypesJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/building_types.json")
+    if err != nil {
+        panic(err)
+    }
+    if err := json.Unmarshal(buildingsDataJSON, &buildingPlansData); err != nil {
+        panic(err)
+    }
+    if err := json.Unmarshal(buildingTypesJSON, &buildingTypesData); err != nil {
+        panic(err)
+    }
+    scheduleConstructions()
 }
 
 func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan) {
-  buildings := make([]model.Building, 0)
-  _ = database.Connection.Model(&buildings).Where("planet_id = ?", planetId).Select()
-  return buildings, getAvailableBuildings(buildings)
+    buildings := make([]model.Building, 0)
+    _ = database.Connection.Model(&buildings).Where("planet_id = ?", planetId).Select()
+    return buildings, getAvailableBuildings(buildings)
 }
 
 func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
-  availableBuildings := make([]model.BuildingPlan, 0)
+    availableBuildings := make([]model.BuildingPlan, 0)
 
-  for buildingName, buildingPlan := range buildingPlansData {
-      if len(buildingPlan.ParentName) == 0 {
-          buildingPlan.Name = buildingName
-          availableBuildings = append(availableBuildings, buildingPlan)
-      }
-  }
-  return availableBuildings
+    for buildingName, buildingPlan := range buildingPlansData {
+        if len(buildingPlan.ParentName) == 0 {
+            buildingPlan.Name = buildingName
+            availableBuildings = append(availableBuildings, buildingPlan)
+        }
+    }
+    return availableBuildings
 }
 
-func CreateBuilding(planet *mapModel.Planet, name string) model.Building {
+func CreateBuilding(planet *model.Planet, name string) model.Building {
     buildingPlan, isset := buildingPlansData[name]
     if !isset {
         panic(errors.New("Unknown building plan"))
@@ -82,16 +81,16 @@ func CreateBuilding(planet *mapModel.Planet, name string) model.Building {
 }
 
 func FinishConstruction(id uint32) {
-      building := model.Building{
-          Id: id,
-      }
-      if err := database.Connection.Select(&building); err != nil {
-          panic(err)
-      }
-      building.Status = model.BUILDING_STATUS_OPERATIONAL
-      if err := database.Connection.Update(&building); err != nil {
+    building := model.Building{
+        Id: id,
+    }
+    if err := database.Connection.Select(&building); err != nil {
         panic(err)
-      }
+    }
+    building.Status = model.BUILDING_STATUS_OPERATIONAL
+    if err := database.Connection.Update(&building); err != nil {
+        panic(err)
+    }
 }
 
 func scheduleConstructions() {

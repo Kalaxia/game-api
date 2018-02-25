@@ -2,7 +2,6 @@ package model
 
 import(
     "time"
-    mapModel "kalaxia-game-api/model/map"
 )
 
 const BUILDING_STATUS_CONSTRUCTING = "constructing"
@@ -17,7 +16,7 @@ type(
     Name string `json:"name"`
     Type *BuildingType `json:"type" sql:"-"`
     TypeName string `json:"-" sql:"type"`
-    Planet *mapModel.Planet `json:"planet"`
+    Planet *Planet `json:"planet"`
     PlanetId uint16 `json:"-"`
     Status string `json:"status"`
     CreatedAt time.Time `json:"created_at"`
