@@ -76,3 +76,11 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
     }
     return results
 }
+
+func GetFactionMembers(factionId uint16) []*model.Player {
+    members := make([]*model.Player, 0)
+    if err := database.Connection.Model(&members).Where("faction_id = ?", factionId).Select(); err != nil {
+        return members
+    }
+    return members
+}
