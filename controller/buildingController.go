@@ -10,6 +10,7 @@ import (
     "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
     "strconv"
+    "kalaxia-game-api/utils"
 )
 
 func CreateBuilding(w http.ResponseWriter, r *http.Request) {
@@ -42,4 +43,12 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     if err := json.NewEncoder(w).Encode(&building); err != nil {
         panic(err)
     }
+}
+
+func CancelBuilding(w http.ResponseWriter, r *http.Request){
+    vars := mux.Vars(r)
+
+    utils.Scheduler.CancelTask(vars["id"])
+    // TODO remove panic
+    // return confirm or error
 }

@@ -73,6 +73,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Cancel Building Construction",
+		"POST",
+		"/api/planets/{id}/buildings",
+		controller.CancelBuilding,
+		true,
+	},
+	Route{
 		"Register Player",
 		"POST",
 		"/api/players",

@@ -2,8 +2,8 @@ package utils
 
 import(
     "errors"
-    "math/rand"
     "time"
+    "github.com/rs/xid"
 )
 
 type Scheduling struct {
@@ -15,15 +15,17 @@ type Task struct {
 }
 
 var Scheduler Scheduling
+var guid xid.ID
 
 func init() {
     Scheduler = Scheduling{
         Queue: make(map[string]Task, 0),
     }
+	guid = xid.New()
 }
 
-func (s *Scheduling) AddTask(seconds uint, callback func()) {
-    id := string(rand.Intn(100000)) + time.Now().Format(time.UnixDate)
+func (s *Scheduling) AddTask(seconds uint, callback func()) string {
+    id := guid.String()
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
@@ -32,6 +34,7 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
         }),
     }
     s.Queue[id] = task
+    return id
 }
 
 func (s *Scheduling) RemoveTask(id string) {

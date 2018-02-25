@@ -50,7 +50,7 @@ func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
     return availableBuildings
 }
 
-func CreateBuilding(planet *model.Planet, name string) model.Building {
+func CreateBuilding(planet *model.Planet, name string) model.BuildingConstruction {
     buildingPlan, isset := buildingPlansData[name]
     if !isset {
         panic(errors.New("unknown building plan"))
@@ -75,10 +75,16 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     if err := database.Connection.Insert(&building); err != nil {
       panic(err)
     }
-    utils.Scheduler.AddTask(buildingPlan.Duration, func() {
+    id := utils.Scheduler.AddTask(buildingPlan.Duration, func() {
         FinishConstruction(building.Id)
     })
-    return building
+
+    buildingConstruction :=model.BuildingConstruction{
+        Building:building,
+        Id:id,
+    }
+
+    return buildingConstruction
 }
 
 func FinishConstruction(id uint32) {

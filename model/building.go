@@ -44,4 +44,9 @@ type(
       Color string `json:"color"`
   }
   BuildingTypesData map[string]BuildingTypeData
+
+  BuildingConstruction struct{
+  	Building Building
+  	Id string
+  }
 )
