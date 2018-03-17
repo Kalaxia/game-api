@@ -48,12 +48,7 @@ func GetFactionPlanetChoices(factionId uint16) []*model.Planet {
             Select(); err != nil {
                 panic(err)
         }
-        relations := GetPlanetRelations(planet.Id)
-        r := make([]interface{}, len(relations))
-        for i, v := range relations {
-            r[i] = v
-        }
-        planet.Relations = r
+        planet.Relations = GetPlanetRelations(planet.Id)
     }
     return planets
 }
