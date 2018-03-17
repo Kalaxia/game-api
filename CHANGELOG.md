@@ -1,3 +1,12 @@
+## [0.1.6] - 2018-03-17
+### Added
+- Hourly takss in scheduling
+- Player retrieval webservice
+- Faction retrieval webservice
+- Hourly calculation of planet resources production
+- Planet storages
+- File logger
+
 ## [0.1.5] - 2018-02-16
 ### Added
 - Scheduling component
