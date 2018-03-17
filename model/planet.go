@@ -22,10 +22,12 @@ type(
     PlayerId uint16 `json:"-"`
     Player *Player `json:"player"`
     Resources []PlanetResource `json:"resources"`
-    Relations []interface{} `json:"relations" sql:"-"`
-    Buildings []interface{} `json:"buildings" sql:"-"`
+    StorageId uint16 `json:"-"`
+    Storage *Storage `json:"storage"`
+    Relations []DiplomaticRelation `json:"relations" sql:"-"`
+    Buildings []Building `json:"buildings" sql:"-"`
     NbBuildings uint8 `json:"nb_buildings" sql:"-"`
-    AvailableBuildings []interface{} `json:"available_buildings" sql:"-"`
+    AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
   }
   PlanetResource struct {
     TableName struct{} `json:"-" sql:"map__planet_resources"`
@@ -34,6 +36,13 @@ type(
     Density uint8 `json:"density"`
     PlanetId uint16 `json:"-"`
     Planet *Planet `json:"planet"`
+  }
+  Storage struct {
+      TableName struct{} `json:"-" sql:"map__planet_storage"`
+
+      Id uint16 `json:"id"`
+      Capacity uint16 `json:"capacity"`
+      Resources map[string]uint16 `json:"resources"`
   }
   PlanetData struct {
     Resources map[string]uint8
