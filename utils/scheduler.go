@@ -7,6 +7,7 @@ import(
 )
 
 type Scheduling struct {
+    Ticker time.Ticker
     Queue map[string]Task
 }
 type Task struct {
@@ -32,6 +33,16 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
         }),
     }
     s.Queue[id] = task
+}
+
+func (s *Scheduling) AddHourlyTask(callback func()) {
+    now := time.Now()
+    nextHour := time.Date(now.Year(), now.Month(), now.Day(), now.Hour() + 1, 0, 0, 0, time.UTC)
+
+    s.AddTask(uint(time.Until(nextHour).Seconds() + 1), func() {
+        callback()
+        s.AddHourlyTask(callback)
+    })
 }
 
 func (s *Scheduling) RemoveTask(id string) {
