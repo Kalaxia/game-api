@@ -16,7 +16,7 @@ func GetSystemPlanets(id uint16) []model.Planet {
     if err := database.
         Connection.
         Model(&planets).
-        Column("planet.*", "Orbit").
+        Column("planet.*", "Orbit", "Player", "Player.Faction").
         Where("planet.system_id = ?", id).
         Select(); err != nil {
             panic(err)
