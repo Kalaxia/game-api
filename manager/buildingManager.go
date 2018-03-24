@@ -29,11 +29,19 @@ func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan
     return buildings, getAvailableBuildings(buildings)
 }
 
-// FIXME some building must need other buildings
 func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
     availableBuildings := make([]model.BuildingPlan, 0)
 
     for buildingName, buildingPlan := range buildingPlansData {
+        existing := false
+        for _, building := range buildings {
+            if building.Name == buildingName {
+                existing = true
+            }
+        }
+        if existing == true {
+            continue
+        }
         if len(buildingPlan.ParentName) == 0 {
             buildingPlan.Name = buildingName
             availableBuildings = append(availableBuildings, buildingPlan)
@@ -63,6 +71,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     utils.Scheduler.AddTask(buildingPlan.Duration, func() {
         FinishConstruction(building.Id)
     })
+    planet.AvailableBuildings = getAvailableBuildings(append(planet.Buildings, building))
     return building
 }
 
