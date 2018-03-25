@@ -14,13 +14,13 @@ type(
 
     Id uint32 `json:"id"`
     Name string `json:"name"`
-    Type *BuildingType `json:"type" sql:"-"`
-    TypeName string `json:"-" sql:"type"`
+    Type string `json:"type" sql:"type"`
     Planet *Planet `json:"planet"`
     PlanetId uint16 `json:"-"`
     Status string `json:"status"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
+    BuiltAt time.Time `json:"built_at"`
   }
   BuildingPlan struct {
     Name string `json:"name"`
@@ -31,17 +31,8 @@ type(
   }
   BuildingPlansData map[string]BuildingPlan
 
-  BuildingType struct {
-    Name string `json:"name"`
-    Color string `json:"color"`
-  }
   Price struct {
     Type string `json:"type"`
-    ResourceType string `json:"resource_type,omitempty"`
     Amount uint `json:"amount"`
   }
-  BuildingTypeData struct {
-      Color string `json:"color"`
-  }
-  BuildingTypesData map[string]BuildingTypeData
 )

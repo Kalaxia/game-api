@@ -11,21 +11,13 @@ import(
 )
 
 var buildingPlansData model.BuildingPlansData
-var buildingTypesData model.BuildingTypesData
 
 func init() {
     buildingsDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/buildings.json")
     if err != nil {
         panic(err)
     }
-    buildingTypesJSON, err := ioutil.ReadFile("..//kalaxia-game-api/resources/building_types.json")
-    if err != nil {
-        panic(err)
-    }
     if err := json.Unmarshal(buildingsDataJSON, &buildingPlansData); err != nil {
-        panic(err)
-    }
-    if err := json.Unmarshal(buildingTypesJSON, &buildingTypesData); err != nil {
         panic(err)
     }
     scheduleConstructions()
@@ -37,11 +29,19 @@ func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan
     return buildings, getAvailableBuildings(buildings)
 }
 
-// FIXME some building must need other buildings
 func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
     availableBuildings := make([]model.BuildingPlan, 0)
 
     for buildingName, buildingPlan := range buildingPlansData {
+        existing := false
+        for _, building := range buildings {
+            if building.Name == buildingName {
+                existing = true
+            }
+        }
+        if existing == true {
+            continue
+        }
         if len(buildingPlan.ParentName) == 0 {
             buildingPlan.Name = buildingName
             availableBuildings = append(availableBuildings, buildingPlan)
@@ -55,22 +55,15 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     if !isset {
         panic(errors.New("unknown building plan"))
     }
-    buildingType, isset := buildingTypesData[buildingPlan.Type]
-    if !isset {
-        panic(errors.New("unknown building type"))
-    }
     building := model.Building{
         Name: name,
-        Type: &model.BuildingType{
-            Name: buildingPlan.Type,
-            Color: buildingType.Color,
-        },
-        TypeName: buildingPlan.Type,
+        Type: buildingPlan.Type,
         Planet: planet,
         PlanetId: planet.Id,
         Status: model.BuildingStatusConstructing,
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
+        BuiltAt: time.Now().Add(time.Second * time.Duration(buildingPlan.Duration)),
     }
     if err := database.Connection.Insert(&building); err != nil {
       panic(err)
@@ -78,6 +71,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     utils.Scheduler.AddTask(buildingPlan.Duration, func() {
         FinishConstruction(building.Id)
     })
+    planet.AvailableBuildings = getAvailableBuildings(append(planet.Buildings, building))
     return building
 }
 
