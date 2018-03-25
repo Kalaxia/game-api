@@ -6,8 +6,13 @@ import(
 )
 
 func GetFaction(id uint16) *model.Faction {
-  faction := &model.Faction{Id: id}
-  if err := database.Connection.Select(faction); err != nil {
+  faction := &model.Faction{}
+  if err := database.
+    Connection.
+    Model(faction).
+    Column("faction.*", "Relations", "Relations.OtherFaction").
+    Where("faction.id = ?", id).
+    Select(); err != nil {
     return nil
   }
   return faction
