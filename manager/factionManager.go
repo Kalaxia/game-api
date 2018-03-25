@@ -74,7 +74,29 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
         }
         results = append(results, faction)
     }
+    createFactionsRelations(results)
     return results
+}
+
+func createFactionsRelations(factions []*model.Faction) {
+    for _, faction := range factions {
+        for _, otherFaction := range factions {
+            if faction.Id == otherFaction.Id {
+                continue
+            }
+            relation := &model.FactionRelation{
+                FactionId: faction.Id,
+                Faction: faction,
+                OtherFactionId: otherFaction.Id,
+                OtherFaction: otherFaction,
+                State: model.RELATION_NEUTRAL,
+            }
+            if err := database.Connection.Insert(relation); err != nil {
+                panic(err)
+            }
+            faction.Relations = append(faction.Relations, relation)
+        }
+    }
 }
 
 func GetFactionMembers(factionId uint16) []*model.Player {
