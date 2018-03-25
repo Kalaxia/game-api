@@ -10,5 +10,6 @@ type(
     Color string `json:"color"`
     ServerId uint16 `json:"-"`
     Server *Server `json:"-"`
+    Relations []*FactionRelation `json:"relations"`
   }
 )
