@@ -6,8 +6,13 @@ import(
 )
 
 func GetFaction(id uint16) *model.Faction {
-  faction := &model.Faction{Id: id}
-  if err := database.Connection.Select(faction); err != nil {
+  faction := &model.Faction{}
+  if err := database.
+    Connection.
+    Model(faction).
+    Column("faction.*", "Relations", "Relations.OtherFaction").
+    Where("faction.id = ?", id).
+    Select(); err != nil {
     return nil
   }
   return faction
@@ -69,7 +74,29 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
         }
         results = append(results, faction)
     }
+    createFactionsRelations(results)
     return results
+}
+
+func createFactionsRelations(factions []*model.Faction) {
+    for _, faction := range factions {
+        for _, otherFaction := range factions {
+            if faction.Id == otherFaction.Id {
+                continue
+            }
+            relation := &model.FactionRelation{
+                FactionId: faction.Id,
+                Faction: faction,
+                OtherFactionId: otherFaction.Id,
+                OtherFaction: otherFaction,
+                State: model.RELATION_NEUTRAL,
+            }
+            if err := database.Connection.Insert(relation); err != nil {
+                panic(err)
+            }
+            faction.Relations = append(faction.Relations, relation)
+        }
+    }
 }
 
 func GetFactionMembers(factionId uint16) []*model.Player {

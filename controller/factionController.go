@@ -15,7 +15,23 @@ func GetFactions(w http.ResponseWriter, r *http.Request) {
     factions := manager.GetServerFactions(player.ServerId)
 
     w.Header().Set("Content-Type", "application/json")
-        if err := json.NewEncoder(w).Encode(&factions); err != nil {
+    if err := json.NewEncoder(w).Encode(&factions); err != nil {
+        panic(err)
+    }
+}
+
+func GetFaction(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+
+    id, _ := strconv.ParseUint(vars["id"], 10, 16)
+    faction := manager.GetFaction(uint16(id))
+    if faction == nil {
+        w.WriteHeader(http.StatusNotFound)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    if err := json.NewEncoder(w).Encode(&faction); err != nil {
         panic(err)
     }
 }

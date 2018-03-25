@@ -115,6 +115,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Faction",
+		"GET",
+		"/api/factions/{id}",
+		controller.GetFaction,
+		true,
+	},
+	Route{
 		"Get Faction Planet Choices",
 		"GET",
 		"/api/factions/{id}/planet-choices",
