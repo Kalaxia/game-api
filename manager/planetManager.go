@@ -5,6 +5,8 @@ import(
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
     "sync"
+    "errors"
+    "math"
 )
 
 func init() {
@@ -42,7 +44,7 @@ func GetPlanet(id uint16, playerId uint16) *model.Planet {
     if err := database.
         Connection.
         Model(&planet).
-        Column("planet.*", "Player", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
+        Column("planet.*", "Player", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
             panic(err)
@@ -126,4 +128,26 @@ func addResourcesToStorage(planet model.Planet, storage *model.Storage) {
         }
         storage.Resources[resource.Name] = newStock
     }
+}
+
+func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) error {
+    if settings.ServicesPoints +
+    settings.BuildingPoints +
+    settings.MilitaryPoints +
+    settings.ResearchPoints > calculatePopulationPoints(planet) {
+        return errors.New("Not enough population points")
+    }
+    planet.Settings.ServicesPoints = settings.ServicesPoints
+    planet.Settings.BuildingPoints = settings.BuildingPoints
+    planet.Settings.MilitaryPoints = settings.MilitaryPoints
+    planet.Settings.ResearchPoints = settings.ResearchPoints
+
+    if err := database.Connection.Update(planet.Settings); err != nil {
+        panic(err)
+    }
+    return nil
+}
+
+func calculatePopulationPoints(planet *model.Planet) uint8 {
+    return uint8(math.Ceil(float64(planet.Population / 100000)))
 }

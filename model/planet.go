@@ -15,6 +15,7 @@ type(
     Id uint16 `json:"id"`
     Name string `json:"name"`
     Type string `json:"type"`
+    Population uint `json:"population"`
     SystemId uint16 `json:"-"`
     System *System `json:"system"`
     OrbitId uint16 `json:"-"`
@@ -24,11 +25,23 @@ type(
     Resources []PlanetResource `json:"resources"`
     StorageId uint16 `json:"-"`
     Storage *Storage `json:"storage"`
+    SettingsId uint16 `json:"-"`
+    Settings *PlanetSettings `json:"settings"`
     Relations []DiplomaticRelation `json:"relations" sql:"-"`
     Buildings []Building `json:"buildings" sql:"-"`
     NbBuildings uint8 `json:"nb_buildings" sql:"-"`
     AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
   }
+  PlanetSettings struct {
+      TableName struct{} `json:"-" sql:"map__planet_settings"`
+
+      Id uint16 `json:"-"`
+      ServicesPoints uint8 `json:"services_points"`
+      BuildingPoints uint8 `json:"building_points"`
+      MilitaryPoints uint8 `json:"military_points"`
+      ResearchPoints uint8 `json:"research_points"`
+  }
+
   PlanetResource struct {
     TableName struct{} `json:"-" sql:"map__planet_resources"`
 
@@ -40,7 +53,7 @@ type(
   Storage struct {
       TableName struct{} `json:"-" sql:"map__planet_storage"`
 
-      Id uint16 `json:"id"`
+      Id uint16 `json:"-"`
       Capacity uint16 `json:"capacity"`
       Resources map[string]uint16 `json:"resources"`
   }
