@@ -1,3 +1,14 @@
+## [0.1.7] - 2018-03-30
+### Added
+- Diplomatic relations between factions
+- Planet demography and population points model
+- Population points update webservice
+- Faction retrieval webservice
+
+### Changed
+- Buildings can now be built only once per planet
+- Buildings now require building points instead of resources
+
 ## [0.1.6] - 2018-03-17
 ### Added
 - Hourly takss in scheduling
