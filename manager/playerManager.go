@@ -2,8 +2,8 @@ package manager
 
 import(
     "time"
-    "errors"
     "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
 )
 
@@ -40,7 +40,7 @@ func CreatePlayer(username string, server *model.Server) *model.Player {
         UpdatedAt: time.Now(),
     }
     if err := database.Connection.Insert(&player); err != nil {
-        panic(err)
+        panic(exception.NewHttpException(500, "Player could not be created", err))
     }
     return &player
 }
@@ -48,11 +48,11 @@ func CreatePlayer(username string, server *model.Server) *model.Player {
 func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     faction := GetFaction(factionId)
     if faction == nil {
-        panic(errors.New("faction not found"))
+        panic(exception.NewHttpException(404, "faction not found", nil))
     }
     planet := GetPlanet(planetId, uint16(player.Id))
     if planet == nil {
-        panic(errors.New("planet not found"))
+        panic(exception.NewHttpException(404, "planet not found", nil))
     }
     planet.PlayerId = player.Id
     planet.Player = player
@@ -61,9 +61,9 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     player.IsActive = true
     IncreasePlayerRelation(planet, player, 150)
     if err := database.Connection.Update(player); err != nil {
-        panic(err)
+        panic(exception.NewHttpException(500, "Player could not be updated", err))
     }
     if err := database.Connection.Update(planet); err != nil {
-        panic(err)
+        panic(exception.NewHttpException(500, "Planet could not be updated", err))
     }
 }

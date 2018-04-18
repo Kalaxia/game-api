@@ -1,11 +1,11 @@
 package manager
 
 import(
-    "errors"
     "time"
     "encoding/json"
     "io/ioutil"
     "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
 )
@@ -15,10 +15,10 @@ var buildingPlansData model.BuildingPlansData
 func init() {
     buildingsDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/buildings.json")
     if err != nil {
-        panic(err)
+        panic(exception.NewException("Can't open buildings configuration file", err))
     }
     if err := json.Unmarshal(buildingsDataJSON, &buildingPlansData); err != nil {
-        panic(err)
+        panic(exception.NewException("Can't read buildings configuration file", err))
     }
     scheduleConstructions()
 }
@@ -53,7 +53,7 @@ func getAvailableBuildings(buildings []model.Building) []model.BuildingPlan {
 func CreateBuilding(planet *model.Planet, name string) model.Building {
     buildingPlan, isset := buildingPlansData[name]
     if !isset {
-        panic(errors.New("unknown building plan"))
+        panic(exception.NewHttpException(400, "unknown building plan", nil))
     }
     building := model.Building{
         Name: name,
@@ -66,7 +66,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
         BuiltAt: time.Now().Add(time.Second * time.Duration(buildingPlan.Duration)),
     }
     if err := database.Connection.Insert(&building); err != nil {
-      panic(err)
+      panic(exception.NewHttpException(500, "Building could not be created", err))
     }
     utils.Scheduler.AddTask(buildingPlan.Duration, func() {
         FinishConstruction(building.Id)
@@ -80,11 +80,11 @@ func FinishConstruction(id uint32) {
         Id: id,
     }
     if err := database.Connection.Select(&building); err != nil {
-        panic(err)
+        panic(exception.NewException("Building not found", err))
     }
     building.Status = model.BuildingStatusOperational
     if err := database.Connection.Update(&building); err != nil {
-        panic(err)
+        panic(exception.NewException("Building could not be updated", err))
     }
 }
 

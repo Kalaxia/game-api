@@ -2,59 +2,38 @@ package controller
 
 import (
     "net/http"
-    "encoding/json"
-    "io"
-    "io/ioutil"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
+    "kalaxia-game-api/utils"
     "strconv"
 )
 
 func GetPlanet(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
     player := context.Get(r, "player").(*model.Player)
+    id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 
-    id, _ := strconv.ParseUint(vars["id"], 10, 16)
-    planet := manager.GetPlanet(uint16(id), player.Id)
-
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(&planet); err != nil {
-        panic(err)
-    }
+    utils.SendJsonResponse(w, 200, manager.GetPlanet(uint16(id), player.Id))
 }
 
 func UpdatePlanetSettings(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
     player := context.Get(r, "player").(*model.Player)
 
-    id, _ := strconv.ParseUint(vars["id"], 10, 16)
+    id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     planet := manager.GetPlanet(uint16(id), player.Id)
 
     if player.Id != planet.Player.Id {
-        w.WriteHeader(http.StatusForbidden)
-        return
+        panic(exception.NewHttpException(http.StatusForbidden, "", nil))
     }
-
-    var body []byte
-    var err error
-    if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
-        panic(err)
+    data := utils.DecodeJsonRequest(r)
+    settings := &model.PlanetSettings{
+        ServicesPoints: uint8(data["services_points"].(uint)),
+        BuildingPoints: uint8(data["building_points"].(uint)),
+        MilitaryPoints: uint8(data["military_points"].(uint)),
+        ResearchPoints: uint8(data["research_points"].(uint)),
     }
-    if err = r.Body.Close(); err != nil {
-        panic(err)
-    }
-    var settings model.PlanetSettings
-    if err = json.Unmarshal(body, &settings); err != nil {
-        panic(err)
-    }
-    if err = manager.UpdatePlanetSettings(planet, &settings); err != nil {
-        w.WriteHeader(http.StatusBadRequest)
-        return
-    }
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(&settings); err != nil {
-        panic(err)
-    }
+    manager.UpdatePlanetSettings(planet, settings)
+    utils.SendJsonResponse(w, 200, settings)
 }

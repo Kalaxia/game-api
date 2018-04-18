@@ -5,6 +5,7 @@ import(
     "io/ioutil"
     "math/rand"
     "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
 )
 
@@ -35,17 +36,17 @@ func GenerateMapSystems(gameMap *model.Map, gameFactions []*model.Faction) {
 func initializeConfiguration() {
     planetsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/planet_types.json")
     if err != nil {
-        panic(err)
+		panic(exception.NewException("Could not open planet types configuration file", err))
     }
     resourcesDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/resources.json")
     if err != nil {
-        panic(err)
+		panic(exception.NewException("Could not open resources configuration file", err))
     }
     if err := json.Unmarshal(planetsDataJSON, &planetsData); err != nil {
-        panic(err)
+		panic(exception.NewException("Could not read planet types configuration file", err))
     }
     if err := json.Unmarshal(resourcesDataJSON, &resourcesData); err != nil {
-        panic(err)
+		panic(exception.NewException("Could not read resources configuration file", err))
     }
 }
 
@@ -57,7 +58,7 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
         Y: y,
     }
     if err := database.Connection.Insert(system); err != nil {
-        panic(err)
+		panic(exception.NewException("System could not be created", err))
     }
     nbOrbits := rand.Intn(5) + MIN_PLANETS_PER_SYSTEM
     for i := 1; i <= nbOrbits; i++ {
@@ -68,7 +69,7 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
                 SystemId: system.Id,
             }
             if err := database.Connection.Insert(orbit); err != nil {
-                panic(err)
+        		panic(exception.NewException("Orbit could not be created", err))
             }
             system.Orbits = append(system.Orbits, *orbit)
             generatePlanet(system, orbit)
@@ -85,9 +86,10 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
         SystemId: system.Id,
         Orbit: orbit,
         OrbitId: orbit.Id,
+        Population: 2000000,
     }
     if err := database.Connection.Insert(planet); err != nil {
-        panic(err)
+		panic(exception.NewException("Planet could not be created", err))
     }
     planet.Resources = choosePlanetResources(planet, planetType)
     system.Planets = append(system.Planets, *planet)
@@ -134,7 +136,7 @@ func generatePlanetResource(resources *[]model.PlanetResource, name string, dens
         PlanetId: planet.Id,
     }
     if err := database.Connection.Insert(planetResource); err != nil {
-        panic(err)
+		panic(exception.NewException("Planet resource could not be created", err))
     }
     *resources = append(*resources, *planetResource)
 }
@@ -161,7 +163,7 @@ func generatePlanetRelation(planet *model.Planet, faction *model.Faction, relati
         Score: score,
     }
     if err := database.Connection.Insert(relation); err != nil {
-        panic(err)
+		panic(exception.NewException("Planet relation could not be created", err))
     }
     *relations = append(*relations, *relation)
 }

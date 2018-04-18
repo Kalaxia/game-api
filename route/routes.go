@@ -9,6 +9,7 @@ import (
 
 	"kalaxia-game-api/controller"
 	"kalaxia-game-api/handler"
+	"kalaxia-game-api/utils"
 )
 
 type(
@@ -26,10 +27,12 @@ func NewRouter() *mux.Router {
     router := mux.NewRouter().StrictSlash(true)
     for _, route := range routes {
 		router.Handle(route.Pattern, handlers.LoggingHandler(
-			os.Stdout, handler.JwtHandler(
-				handler.AuthorizationHandler(
-					http.HandlerFunc(route.HandlerFunc),
-				), route.IsProtected),
+			os.Stdout, utils.ErrorHandler(
+				handler.JwtHandler(
+					handler.AuthorizationHandler(
+						http.HandlerFunc(route.HandlerFunc),
+					), route.IsProtected),
+				),
 			),
 		).Methods(route.Method)
     }

@@ -1,8 +1,10 @@
 package manager
 
 import(
-  "kalaxia-game-api/database"
-  "kalaxia-game-api/model"
+
+    "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
+    "kalaxia-game-api/model"
 )
 
 func GetFaction(id uint16) *model.Faction {
@@ -51,7 +53,7 @@ func GetFactionPlanetChoices(factionId uint16) []*model.Planet {
             Model(&planet.Resources).
             Where("planet_id = ?", planet.Id).
             Select(); err != nil {
-                panic(err)
+                panic(exception.NewException("Planet resources not found", err))
         }
         planet.Relations = GetPlanetRelations(planet.Id)
     }
@@ -70,7 +72,7 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
             Server: server,
         }
         if err := database.Connection.Insert(faction); err != nil {
-            panic(err)
+            panic(exception.NewException("Server faction could not be created", err))
         }
         results = append(results, faction)
     }
@@ -92,7 +94,7 @@ func createFactionsRelations(factions []*model.Faction) {
                 State: model.RELATION_NEUTRAL,
             }
             if err := database.Connection.Insert(relation); err != nil {
-                panic(err)
+                panic(exception.NewException("Faction relation could not be created", err))
             }
             faction.Relations = append(faction.Relations, relation)
         }

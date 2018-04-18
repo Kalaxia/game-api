@@ -2,10 +2,10 @@ package manager
 
 import(
     "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
     "sync"
-    "errors"
     "math"
 )
 
@@ -21,7 +21,7 @@ func GetSystemPlanets(id uint16) []model.Planet {
         Column("planet.*", "Orbit", "Player", "Player.Faction").
         Where("planet.system_id = ?", id).
         Select(); err != nil {
-            panic(err)
+            panic(exception.NewHttpException(404, "System not found", err))
     }
     return planets
 }
@@ -34,7 +34,7 @@ func GetPlayerPlanets(id uint16) []model.Planet {
         Column("planet.*", "Resources").
         Where("planet.player_id = ?", id).
         Select(); err != nil {
-            panic(err)
+            panic(exception.NewHttpException(404, "Player not found", err))
     }
     return planets
 }
@@ -47,7 +47,7 @@ func GetPlanet(id uint16, playerId uint16) *model.Planet {
         Column("planet.*", "Player", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
-            panic(err)
+            return nil
     }
     if planet.Player != nil && playerId == planet.Player.Id {
         getPlanetOwnerData(&planet)
@@ -86,13 +86,14 @@ func getPlanets(offset int, limit int) []model.Planet {
         Limit(limit).
         Offset(offset).
         Select(); err != nil {
-            panic(err)
+            panic(exception.NewException("Planets could not be retrieved", err))
     }
     return planets
 }
 
 func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
     defer wg.Done()
+    defer utils.CatchException()
     if planet.Storage == nil {
         storage := &model.Storage{
             Capacity: 5000,
@@ -100,17 +101,17 @@ func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
         }
         addResourcesToStorage(planet, storage)
         if err := database.Connection.Insert(storage); err != nil {
-            utils.Log(err.Error())
+            panic(exception.NewException("Storage could not be created", err))
         }
         planet.Storage = storage
         planet.StorageId = storage.Id
         if err := database.Connection.Update(&planet); err != nil {
-            utils.Log(err.Error())
+            panic(exception.NewException("Planet storage could not be updated", err))
         }
     } else {
         addResourcesToStorage(planet, planet.Storage)
         if err := database.Connection.Update(planet.Storage); err != nil {
-            utils.Log(err.Error())
+            panic(exception.NewException("Planet storage could not be updated", err))
         }
     }
 }
@@ -135,7 +136,7 @@ func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) 
     settings.BuildingPoints +
     settings.MilitaryPoints +
     settings.ResearchPoints > calculatePopulationPoints(planet) {
-        return errors.New("Not enough population points")
+        panic(exception.NewHttpException(400, "Not enough population points", nil))
     }
     planet.Settings.ServicesPoints = settings.ServicesPoints
     planet.Settings.BuildingPoints = settings.BuildingPoints
@@ -143,7 +144,7 @@ func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) 
     planet.Settings.ResearchPoints = settings.ResearchPoints
 
     if err := database.Connection.Update(planet.Settings); err != nil {
-        panic(err)
+        panic(exception.NewException("Planet settings could not be updated", nil))
     }
     return nil
 }

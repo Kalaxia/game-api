@@ -5,7 +5,7 @@ import(
   "os"
   "net/http"
   "strings"
-
+  "kalaxia-game-api/exception"
   "github.com/dgrijalva/jwt-go"
   "github.com/gorilla/context"
 )
@@ -18,15 +18,11 @@ func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
         }
         authorizationHeader := req.Header.Get("authorization")
         if authorizationHeader == "" {
-          w.WriteHeader(http.StatusUnauthorized)
-          w.Write([]byte("An authorization header is required"))
-          return
+          panic(exception.NewHttpException(http.StatusUnauthorized, "An authorization header is required", nil))
         }
         bearerToken := strings.Split(authorizationHeader, " ")
         if len(bearerToken) != 2 {
-          w.WriteHeader(http.StatusBadRequest)
-          w.Write([]byte("The Authorization header format is invalid"))
-          return
+          panic(exception.NewHttpException(http.StatusBadRequest, "The Authorization header format is invalid", nil))
         }
         token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
             if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -35,15 +31,13 @@ func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
             return []byte(os.Getenv("JWT_SECRET")), nil
         })
         if err != nil {
-            panic(err)
-            return
+            panic(exception.NewHttpException(500, "JWT could not be created", nil))
         }
         if token.Valid {
             context.Set(req, "jwt", token.Claims)
             next(w, req)
         } else {
-            w.WriteHeader(http.StatusInternalServerError)
-            w.Write([]byte("Invalid authorization token"))
+            panic(exception.NewHttpException(http.StatusInternalServerError, "Invalid authorization token", nil))
         }
     })
 }

@@ -2,6 +2,7 @@ package manager
 
 import(
   "kalaxia-game-api/database"
+  "kalaxia-game-api/exception"
   "kalaxia-game-api/model"
 )
 
@@ -13,7 +14,7 @@ func GetPlanetRelations(planetId uint16) []model.DiplomaticRelation {
     Column("diplomatic_relation.*", "Faction", "Player", "Player.Faction").
     Where("diplomatic_relation.planet_id = ?", planetId).
     Select(); err != nil {
-    return nil
+    panic(exception.NewException("Planet not found", err))
   }
   return relations
 }
@@ -37,7 +38,7 @@ func IncreasePlayerRelation(planet *model.Planet, player *model.Player, score in
         Where("planet_id = ?", planet.Id).
         Where("player_id = ?", player.Id).
         Update(); err != nil {
-            panic(err)
+            panic(exception.NewException("Planet relation could not be updated", err))
     }
 }
 
@@ -50,6 +51,6 @@ func createPlayerRelation(planet *model.Planet, player *model.Player, score int)
         Score: score,
     }
     if err := database.Connection.Insert(relation); err != nil {
-        panic(err)
+        panic(exception.NewException("Planet relation could not be created", err))
     }
 }

@@ -1,16 +1,14 @@
 package controller
 
 import (
-    "fmt"
     "net/http"
-    "encoding/json"
-	"io"
-	"io/ioutil"
     "os"
     "time"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
     "kalaxia-game-api/security"
+    "kalaxia-game-api/utils"
     "github.com/dgrijalva/jwt-go"
 )
 
@@ -20,32 +18,17 @@ import (
  * In any case, a JWT is returned, used by the player to authenticate
  */
 func Authenticate(w http.ResponseWriter, r *http.Request) {
-    var body []byte
-    var err error
-    if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
-        panic(err)
-    }
-    if err = r.Body.Close(); err != nil {
-        panic(err)
-    }
-    jsonData := security.Decrypt(r.Header.Get("Application-Key"), r.Header.Get("Application-Iv"), body)
-    var data map[string]string
-    if err = json.Unmarshal(jsonData, &data); err != nil {
-        panic(err)
-    }
-    server := manager.GetServerBySignature(data["signature"])
+    data := utils.DecodeJsonRequest(r)
+    server := manager.GetServerBySignature(data["signature"].(string))
     if server == nil {
-        w.WriteHeader(http.StatusNotFound)
-        return
+        panic(exception.NewHttpException(404, "Server not found", nil))
     }
-    player := manager.GetPlayerByUsername(data["username"], server)
+    player := manager.GetPlayerByUsername(data["username"].(string), server)
     if player == nil {
-        player = manager.CreatePlayer(data["username"], server)
+        player = manager.CreatePlayer(data["username"].(string), server)
     }
     if server.Id != player.Server.Id {
-        w.WriteHeader(http.StatusBadRequest)
-        w.Write([]byte("Invalid server data"))
-        return
+        panic(exception.NewHttpException(http.StatusBadRequest, "Invalid server data", nil))
     }
     token := getNewJWT(player)
     cipherData, key, iv := security.Encrypt([]byte(token))
@@ -61,9 +44,9 @@ func getNewJWT(player *model.Player) string {
         "server_id": player.Server.Id,
         "created_at": time.Now().Format(time.RFC3339),
     })
-    tokenString, error := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-    if error != nil {
-        fmt.Println(error)
+    tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+    if err != nil {
+        panic(exception.NewHttpException(http.StatusInternalServerError, "JWT creation failed", err))
     }
     return tokenString
 }

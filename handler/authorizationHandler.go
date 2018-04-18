@@ -4,6 +4,7 @@ import(
     "net/http"
     "time"
     "kalaxia-game-api/manager"
+    "kalaxia-game-api/exception"
     "github.com/dgrijalva/jwt-go"
     "github.com/gorilla/context"
 )
@@ -19,16 +20,13 @@ func AuthorizationHandler(next http.HandlerFunc) http.HandlerFunc {
         data := claims.(jwt.MapClaims)
         createdAt, _ := time.Parse(time.RFC3339, data["created_at"].(string))
         if createdAt.Add(time.Hour * time.Duration(2)).Before(time.Now()) {
-            w.WriteHeader(http.StatusUnauthorized)
-            w.Write([]byte("Expired JWT"))
+            panic(exception.NewHttpException(http.StatusUnauthorized, "Expired JWT", nil))
         }
         player := manager.GetPlayer(uint16(data["id"].(float64)))
-        if player != nil {
-            context.Set(req, "player", player)
-            next(w, req)
-        } else {
-            w.WriteHeader(http.StatusInternalServerError)
-            w.Write([]byte("Unavailable player account"))
+        if player == nil {
+            panic(exception.NewHttpException(http.StatusInternalServerError, "Unavailable player account", nil))
         }
+        context.Set(req, "player", player)
+        next(w, req)
     })
 }

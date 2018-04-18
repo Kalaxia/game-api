@@ -1,7 +1,7 @@
 package utils
 
 import(
-    "errors"
+    "kalaxia-game-api/exception"
     "math/rand"
     "time"
 )
@@ -48,7 +48,7 @@ func (s *Scheduling) AddHourlyTask(callback func()) {
 func (s *Scheduling) RemoveTask(id string) {
     _, isset := s.Queue[id]
     if !isset {
-        panic(errors.New("unknown scheduler id"))
+        panic(exception.NewException("unknown scheduler id", nil))
     }
     delete(s.Queue, id)
 }
@@ -56,7 +56,7 @@ func (s *Scheduling) RemoveTask(id string) {
 func (s *Scheduling) CancelTask(id string) {
     task, isset := s.Queue[id]
     if !isset {
-        panic(errors.New("unknown scheduler id"))
+        panic(exception.NewHttpException(500, "unknown scheduler id", nil))
     }
     task.Timer.Stop()
     delete(s.Queue, id)

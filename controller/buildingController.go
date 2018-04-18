@@ -1,14 +1,13 @@
 package controller
 
 import (
-    "io"
-    "io/ioutil"
     "net/http"
-    "encoding/json"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
+    "kalaxia-game-api/utils"
     "strconv"
 )
 
@@ -20,26 +19,8 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     planet := manager.GetPlanet(uint16(id), player.Id)
 
     if uint16(id) != planet.Id {
-        w.WriteHeader(http.StatusForbidden)
-        return
+        panic(exception.NewHttpException(403, "Forbidden", nil))
     }
-
-    var body []byte
-    var err error
-    if body, err = ioutil.ReadAll(io.LimitReader(r.Body, 1048576)); err != nil {
-        panic(err)
-    }
-    if err = r.Body.Close(); err != nil {
-        panic(err)
-    }
-    var data map[string]string
-    if err = json.Unmarshal(body, &data); err != nil {
-        panic(err)
-    }
-    building := manager.CreateBuilding(planet, data["name"])
-
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(&building); err != nil {
-        panic(err)
-    }
+    data := utils.DecodeJsonRequest(r)
+    utils.SendJsonResponse(w, 201, manager.CreateBuilding(planet, data["name"].(string)))
 }
