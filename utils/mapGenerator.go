@@ -79,6 +79,7 @@ func generateSystem(gameMap *model.Map, x uint16, y uint16) {
 
 func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Planet {
     planetType := choosePlanetType(orbit)
+    settings := generateSettings()
     planet := &model.Planet{
         Name: "Régalion V",
         Type: planetType,
@@ -87,6 +88,8 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
         Orbit: orbit,
         OrbitId: orbit.Id,
         Population: 2000000,
+        Settings: settings,
+        SettingsId: settings.Id,
     }
     if err := database.Connection.Insert(planet); err != nil {
 		panic(exception.NewException("Planet could not be created", err))
@@ -95,6 +98,19 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
     system.Planets = append(system.Planets, *planet)
     choosePlanetRelations(planet)
     return planet
+}
+
+func generateSettings() *model.PlanetSettings {
+    settings := &model.PlanetSettings{
+        ServicesPoints: 5,
+        BuildingPoints: 5,
+        MilitaryPoints: 5,
+        ResearchPoints: 5,
+    }
+    if err := database.Connection.Insert(settings); err != nil {
+		panic(exception.NewException("Planet settings could not be created", err))
+    }
+    return settings
 }
 
 func choosePlanetType(orbit *model.SystemOrbit) string {
