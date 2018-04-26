@@ -2,20 +2,14 @@ package controller
 
 import (
     "net/http"
-    "encoding/json"
     "github.com/gorilla/mux"
     "kalaxia-game-api/manager"
+    "kalaxia-game-api/utils"
     "strconv"
 )
 
 func GetSystem(w http.ResponseWriter, r *http.Request) {
-    vars := mux.Vars(r)
+    id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 
-    id, _ := strconv.ParseUint(vars["id"], 10, 16)
-    system := manager.GetSystem(uint16(id))
-
-    w.Header().Set("Content-Type", "application/json")
-    if err := json.NewEncoder(w).Encode(&system); err != nil {
-        panic(err)
-    }
+    utils.SendJsonResponse(w, 200, manager.GetSystem(uint16(id)))
 }

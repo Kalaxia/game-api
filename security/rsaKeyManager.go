@@ -5,6 +5,7 @@ import (
 	"encoding/base64"
 	"encoding/pem"
 	"io/ioutil"
+	"kalaxia-game-api/exception"
 	"os"
 	"bytes"
 	"crypto/aes"
@@ -21,7 +22,7 @@ func InitializeRsaVault() bool {
 	// generate private key
 	privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Private key could not be generated", err))
 	}
 	// extract public key
 	publickey := &privatekey.PublicKey
@@ -44,15 +45,15 @@ func InitializeRsaVault() bool {
 func Encrypt(data []byte) ([]byte, string, string) {
 	portalPEM, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/portal_rsa.pub")
 	if (err != nil) {
-		panic(err)
+		panic(exception.NewException("Could not read portal public key", err))
 	}
 	block, _ := pem.Decode([]byte(portalPEM))
 	if block == nil {
-		panic("failed to parse PEM block containing the public key")
+		panic(exception.NewException("failed to parse PEM block containing the public key", nil))
 	}
 	publicKey, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		panic("failed to parse DER encoded public key: " + err.Error())
+		panic(exception.NewException("failed to parse DER encoded public key", err))
 	}
 	rsaPublicKey, _ := publicKey.(*rsa.PublicKey)
 
@@ -60,11 +61,11 @@ func Encrypt(data []byte) ([]byte, string, string) {
 
 	cipherKey, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, key)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Could not encrypt cipher key", err))
 	}
 	cipherIv, err := rsa.EncryptPKCS1v15(rand.Reader, rsaPublicKey, iv)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Could not encrypt cipher IV", err))
 	}
 	return data, base64.StdEncoding.EncodeToString(cipherKey), base64.StdEncoding.EncodeToString(cipherIv)
 }
@@ -74,11 +75,11 @@ func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
 	iv := make([]byte, 16)
 	_, err := rand.Read(key)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Could not generate random key", err))
 	}
 	_, err = rand.Read(iv)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Could not generate random IV", err))
 	}
 	// CBC mode works on blocks so plaintexts may need to be padded to the
 	// next whole block. If the block is incomplete, we add padding to it
@@ -87,7 +88,7 @@ func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
 	}
 	block, err := aes.NewCipher(key)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Could not create AES cipher", err))
 	}
 	mode := cipher.NewCBCEncrypter(block, iv)
 	mode.CryptBlocks(data, data)
@@ -98,31 +99,31 @@ func encryptAesPayload(data []byte) ([]byte, []byte, []byte) {
 func Decrypt(encryptedKey string, encryptedIv string, data []byte) []byte {
 	pkey, err := ioutil.ReadFile("/go/src/kalaxia-game-api/rsa_vault/private.key")
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Private key file could not be opened", err))
 	}
 	privatekey, err := x509.ParsePKCS1PrivateKey(pkey)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Private key could not be parsed", err))
 	}
 	key, err := base64.StdEncoding.DecodeString(encryptedKey)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Encrypted key could not be decoded", err))
 	}
 	iv, err := base64.StdEncoding.DecodeString(encryptedIv)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("Encrypted IV could not be decoded", err))
 	}
 	aesKey, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, key)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("AES key could not be decrypted", err))
 	}
 	aesIv, err := rsa.DecryptPKCS1v15(rand.Reader, privatekey, iv)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("AES IV could not be decrypted", err))
 	}
 	block, err := aes.NewCipher(aesKey)
 	if err != nil {
-		panic(err)
+		panic(exception.NewException("AES cipher could not be created", err))
 	}
 	mode := cipher.NewCBCDecrypter(block, aesIv)
 	// CryptBlocks can work in-place if the two arguments are the same.

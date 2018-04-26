@@ -2,6 +2,7 @@ package manager
 
 import(
   "kalaxia-game-api/database"
+  "kalaxia-game-api/exception"
   "kalaxia-game-api/model"
   "kalaxia-game-api/utils"
 )
@@ -13,7 +14,7 @@ func GenerateMap(server *model.Server, factions []*model.Faction, size uint16) *
         Size: size,
     }
     if err := database.Connection.Insert(gameMap); err != nil {
-        panic(err)
+        panic(exception.NewException("Map could not be created", err))
     }
     utils.GenerateMapSystems(gameMap, factions)
     return gameMap

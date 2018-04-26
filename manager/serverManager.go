@@ -2,6 +2,7 @@ package manager
 
 import(
     "kalaxia-game-api/database"
+    "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
 )
 
@@ -20,7 +21,7 @@ func CreateServer(name string, serverType string, signature string) *model.Serve
         Signature: signature,
     }
     if err := database.Connection.Insert(server); err != nil {
-        panic(err)
+        panic(exception.NewHttpException(500, "Server could not be created", err))
     }
     return server
 }

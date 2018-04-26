@@ -14,6 +14,5 @@ func main() {
 	} else {
 		fmt.Println("The RSA keys are already generated")
 	}
-  router := route.NewRouter()
-  log.Fatal(http.ListenAndServe(":80", router))
+  	log.Fatal(http.ListenAndServe(":80", route.NewRouter()))
 }
