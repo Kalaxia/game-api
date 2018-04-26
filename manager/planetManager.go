@@ -144,7 +144,7 @@ func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) 
     planet.Settings.ResearchPoints = settings.ResearchPoints
 
     if err := database.Connection.Update(planet.Settings); err != nil {
-        panic(exception.NewException("Planet settings could not be updated", nil))
+        panic(exception.NewException("Planet settings could not be updated", err))
     }
     return nil
 }

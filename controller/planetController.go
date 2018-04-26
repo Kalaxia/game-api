@@ -29,10 +29,10 @@ func UpdatePlanetSettings(w http.ResponseWriter, r *http.Request) {
     }
     data := utils.DecodeJsonRequest(r)
     settings := &model.PlanetSettings{
-        ServicesPoints: uint8(data["services_points"].(uint)),
-        BuildingPoints: uint8(data["building_points"].(uint)),
-        MilitaryPoints: uint8(data["military_points"].(uint)),
-        ResearchPoints: uint8(data["research_points"].(uint)),
+        ServicesPoints: uint8(data["services_points"].(float64)),
+        BuildingPoints: uint8(data["building_points"].(float64)),
+        MilitaryPoints: uint8(data["military_points"].(float64)),
+        ResearchPoints: uint8(data["research_points"].(float64)),
     }
     manager.UpdatePlanetSettings(planet, settings)
     utils.SendJsonResponse(w, 200, settings)
