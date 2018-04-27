@@ -1,0 +1,17 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+    id: integer
+    pseudo: string
+    faction:
+        description: "A faction object"
+        type: object
+        example: |
+            {
+                "id": 1,
+                "name": "Les noirs vengeurs",
+                "description": "Assoiffés de revanche, ces traqueurs ne lâchent jamais leur cible d'un pas"
+            }
+    is_active: boolean
+    created_at: string
+    updated_at: string

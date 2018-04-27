@@ -1,0 +1,12 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+    id: integer
+    coord_x: integer
+    coord_y: integer
+    planets:
+        type: object[]
+        items: !include ../planets/planet.raml
+    orbits:
+        type: object[]
+        items: !include orbit.raml

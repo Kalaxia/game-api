@@ -1,0 +1,150 @@
+#%RAML 1.0
+title: Kalaxia Game API
+baseUri: /api
+version: v0.1.7
+
+/auth:
+    post:
+        headers:
+            Application-Key:
+                description: "The crypted AES key protecting the data"
+            Application-Iv:
+                description: "The crypted AES iv protecting the data"
+        body:
+            application/json:
+                type: object
+                properties:
+                    username: string
+                    signature: string
+        responses:
+            200:
+                headers:
+                    Application-Key:
+                        description: "The crypted AES key protecting the data"
+                    Application-Iv:
+                        description: "The crypted AES iv protecting the data"
+                body:
+                    text/plain:
+                        description: "The crypted JWT token for the user session"
+                        type: string
+                        example: "sq5f4g65df565sq2d652fqsd2qs52d56qsd"
+
+/factions:
+    get:
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: object[]
+                        items: !include factions/faction.raml
+    /{id}:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: !include factions/faction.raml
+        /members:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include players/player.raml
+
+        /planet-choices:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include planets/planet.raml
+
+/map:
+    get:
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: !include maps/map.raml
+
+/players:
+    post:
+        body:
+            application/json:
+                type: object
+                properties:
+                    faction_id: integer
+                    planet_id: integer
+        responses:
+            204:
+            403:
+                description: "If the session account is already active"
+
+    /me:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: !include players/player.raml
+    /{id}:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: !include players/player.raml
+        /planets:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include planets/planet.raml
+
+/planets:
+    /{id}:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: !include planets/planet.raml
+        /settings:
+            put:
+                body:
+                    application/json:
+                        type: !include planets/settings.raml
+/servers:
+    post:
+        body:
+            application/json:
+                type: object
+                properties:
+                    name: string
+                    type: string
+                    signature: string
+                example: |
+                    {
+                        "name": "Preprod",
+                        "type": "multiplayer",
+                        "signature": "ds56g9ht45ff5gf6g5ez6dagh5"
+                    }
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: !include servers/server.raml
+
+/systems:
+    /{id}:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: !include maps/system.raml
