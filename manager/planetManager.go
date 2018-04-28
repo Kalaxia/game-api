@@ -82,7 +82,7 @@ func getPlanets(offset int, limit int) []model.Planet {
     if err := database.
         Connection.
         Model(&planets).
-        Column("planet.*", "Player", "Buildings", "Resources", "Storage").
+        Column("planet.*", "Player", "Buildings", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
         Limit(limit).
         Offset(offset).
         Select(); err != nil {
@@ -94,6 +94,12 @@ func getPlanets(offset int, limit int) []model.Planet {
 func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
     defer wg.Done()
     defer utils.CatchException()
+
+    calculatePlanetResourcesProduction(planet)
+    calculatePointsProduction(planet)
+}
+
+func calculatePlanetResourcesProduction(planet model.Planet) {
     if planet.Storage == nil {
         storage := &model.Storage{
             Capacity: 5000,
@@ -112,6 +118,18 @@ func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
         addResourcesToStorage(planet, planet.Storage)
         if err := database.Connection.Update(planet.Storage); err != nil {
             panic(exception.NewException("Planet storage could not be updated", err))
+        }
+    }
+}
+
+func calculatePointsProduction(planet model.Planet) {
+    buildingPoints := planet.Settings.BuildingPoints
+    for _, building := range planet.Buildings {
+        if buildingPoints <= 0 {
+            break
+        }
+        if building.Status == model.BuildingStatusConstructing {
+            buildingPoints -= spendBuildingPoints(building, buildingPoints)
         }
     }
 }
