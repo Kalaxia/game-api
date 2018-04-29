@@ -25,7 +25,9 @@ func init() {
 
 func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan) {
     buildings := make([]model.Building, 0)
-    _ = database.Connection.Model(&buildings).Where("planet_id = ?", planetId).Select()
+    if err := database.Connection.Model(&buildings).Where("building.planet_id = ?", planetId).Order("id").Column("building.*", "ConstructionState").Select(); err != nil {
+        panic(exception.NewHttpException(500, "Something nasty happened", err))
+    }
     return buildings, getAvailableBuildings(buildings)
 }
 
@@ -55,6 +57,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     if !isset {
         panic(exception.NewHttpException(400, "unknown building plan", nil))
     }
+    constructionState := createConstructionState(buildingPlan)
     building := model.Building{
         Name: name,
         Type: buildingPlan.Type,
@@ -63,28 +66,77 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
         Status: model.BuildingStatusConstructing,
         CreatedAt: time.Now(),
         UpdatedAt: time.Now(),
-        BuiltAt: time.Now().Add(time.Second * time.Duration(buildingPlan.Duration)),
+        ConstructionState: constructionState,
+        ConstructionStateId: constructionState.Id,
     }
     if err := database.Connection.Insert(&building); err != nil {
       panic(exception.NewHttpException(500, "Building could not be created", err))
     }
     utils.Scheduler.AddTask(buildingPlan.Duration, func() {
-        FinishConstruction(building.Id)
+        checkConstructionState(building.Id)
     })
     planet.AvailableBuildings = getAvailableBuildings(append(planet.Buildings, building))
     return building
 }
 
-func FinishConstruction(id uint32) {
-    building := model.Building{
-        Id: id,
+func createConstructionState(buildingPlan model.BuildingPlan) *model.ConstructionState {
+    points := uint8(0)
+    for _, price := range buildingPlan.Price {
+        if price.Type == "points" {
+            points = uint8(price.Amount)
+        }
     }
-    if err := database.Connection.Select(&building); err != nil {
+    constructionState := &model.ConstructionState {
+        Points: points,
+        CurrentPoints: 0,
+        BuiltAt: time.Now().Add(time.Second * time.Duration(buildingPlan.Duration)),
+    }
+    if err := database.Connection.Insert(constructionState); err != nil {
+      panic(exception.NewHttpException(500, "Construction State could not be created", err))
+    }
+    return constructionState
+}
+
+func spendBuildingPoints(building model.Building, buildingPoints uint8) uint8 {
+    missingPoints := building.ConstructionState.Points - building.ConstructionState.CurrentPoints
+    if missingPoints == 0 {
+        return buildingPoints
+    }
+    if missingPoints > buildingPoints {
+        building.ConstructionState.CurrentPoints += buildingPoints
+        buildingPoints = 0
+    } else {
+        building.ConstructionState.CurrentPoints += missingPoints
+        buildingPoints -= missingPoints
+    }
+    if err := database.Connection.Update(building.ConstructionState); err != nil {
+        panic(exception.NewException("Construction State could not be updated", err))
+    }
+    if building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
+        checkConstructionState(building.Id)
+    }
+    return buildingPoints
+}
+
+func checkConstructionState(id uint32) {
+    building := &model.Building{}
+    if err := database.Connection.Model(building).Column("building.*", "ConstructionState").Where("building.id = ?", id).Select(); err != nil {
         panic(exception.NewException("Building not found", err))
     }
+    if time.Now().After(building.ConstructionState.BuiltAt) &&
+       building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
+        finishConstruction(building)
+    }
+}
+
+func finishConstruction(building *model.Building) {
     building.Status = model.BuildingStatusOperational
-    if err := database.Connection.Update(&building); err != nil {
+    building.ConstructionStateId = 0
+    if err := database.Connection.Update(building); err != nil {
         panic(exception.NewException("Building could not be updated", err))
+    }
+    if err := database.Connection.Delete(building.ConstructionState); err != nil {
+        panic(exception.NewException("Construction State could not be removed", err))
     }
 }
 
@@ -98,10 +150,10 @@ func scheduleConstructions() {
             endedAt := building.CreatedAt.Add(time.Second * time.Duration(plan.Duration))
             if endedAt.After(now) {
                 utils.Scheduler.AddTask(uint(time.Until(endedAt).Seconds()), func() {
-                    FinishConstruction(building.Id)
+                    checkConstructionState(building.Id)
                 })
             } else {
-                FinishConstruction(building.Id)
+                checkConstructionState(building.Id)
             }
         }(building)
     }
@@ -112,7 +164,7 @@ func getConstructingBuildings() []model.Building {
     _ = database.
         Connection.
         Model(&buildings).
-        Where("status = ?", model.BuildingStatusConstructing).
-        Select()
+        Where("building.status = ?", model.BuildingStatusConstructing).
+        Select("building.*", "building.ConstructionState")
     return buildings
 }
