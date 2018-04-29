@@ -25,7 +25,7 @@ func init() {
 
 func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan) {
     buildings := make([]model.Building, 0)
-    if err := database.Connection.Model(&buildings).Where("building.planet_id = ?", planetId).Column("building.*", "ConstructionState").Select(); err != nil {
+    if err := database.Connection.Model(&buildings).Where("building.planet_id = ?", planetId).Order("id").Column("building.*", "ConstructionState").Select(); err != nil {
         panic(exception.NewHttpException(500, "Something nasty happened", err))
     }
     return buildings, getAvailableBuildings(buildings)
@@ -131,6 +131,7 @@ func checkConstructionState(id uint32) {
 
 func finishConstruction(building *model.Building) {
     building.Status = model.BuildingStatusOperational
+    building.ConstructionStateId = 0
     if err := database.Connection.Update(building); err != nil {
         panic(exception.NewException("Building could not be updated", err))
     }

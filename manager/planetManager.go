@@ -57,7 +57,7 @@ func GetPlanet(id uint16, playerId uint16) *model.Planet {
 
 func getPlanetOwnerData(planet *model.Planet) {
     planet.Buildings, planet.AvailableBuildings = GetPlanetBuildings(planet.Id)
-    planet.NbBuildings = 3
+    planet.NbBuildings = 7
 }
 
 func CalculatePlanetsProductions() {
@@ -129,7 +129,7 @@ func calculatePointsProduction(planet model.Planet) {
             break
         }
         if building.Status == model.BuildingStatusConstructing {
-            buildingPoints -= spendBuildingPoints(building, buildingPoints)
+            buildingPoints = spendBuildingPoints(building, buildingPoints)
         }
     }
 }
