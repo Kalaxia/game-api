@@ -1,2 +1,5 @@
+.env
+kalaxia.env
 rsa_vault/*
 !/rsa_vault/.gitkeep
+volumes/*
