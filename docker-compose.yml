@@ -1,14 +1,56 @@
 ---
-version: '3'
+version: '3.5'
 networks:
-    api:
+    game:
+        name: kalaxia_game
         driver: bridge
 
 services:
     api:
-        container_name: kalaxia_game_api
+        container_name: kalaxia_api
         build: .
+        image: kalaxia/api
+        env_file:
+            - kalaxia.env
         networks:
-            - api
+            - game
         volumes:
-            - ".:/go/src/kalaxia-game-api"
+            - "./rsa_vault:/go/src/kalaxia-game-api/rsa_vault"
+
+    nginx:
+        container_name: kalaxia_nginx
+        build: build/docker/nginx
+        networks:
+            - game
+        depends_on:
+            - api
+        env_file:
+            - kalaxia.env
+        volumes:
+            - "./volumes/app:/srv/app"
+            # nginx
+            - "./volumes/ssl:/etc/ssl"
+            - "./volumes/logs/nginx:/var/log/nginx"
+        ports:
+            - "${NGINX_HTTPS_PORT}:443"
+            - "${NGINX_PORT}:80"
+
+    postgresql:
+        container_name: kalaxia_postgresql
+        image: postgres:9.6
+        env_file:
+            - kalaxia.env
+        networks:
+            - game
+        ports:
+            - "5432"
+
+    phpgpadmin:
+        container_name: kalaxia_phpgpadmin
+        image: zhajor/docker-phppgadmin
+        env_file:
+            - kalaxia.env
+        networks:
+            - game
+        ports:
+            - "9090:80"
