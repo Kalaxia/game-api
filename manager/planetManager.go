@@ -47,7 +47,7 @@ func GetPlanet(id uint16, playerId uint16) *model.Planet {
         Column("planet.*", "Player", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
-            return nil
+            panic(exception.NewHttpException(404, "Planet not found", err))
     }
     if planet.Player != nil && playerId == planet.Player.Id {
         getPlanetOwnerData(&planet)
