@@ -26,8 +26,8 @@ type(
         Id uint `json:"id"`
         Name string `json:"name"`
         Type string `json:"type"`
-        FrameSlug string `json:"-"`
-        Frame *ShipFrame `json:"frame" sql:"-"`
+        FrameSlug string `json:"frame"`
+        Frame *ShipFrame `json:"-" sql:"-"`
         Slots []ShipSlot `json:"slots" sql:"-"`
         Stats map[string]uint16 `json:"stats"`
     }

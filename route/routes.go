@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/handlers"
 
+	"kalaxia-game-api/controller/ship"
 	"kalaxia-game-api/controller"
 	"kalaxia-game-api/handler"
 	"kalaxia-game-api/utils"
@@ -59,6 +60,20 @@ var routes = Routes{
 		"GET",
 		"/api/me",
 		controller.GetCurrentPlayer,
+		true,
+	},
+	Route{
+		"Get Current Player Ship Models",
+		"GET",
+		"/api/me/ship-models",
+		shipController.GetPlayerShipModels,
+		true,
+	},
+	Route{
+		"Create Current Player Ship Model",
+		"POST",
+		"/api/me/ship-models",
+		shipController.CreateShipModel,
 		true,
 	},
 	Route{
