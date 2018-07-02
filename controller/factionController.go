@@ -4,7 +4,6 @@ import (
     "net/http"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
-    "kalaxia-game-api/exception"
     "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
@@ -19,10 +18,8 @@ func GetFactions(w http.ResponseWriter, r *http.Request) {
 
 func GetFaction(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    if faction := manager.GetFaction(uint16(id)); faction != nil {
-        utils.SendJsonResponse(w, 200, faction)
-    }
-    panic(exception.NewHttpException(404, "Faction not found", nil))
+
+    utils.SendJsonResponse(w, 200, manager.GetFaction(uint16(id)))
 }
 
 func GetFactionPlanetChoices(w http.ResponseWriter, r *http.Request) {

@@ -1,7 +1,6 @@
 package manager
 
 import(
-
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
@@ -15,17 +14,17 @@ func GetFaction(id uint16) *model.Faction {
     Column("faction.*", "Relations", "Relations.OtherFaction").
     Where("faction.id = ?", id).
     Select(); err != nil {
-    return nil
+    panic(exception.NewHttpException(404, "Faction not found", nil))
   }
   return faction
 }
 
 func GetServerFactions(serverId uint16) []*model.Faction {
-  factions := make([]*model.Faction, 0)
-  if err := database.Connection.Model(&factions).Where("server_id = ?", serverId).Select(); err != nil {
-    return nil
-  }
-  return factions
+    factions := make([]*model.Faction, 0)
+    if err := database.Connection.Model(&factions).Where("server_id = ?", serverId).Select(); err != nil {
+        panic(exception.NewHttpException(404, "Server not found", nil))
+    }
+    return factions
 }
 
 func GetFactionPlanetChoices(factionId uint16) []*model.Planet {
