@@ -48,11 +48,13 @@ func createShipModelSlots(shipModel *model.ShipModel) {
     }
 }
 
-func GetShipPlayerModels(playerId uint16) []model.ShipPlayerModel {
-    var models []model.ShipPlayerModel
-    if err := database.Connection.Model(&models).Column("Model").Where("player_id = ?", playerId).Select(); err != nil {
+func GetShipPlayerModels(playerId uint16) []*model.ShipModel {
+    var shipPlayerModels []model.ShipPlayerModel
+    if err := database.Connection.Model(&shipPlayerModels).Column("Model").Where("player_id = ?", playerId).Select(); err != nil {
         panic(exception.NewHttpException(500, "Could not retrieve player ship models", err))
     }
+    models := make([]*model.ShipModel, len(shipPlayerModels))
+    for i, spm := range shipPlayerModels { models[i] = spm.Model }
     return models
 }
 
