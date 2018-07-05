@@ -4,6 +4,8 @@ import(
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
+
+	"github.com/gosimple/slug"
 )
 
 func GetFaction(id uint16) *model.Faction {
@@ -65,8 +67,10 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
         data := factionData.(map[string]interface{})
         faction := &model.Faction{
             Name: data["name"].(string),
+            Slug: slug.Make(data["name"].(string)),
             Description: data["description"].(string),
             Color: data["color"].(string),
+            Banner: data["banner"].(string),
             ServerId: server.Id,
             Server: server,
         }
