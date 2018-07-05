@@ -63,7 +63,7 @@ func getShipModelInfo(frame model.ShipFrame, slots []model.ShipSlot) (string, ma
     stats := make(map[string]uint16, 0)
     for stat, value := range frame.Stats {
         if storedStat, ok := stats[stat]; ok {
-            storedStat += value
+            stats[stat] = storedStat + value
         } else {
             stats[stat] = value
         }
@@ -76,14 +76,14 @@ func getShipModelInfo(frame model.ShipFrame, slots []model.ShipSlot) (string, ma
         }
         for score, amount := range module.Scores {
             if storedScore, ok := scores[score]; ok {
-                storedScore += amount
+                scores[score] = storedScore + amount
             } else {
                 scores[score] = amount
             }
         }
-        for stat, value := range module.Stats {
+        for stat, value := range module.ShipStats {
             if storedStat, ok := stats[stat]; ok {
-                storedStat += value
+                stats[stat] = storedStat + value
             } else {
                 stats[stat] = value
             }
@@ -112,7 +112,9 @@ func getSlotsData(data map[string]interface{}) []model.ShipSlot {
         slot := slotData.(map[string]interface{})
         slots[i] = model.ShipSlot{
             Position: uint8(slot["position"].(float64)),
-            ModuleSlug: slot["module"].(string),
+        }
+        if slot["module"] != nil {
+            slots[i].ModuleSlug = slot["module"].(string)
         }
     }
     return slots

@@ -37,6 +37,7 @@ type(
         Shape string `json:"shape"`
         Size string `json:"size"`
         Stats map[string]uint16 `json:"stats"`
+        ShipStats map[string]uint16 `json:"ship_stats"`
         Scores map[string]uint8 `json:"scores"`
         Price []Price `json:"price"`
     }
