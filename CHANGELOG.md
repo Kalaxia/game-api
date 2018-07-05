@@ -1,3 +1,12 @@
+## [0.1.8] - 2018-07-05
+### Added
+- Exception catchers
+- Planet settings model and update service
+- Building construction with building points
+- Ship, ship models and fleet model structures with migration scripts
+- Player ship models retrieval webservice
+- Ship model creation webservice
+
 ## [0.1.7] - 2018-03-30
 ### Added
 - Diplomatic relations between factions
