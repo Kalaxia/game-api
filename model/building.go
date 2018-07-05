@@ -40,9 +40,4 @@ type(
       CurrentPoints uint8 `json:"current_points" sql:",notnull"`
       Points uint8 `json:"points"`
   }
-
-  Price struct {
-    Type string `json:"type"`
-    Amount uint `json:"amount"`
-  }
 )

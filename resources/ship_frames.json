@@ -1,0 +1,100 @@
+{
+    "racer": {
+        "slug": "racer",
+        "slots": [
+            {
+                "shape": "square",
+                "size": "small"
+            },
+            {
+                "shape": "square",
+                "size": "medium"
+            },
+            {
+                "shape": "square",
+                "size": "small"
+            }
+        ],
+        "stats": {
+            "armor": 45
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 3
+            },
+            {
+                "type": "credits",
+                "amount": 125
+            }
+        ]
+    },
+    "corvette": {
+        "slug": "corvette",
+        "slots": [
+            {
+                "shape": "square",
+                "size": "small"
+            },
+            {
+                "shape": "circle",
+                "size": "small"
+            },
+            {
+                "shape": "square",
+                "size": "medium"
+            }
+        ],
+        "stats": {
+            "armor": 60
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 5
+            },
+            {
+                "type": "credits",
+                "amount": 200
+            }
+        ]
+    },
+    "frigate": {
+        "slug": "frigate",
+        "slots": [
+            {
+                "shape": "square",
+                "size": "medium"
+            },
+            {
+                "shape": "rectangle",
+                "size": "medium"
+            },
+            {
+                "shape": "rectangle",
+                "size": "small"
+            },
+            {
+                "shape": "circle",
+                "size": "small"
+            },
+            {
+                "shape": "circle",
+                "size": "small"
+            }
+        ],
+        "stats": {
+            "armor": 80
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 8
+            },
+            {
+                "type": "credits",
+                "amount": 350
+            }
+        ]
+    }
+}
