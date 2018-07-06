@@ -7,8 +7,10 @@ version: v0.1.7
     post:
         headers:
             Application-Key:
+                type: string
                 description: "The crypted AES key protecting the data"
             Application-Iv:
+                type: string
                 description: "The crypted AES iv protecting the data"
         body:
             application/json:

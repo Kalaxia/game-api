@@ -2,12 +2,12 @@
 version: '3.5'
 networks:
     game:
-        name: ${USER}_game
+        name: ${NETWORK_USER}_game
         driver: bridge
 
 services:
     api:
-        container_name: ${USER}_api
+        container_name: ${NETWORK_USER}_api
         build: .
         image: ${API_DOCKER_IMAGE}
         env_file:
@@ -18,7 +18,7 @@ services:
             - "./rsa_vault:/go/src/kalaxia-game-api/rsa_vault"
 
     nginx:
-        container_name: ${USER}_nginx
+        container_name: ${NETWORK_USER}_nginx
         build: build/docker/nginx
         networks:
             - game
@@ -36,7 +36,7 @@ services:
             - "${NGINX_PORT}:80"
 
     postgresql:
-        container_name: ${USER}_postgresql
+        container_name: ${NETWORK_USER}_postgresql
         image: postgres:9.6
         env_file:
             - kalaxia.env
