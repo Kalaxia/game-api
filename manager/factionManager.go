@@ -16,7 +16,7 @@ func GetFaction(id uint16) *model.Faction {
     Column("faction.*", "Relations", "Relations.OtherFaction").
     Where("faction.id = ?", id).
     Select(); err != nil {
-    panic(exception.NewHttpException(404, "Faction not found", nil))
+    panic(exception.NewHttpException(404, "Faction not found", err))
   }
   return faction
 }
@@ -24,7 +24,7 @@ func GetFaction(id uint16) *model.Faction {
 func GetServerFactions(serverId uint16) []*model.Faction {
     factions := make([]*model.Faction, 0)
     if err := database.Connection.Model(&factions).Where("server_id = ?", serverId).Select(); err != nil {
-        panic(exception.NewHttpException(404, "Server not found", nil))
+        panic(exception.NewHttpException(404, "Server not found", err))
     }
     return factions
 }
