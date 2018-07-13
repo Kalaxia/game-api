@@ -31,7 +31,7 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
     data := utils.DecodeJsonRequest(r)
     player := context.Get(r, "player").(*model.Player)
     if player.IsActive == true {
-        panic(exception.NewHttpException(http.StatusForbidden, "", nil))
+        panic(exception.NewHttpException(http.StatusForbidden, "Player account is already active", nil))
     }
     factionId, _ := strconv.ParseUint(data["faction_id"].(string), 10, 16)
     planetId, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16)
