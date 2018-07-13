@@ -1,3 +1,11 @@
+## [0.1.9] - 2018-07-13
+### Added
+- Factions banner
+- Configuration for test servers
+
+### Fixed
+- Error messages when faction select query fails
+
 ## [0.1.8] - 2018-07-05
 ### Added
 - Exception catchers
