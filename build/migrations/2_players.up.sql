@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS players(
   server_id int references servers(id) NOT NULL,
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL,
+  money int,
   CONSTRAINT username_constraint UNIQUE (username, server_id),
   CONSTRAINT pseudo_constraint UNIQUE (pseudo, server_id)
 );
