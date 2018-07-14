@@ -70,15 +70,10 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     }
 }
 
-func IncreasePlayerWallet(player *model.Player, amount  uint64){
-    int newAmount =player.Wallet + amount
+func IncreasePlayerWallet(player *model.Player, amount  uint64) {
     if newAmount := player.Wallet + amount; newAmount>=0 {
       player.Wallet = newAmount
-    }
-    else {
+    } else {
       player.Wallet = 0;
-    }
-    if err := database.Connection.Update(player); err != nil {
-        panic(exception.NewHttpException(500, "Player could not be updated", err))
     }
 }

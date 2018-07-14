@@ -14,7 +14,7 @@ type(
     FactionId uint16 `json:"-"`
     Faction *Faction `json:"faction"`
     IsActive bool `json:"is_active"`
-    Wallet uint64 `json:"wallet"`
+    Wallet uint32 `json:"wallet"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
   }
