@@ -58,6 +58,19 @@ func GetShipPlayerModels(playerId uint16) []*model.ShipModel {
     return models
 }
 
+func GetShipModel(playerId uint16, modelId uint) *model.ShipModel {
+    var shipPlayerModel model.ShipPlayerModel
+    if err := database.Connection.Model(&shipPlayerModel).Column("Model").Where("player_id = ?", playerId).Where("Model.id = ?", modelId).Select(); err != nil {
+        panic(exception.NewHttpException(404, "Player ship model not found", err))
+    }
+    slots := make([]model.ShipSlot, 0)
+    if err := database.Connection.Model(&slots).Where("model_id = ?", shipPlayerModel.Model.Id).Select(); err != nil {
+        panic(exception.NewHttpException(500, "Could not retrieve ship slots", err))
+    }
+    shipPlayerModel.Model.Slots = slots
+    return shipPlayerModel.Model
+}
+
 func getShipModelInfo(frame model.ShipFrame, slots []model.ShipSlot) (string, map[string]uint16) {
     scores := make(map[string]uint8, 0)
     stats := make(map[string]uint16, 0)

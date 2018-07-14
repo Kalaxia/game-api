@@ -70,6 +70,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Current Player Ship Model",
+		"GET",
+		"/api/me/ship-models/{id}",
+		shipController.GetShipModel,
+		true,
+	},
+	Route{
 		"Create Current Player Ship Model",
 		"POST",
 		"/api/me/ship-models",
