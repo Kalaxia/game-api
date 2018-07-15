@@ -1,0 +1,1 @@
+ALTER TABLE players ADD wallet int NOT NULL DEFAULT 0;
