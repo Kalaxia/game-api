@@ -7,6 +7,10 @@ import(
     "kalaxia-game-api/model"
 )
 
+func init() {
+    utils.Scheduler.AddHourlyTask(func () { CalculatePlayersWage() })
+}
+
 func GetPlayer(id uint16) *model.Player {
     var player model.Player
     if err := database.Connection.Model(&player).Column("player.*", "Faction").Where("player.id = ?", id).Select(); err != nil {
@@ -82,4 +86,49 @@ func IncreasePlayerWallet(player *model.Player, amount  uint32) {
     } else {
       player.Wallet = 0;
     }
+}
+func CalculatePlayerWage(player model.Player, wg $sync.WaitGroup) {
+  defer wg.Done()
+  defer utils.CatchException()
+  baseWage := 50
+  serviceWageRatio := 0.5
+  wage := 0
+  planets := GetPlayerPlanets(player.Id)
+  for index, value := range planets {
+    wage += baseWage + value.PlanetSettings.ServicesPoints*serviceWageRatio
+  }
+  IncreasePlayerWallet(&player, wage)
+  if err := database.Connection.Update(player); err != nil {
+      panic(exception.NewHttpException(500, "Player could not be updated", err))
+  }
+}
+
+func CalculatePlayersWage() {
+    nbPlayers, _ := database.Connection.Model(&model.Player{}).Count()
+    limit := 20
+
+    var wg sync.WaitGroup
+
+    for offset := 0; offset < nbPlayers; offset +=limit {
+        players := getPlayers(offset, limit)
+
+        for _, player := range players {
+          wg.Add(1)
+          go CalculatePlayerWage(player, &wg)
+        }
+        wg.Wait()
+    }
+}
+
+func getPlayers(offset int, limit int) []model.Player {
+    var players []model.Players
+    if err := database.Connection.
+        Model($players).
+        Column("").
+        Limit(limit).
+        Offset(offset).
+        Select(); err != nil {
+            panic(exception.NewException("Players could not be rertrieved", err))
+    }
+    return players
 }
