@@ -45,6 +45,12 @@ func CreatePlayer(username string, server *model.Server) *model.Player {
     return &player
 }
 
+func UpdatePlayer(player *model.Player) {
+    if err := database.Connection.Update(player); err != nil {
+        panic(exception.NewException("Player could not be updated", err))
+    }
+}
+
 func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     faction := GetFaction(factionId)
     if faction == nil {
@@ -70,8 +76,8 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     }
 }
 
-func IncreasePlayerWallet(player *model.Player, amount  uint64) {
-    if newAmount := player.Wallet + amount; newAmount>=0 {
+func IncreasePlayerWallet(player *model.Player, amount  uint32) {
+    if newAmount := player.Wallet + amount; newAmount >= 0 {
       player.Wallet = newAmount
     } else {
       player.Wallet = 0;

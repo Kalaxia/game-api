@@ -98,6 +98,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Launch Ship Construction",
+		"POST",
+		"/api/planets/{id}/ships",
+		shipController.CreateShip,
+		true,
+	},
+	Route{
 		"Register Player",
 		"POST",
 		"/api/players",

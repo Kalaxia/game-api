@@ -21,7 +21,7 @@ func GetShipModel(w http.ResponseWriter, r *http.Request) {
 
     utils.SendJsonResponse(w, 200, shipManager.GetShipModel(
         context.Get(r, "player").(*model.Player).Id,
-        uint(id),
+        uint32(id),
     ))
 }
 

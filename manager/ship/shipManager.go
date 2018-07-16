@@ -1,11 +1,12 @@
 package shipManager
 
 import(
-    //"time"
+    "time"
     "encoding/json"
     "io/ioutil"
-    //"kalaxia-game-api/database"
+    "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
+    "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
 )
@@ -29,31 +30,69 @@ func init() {
     if err := json.Unmarshal(modulesDataJSON, &modulesData); err != nil {
         panic(exception.NewException("Can't read ship modules configuration file", err))
     }
-    //scheduleShipBuildings()
+    utils.Scheduler.AddHourlyTask(func () { checkShipBuildingState() })
 }
 
-// func CreateShip(player *model.Player, planet *model.Planet, data map[string]interface{}) *model.Ship {
-//
-//
-//
-//     ship := &model.Ship{
-//         Name: data["name"].(string),
-//         Model: &model.ShipModel{
-//
-//         },
-//         CreatedAt: time.Now(),
-//     }
-//
-//     if err := database.Connection.Insert(&ship); err != nil {
-//       panic(exception.NewHttpException(500, "Ship could not be created", err))
-//     }
-//     utils.Scheduler.AddTask(buildingDuration, func() {
-//         checkShipBuildingState(ship.Id)
-//     })
-//     return building
-//     return ship
-// }
-//
-// func checkShipBuildingState(uint id) {
-//
-// }
+func CreateShip(player *model.Player, planet *model.Planet, data map[string]interface{}) *model.Ship {
+    modelId := uint32(data["model"].(map[string]interface{})["id"].(float64))
+    quantity := uint8(data["quantity"].(float64))
+    shipModel := GetShipModel(player.Id, modelId)
+
+    points := PayShipCost(shipModel.Price, &player.Wallet, planet.Storage, quantity)
+
+    constructionState := model.ShipConstructionState{
+        CurrentPoints: 0,
+        Points: points,
+    }
+    ship := model.Ship{
+        ModelId: shipModel.Id,
+        Model: shipModel,
+        HangarId: planet.Id,
+        Hangar: planet,
+        CreatedAt: time.Now(),
+    }
+    for i := uint8(0); i < quantity; i++ {
+        cs:= constructionState
+        s := ship
+        if err := database.Connection.Insert(&cs); err != nil {
+            panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
+        }
+        s.ConstructionState = &cs
+        s.ConstructionStateId = cs.Id
+        if err := database.Connection.Insert(&s); err != nil {
+            panic(exception.NewHttpException(500, "Ship could not be created", err))
+        }
+    }
+    manager.UpdatePlanetStorage(planet)
+    manager.UpdatePlayer(player)
+    return &ship
+}
+
+func PayShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
+    var points uint8
+    for _, price := range prices {
+        switch price.Type {
+            case model.PRICE_TYPE_MONEY:
+                if price.Amount > *wallet {
+                    panic(exception.NewHttpException(400, "Not enough money", nil))
+                }
+                *wallet -= price.Amount
+                break
+            case model.PRICE_TYPE_POINTS:
+                points = uint8(price.Amount)
+                break
+            case model.PRICE_TYPE_RESOURCE:
+                amount := uint16(price.Amount) * uint16(quantity)
+                if !storage.HasResource(price.Resource, amount) {
+                    panic(exception.NewHttpException(400, "Not enough resources", nil))
+                }
+                storage.SubstractResource(price.Resource, amount)
+                break
+        }
+    }
+    return points
+}
+
+func checkShipBuildingState() {
+
+}
