@@ -62,3 +62,16 @@ type(
   }
   PlanetsData map[string]PlanetData
 )
+
+func (s *Storage) HasResource(resource string, quantity uint16) bool {
+    if rQuantity, ok := s.Resources[resource]; !ok || rQuantity < quantity {
+        return false
+    }
+    return true
+}
+
+func (s *Storage) SubstractResource(resource string, quantity uint16) {
+    if _, ok := s.Resources[resource]; ok {
+        s.Resources[resource] -= quantity
+    }
+}

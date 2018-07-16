@@ -149,7 +149,7 @@ func addResourcesToStorage(planet model.Planet, storage *model.Storage) {
     }
 }
 
-func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) error {
+func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) {
     if settings.ServicesPoints +
     settings.BuildingPoints +
     settings.MilitaryPoints +
@@ -164,7 +164,12 @@ func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) 
     if err := database.Connection.Update(planet.Settings); err != nil {
         panic(exception.NewException("Planet settings could not be updated", err))
     }
-    return nil
+}
+
+func UpdatePlanetStorage(planet *model.Planet) {
+    if err := database.Connection.Update(planet.Storage); err != nil {
+        panic(exception.NewException("Planet storage could not be updated", err))
+    }
 }
 
 func calculatePopulationPoints(planet *model.Planet) uint8 {
