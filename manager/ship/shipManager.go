@@ -1,11 +1,12 @@
 package shipManager
 
 import(
-    //"time"
+    "time"
     "encoding/json"
     "io/ioutil"
-    //"kalaxia-game-api/database"
+    "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
+    "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
 )
@@ -29,31 +30,140 @@ func init() {
     if err := json.Unmarshal(modulesDataJSON, &modulesData); err != nil {
         panic(exception.NewException("Can't read ship modules configuration file", err))
     }
-    //scheduleShipBuildings()
+    utils.Scheduler.AddHourlyTask(func () { checkShipsBuildingState() })
 }
 
-// func CreateShip(player *model.Player, planet *model.Planet, data map[string]interface{}) *model.Ship {
-//
-//
-//
-//     ship := &model.Ship{
-//         Name: data["name"].(string),
-//         Model: &model.ShipModel{
-//
-//         },
-//         CreatedAt: time.Now(),
-//     }
-//
-//     if err := database.Connection.Insert(&ship); err != nil {
-//       panic(exception.NewHttpException(500, "Ship could not be created", err))
-//     }
-//     utils.Scheduler.AddTask(buildingDuration, func() {
-//         checkShipBuildingState(ship.Id)
-//     })
-//     return building
-//     return ship
-// }
-//
-// func checkShipBuildingState(uint id) {
-//
-// }
+func CreateShip(player *model.Player, planet *model.Planet, data map[string]interface{}) *model.Ship {
+    modelId := uint32(data["model"].(map[string]interface{})["id"].(float64))
+    quantity := uint8(data["quantity"].(float64))
+    shipModel := GetShipModel(player.Id, modelId)
+
+    points := payShipCost(shipModel.Price, &player.Wallet, planet.Storage, quantity)
+
+    constructionState := model.ShipConstructionState{
+        CurrentPoints: 0,
+        Points: points,
+    }
+    ship := model.Ship{
+        ModelId: shipModel.Id,
+        Model: shipModel,
+        HangarId: planet.Id,
+        Hangar: planet,
+        CreatedAt: time.Now(),
+    }
+    for i := uint8(0); i < quantity; i++ {
+        cs:= constructionState
+        s := ship
+        if err := database.Connection.Insert(&cs); err != nil {
+            panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
+        }
+        s.ConstructionState = &cs
+        s.ConstructionStateId = cs.Id
+        if err := database.Connection.Insert(&s); err != nil {
+            panic(exception.NewHttpException(500, "Ship could not be created", err))
+        }
+    }
+    manager.UpdatePlanetStorage(planet)
+    manager.UpdatePlayer(player)
+    return &ship
+}
+
+func GetConstructingShips(planet *model.Planet) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ConstructionState", "Model").
+        Where("construction_state_id IS NOT NULL").
+        Where("hangar_id = ?", planet.Id).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
+func GetHangarShips(planet *model.Planet) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column( "Model").
+        Where("construction_state_id IS NULL").
+        Where("hangar_id = ?", planet.Id).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
+func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
+    var points uint8
+    for _, price := range prices {
+        switch price.Type {
+            case model.PRICE_TYPE_MONEY:
+                if price.Amount > *wallet {
+                    panic(exception.NewHttpException(400, "Not enough money", nil))
+                }
+                *wallet -= price.Amount
+                break
+            case model.PRICE_TYPE_POINTS:
+                points = uint8(price.Amount)
+                break
+            case model.PRICE_TYPE_RESOURCE:
+                amount := uint16(price.Amount) * uint16(quantity)
+                if !storage.HasResource(price.Resource, amount) {
+                    panic(exception.NewHttpException(400, "Not enough resources", nil))
+                }
+                storage.SubstractResource(price.Resource, amount)
+                break
+        }
+    }
+    return points
+}
+
+func checkShipsBuildingState() {
+    defer utils.CatchException()
+
+    var ships []model.Ship
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ship.*", "ConstructionState", "Hangar", "Hangar.Settings").
+        Order("ship.hangar_id ASC").
+        Where("ship.construction_state_id IS NOT NULL").
+        Select(); err != nil {
+        panic(exception.NewException("Constructing ships could not be retrieved", err))
+    }
+    currentPlanetId := uint16(0)
+    remainingPoints := uint8(0)
+    for _, ship := range ships {
+        if currentPlanetId != ship.HangarId {
+            currentPlanetId = ship.HangarId
+            remainingPoints = ship.Hangar.Settings.MilitaryPoints
+        }
+        if remainingPoints < 1 {
+            continue
+        }
+        neededPoints := ship.ConstructionState.Points - ship.ConstructionState.CurrentPoints
+        if neededPoints <= remainingPoints {
+            remainingPoints -= neededPoints
+            finishShipConstruction(&ship)
+        } else {
+            ship.ConstructionState.CurrentPoints += remainingPoints
+            if err := database.Connection.Update(ship.ConstructionState); err != nil {
+                panic(exception.NewException("Ship Construction State could not be udpated", err))
+            }
+            remainingPoints = 0
+        }
+    }
+}
+
+func finishShipConstruction(ship *model.Ship) {
+    ship.ConstructionStateId = 0
+    if err := database.Connection.Update(ship); err != nil {
+        panic(exception.NewException("Ship could not be updated", err))
+    }
+    if err := database.Connection.Delete(ship.ConstructionState); err != nil {
+        panic(exception.NewException("Ship Construction State could not be removed", err))
+    }
+}

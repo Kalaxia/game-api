@@ -70,6 +70,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Current Player Ship Model",
+		"GET",
+		"/api/me/ship-models/{id}",
+		shipController.GetShipModel,
+		true,
+	},
+	Route{
 		"Create Current Player Ship Model",
 		"POST",
 		"/api/me/ship-models",
@@ -88,6 +95,27 @@ var routes = Routes{
 		"POST",
 		"/api/planets/{id}/buildings",
 		controller.CreateBuilding,
+		true,
+	},
+	Route{
+		"Launch Ship Construction",
+		"POST",
+		"/api/planets/{id}/ships",
+		shipController.CreateShip,
+		true,
+	},
+	Route{
+		"Get Hangar Ships",
+		"GET",
+		"/api/planets/{id}/ships",
+		shipController.GetHangarShips,
+		true,
+	},
+	Route{
+		"Get Constructing Ships",
+		"GET",
+		"/api/planets/{id}/ships/constructing",
+		shipController.GetConstructingShips,
 		true,
 	},
 	Route{

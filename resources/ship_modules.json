@@ -24,7 +24,7 @@
             },
             {
                 "type": "resource",
-                "resource": "resource.a",
+                "resource": "resources.e",
                 "amount": 50
             }
         ]
@@ -53,12 +53,12 @@
             },
             {
                 "type": "resource",
-                "resource": "resource.b",
+                "resource": "resources.b",
                 "amount": 75
             },
             {
                 "type": "resource",
-                "resource": "resource.c",
+                "resource": "resources.c",
                 "amount": 60
             }
         ]
@@ -87,12 +87,12 @@
             },
             {
                 "type": "resource",
-                "resource": "resource.b",
+                "resource": "resources.b",
                 "amount": 60
             },
             {
                 "type": "resource",
-                "resource": "resource.d",
+                "resource": "resources.a",
                 "amount": 40
             }
         ]
@@ -123,7 +123,7 @@
             },
             {
                 "type": "resource",
-                "resource": "resource.a",
+                "resource": "resources.e",
                 "amount": 50
             }
         ]
@@ -154,17 +154,17 @@
             },
             {
                 "type": "resource",
-                "resource": "resource.a",
+                "resource": "resources.a",
                 "amount": 60
             },
             {
                 "type": "resource",
-                "resource": "resource.e",
+                "resource": "resources.e",
                 "amount": 50
             },
             {
                 "type": "resource",
-                "resource": "resource.f",
+                "resource": "resources.f",
                 "amount": 50
             }
         ]

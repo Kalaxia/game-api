@@ -14,6 +14,13 @@ const ModuleTypeShield = "shield"
 const ModuleTypeCargo = "cargo"
 
 type(
+    ShipConstructionState struct {
+        TableName struct{} `json:"-" sql:"ship__construction_states"`
+
+        Id uint32 `json:"id"`
+        CurrentPoints uint8 `json:"current_points" sql:",notnull"`
+        Points uint8 `json:"points"`
+    }
     ShipFrame struct {
         Slug string `json:"slug"`
         Slots []ShipSlotPlan `json:"slots"`
@@ -30,6 +37,7 @@ type(
         Frame *ShipFrame `json:"-" sql:"-"`
         Slots []ShipSlot `json:"slots" sql:"-"`
         Stats map[string]uint16 `json:"stats"`
+        Price []Price `json:"price"`
     }
     ShipModule struct {
         Slug string `json:"slug"`
@@ -60,14 +68,16 @@ type(
     Ship struct {
         TableName struct{} `json:"-" sql:"ship__ships"`
 
+        Id uint32 `json:"id"`
         HangarId uint16 `json:"-"`
         Hangar *Planet `json:"hangar"`
-        FleetId uint16 `json:"-"`
-        Fleet *Fleet `json:"fleet"`
+        // FleetId uint16 `json:"-"`
+        // Fleet *Fleet `json:"fleet"`
         ModelId uint `json:"-"`
         Model *ShipModel `json:"model"`
         CreatedAt time.Time `json:"created_at"`
-        BuiltAt time.Time `json:"updated_at"`
+        ConstructionStateId uint32 `json:"-"`
+        ConstructionState *ShipConstructionState `json:"construction_state"`
     }
     ShipSlot struct {
         TableName struct{} `json:"-" sql:"ship__slots"`
@@ -84,3 +94,35 @@ type(
         Size string `json:"size"`
     }
 )
+
+func (sm *ShipModel) CalculatePrices() {
+    sm.Price = make([]Price, 0)
+    pricesMap := make(map[string]Price, 0)
+    addPrice := func(price Price) {
+        var priceType string
+        if price.Type != PRICE_TYPE_RESOURCE {
+            priceType = price.Type
+        } else {
+            priceType = price.Resource
+        }
+        if p, ok := pricesMap[priceType]; ok {
+            p.Amount += price.Amount
+        } else {
+            pricesMap[priceType] = price
+        }
+    }
+    for _, price := range sm.Frame.Price {
+        addPrice(price)
+    }
+    for _, slot := range sm.Slots {
+        if slot.Module == nil {
+            continue
+        }
+        for _, price := range slot.Module.Price {
+            addPrice(price)
+        }
+    }
+    for _, price := range pricesMap {
+        sm.Price = append(sm.Price, price)
+    }
+}
