@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS ship__ships(
     id SERIAL PRIMARY KEY,
     model_id INT NOT NULL REFERENCES ship__models(id),
     hangar_id INT REFERENCES map__planets(id),
-    construction_state_id INT NOT NULL REFERENCES ship__construction_states(id),
+    construction_state_id INT REFERENCES ship__construction_states(id),
     created_at timestamptz NOT NULL
 );
 
