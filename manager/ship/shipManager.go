@@ -82,6 +82,20 @@ func GetConstructingShips(planet *model.Planet) []model.Ship {
     return ships
 }
 
+func GetHangarShips(planet *model.Planet) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column( "Model").
+        Where("construction_state_id IS NULL").
+        Where("hangar_id = ?", planet.Id).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
 func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
     var points uint8
     for _, price := range prices {

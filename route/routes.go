@@ -105,6 +105,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Hangar Ships",
+		"GET",
+		"/api/planets/{id}/ships",
+		shipController.GetHangarShips,
+		true,
+	},
+	Route{
 		"Get Constructing Ships",
 		"GET",
 		"/api/planets/{id}/ships/constructing",
