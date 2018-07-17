@@ -68,6 +68,7 @@ type(
     Ship struct {
         TableName struct{} `json:"-" sql:"ship__ships"`
 
+        Id uint32 `json:"id"`
         HangarId uint16 `json:"-"`
         Hangar *Planet `json:"hangar"`
         // FleetId uint16 `json:"-"`

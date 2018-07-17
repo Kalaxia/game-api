@@ -30,7 +30,7 @@ func init() {
     if err := json.Unmarshal(modulesDataJSON, &modulesData); err != nil {
         panic(exception.NewException("Can't read ship modules configuration file", err))
     }
-    utils.Scheduler.AddHourlyTask(func () { checkShipBuildingState() })
+    utils.Scheduler.AddHourlyTask(func () { checkShipsBuildingState() })
 }
 
 func CreateShip(player *model.Player, planet *model.Planet, data map[string]interface{}) *model.Ship {
@@ -38,7 +38,7 @@ func CreateShip(player *model.Player, planet *model.Planet, data map[string]inte
     quantity := uint8(data["quantity"].(float64))
     shipModel := GetShipModel(player.Id, modelId)
 
-    points := PayShipCost(shipModel.Price, &player.Wallet, planet.Storage, quantity)
+    points := payShipCost(shipModel.Price, &player.Wallet, planet.Storage, quantity)
 
     constructionState := model.ShipConstructionState{
         CurrentPoints: 0,
@@ -68,7 +68,21 @@ func CreateShip(player *model.Player, planet *model.Planet, data map[string]inte
     return &ship
 }
 
-func PayShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
+func GetConstructingShips(planet *model.Planet) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ConstructionState", "Model").
+        Where("construction_state_id IS NOT NULL").
+        Where("hangar_id = ?", planet.Id).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
+func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
     var points uint8
     for _, price := range prices {
         switch price.Type {
@@ -93,6 +107,49 @@ func PayShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, q
     return points
 }
 
-func checkShipBuildingState() {
+func checkShipsBuildingState() {
+    defer utils.CatchException()
 
+    var ships []model.Ship
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ship.*", "ConstructionState", "Hangar", "Hangar.Settings").
+        Order("ship.hangar_id ASC").
+        Where("ship.construction_state_id IS NOT NULL").
+        Select(); err != nil {
+        panic(exception.NewException("Constructing ships could not be retrieved", err))
+    }
+    currentPlanetId := uint16(0)
+    remainingPoints := uint8(0)
+    for _, ship := range ships {
+        if currentPlanetId != ship.HangarId {
+            currentPlanetId = ship.HangarId
+            remainingPoints = ship.Hangar.Settings.MilitaryPoints
+        }
+        if remainingPoints < 1 {
+            continue
+        }
+        neededPoints := ship.ConstructionState.Points - ship.ConstructionState.CurrentPoints
+        if neededPoints <= remainingPoints {
+            remainingPoints -= neededPoints
+            finishShipConstruction(&ship)
+        } else {
+            ship.ConstructionState.CurrentPoints += remainingPoints
+            if err := database.Connection.Update(ship.ConstructionState); err != nil {
+                panic(exception.NewException("Ship Construction State could not be udpated", err))
+            }
+            remainingPoints = 0
+        }
+    }
+}
+
+func finishShipConstruction(ship *model.Ship) {
+    ship.ConstructionStateId = 0
+    if err := database.Connection.Update(ship); err != nil {
+        panic(exception.NewException("Ship could not be updated", err))
+    }
+    if err := database.Connection.Delete(ship.ConstructionState); err != nil {
+        panic(exception.NewException("Ship Construction State could not be removed", err))
+    }
 }
