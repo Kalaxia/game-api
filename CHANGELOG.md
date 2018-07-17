@@ -1,3 +1,16 @@
+## [0.1.10] - 2018-07-17
+### Added
+- Player wallet
+- Ship model price stored at its creation
+- Player ship models retrieval
+- Planet hangar ships retrieval
+- Ship creation
+- Ship construction with military points
+- Storage resources spending
+
+### Fixed
+- Price diff between the front and the API
+
 ## [0.1.9] - 2018-07-13
 ### Added
 - Factions banner
