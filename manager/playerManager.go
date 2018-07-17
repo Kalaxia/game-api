@@ -5,6 +5,9 @@ import(
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
+    "kalaxia-game-api/utils"
+    "sync"
+    "math"
 )
 
 func init() {
@@ -70,7 +73,7 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     player.Faction = faction
     player.IsActive = true
     player.Wallet = 0
-    IncreasePlayerWallet(player, 40000)
+    UpdatePlayerWallet(player, 40000)
     IncreasePlayerRelation(planet, player, 150)
     if err := database.Connection.Update(player); err != nil {
         panic(exception.NewHttpException(500, "Player could not be updated", err))
@@ -80,26 +83,27 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     }
 }
 
-func IncreasePlayerWallet(player *model.Player, amount  uint32) {
-    if newAmount := player.Wallet + amount; newAmount >= 0 {
-      player.Wallet = newAmount
+func UpdatePlayerWallet(player *model.Player, amount  int32) {
+    if newAmount := int32(player.Wallet) + amount; newAmount >= 0 {
+      player.Wallet = uint32(newAmount)
     } else {
       player.Wallet = 0;
     }
 }
-func CalculatePlayerWage(player model.Player, wg $sync.WaitGroup) {
+
+func CalculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
   defer wg.Done()
   defer utils.CatchException()
-  baseWage := 50
-  serviceWageRatio := 0.5
-  wage := 0
+  baseWage := int32(50)
+  serviceWageRatio := float64(0.5)
+  wage := int32(0)
   planets := GetPlayerPlanets(player.Id)
-  for index, value := range planets {
-    wage += baseWage + value.PlanetSettings.ServicesPoints*serviceWageRatio
+  for _, value := range planets {
+    wage += baseWage +  int32( math.Round( float64(value.Settings.ServicesPoints) * serviceWageRatio))
   }
-  IncreasePlayerWallet(&player, wage)
+  UpdatePlayerWallet(&player, wage)
   if err := database.Connection.Update(player); err != nil {
-      panic(exception.NewHttpException(500, "Player could not be updated", err))
+      panic(err)
   }
 }
 
@@ -121,10 +125,9 @@ func CalculatePlayersWage() {
 }
 
 func getPlayers(offset int, limit int) []model.Player {
-    var players []model.Players
+    players := make([]model.Player, 0)
     if err := database.Connection.
-        Model($players).
-        Column("").
+        Model(&players).
         Limit(limit).
         Offset(offset).
         Select(); err != nil {
