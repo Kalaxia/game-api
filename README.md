@@ -27,6 +27,33 @@ To use the created image with the Docker Compose repository, you must tag it:
 docker tag kalaxiagameapi_api kalaxia/api
 ```
 
+Build Docker Image with Travis
+-----------------------------
+
+As Docker doesn't work with some members of the team, we made a test server to run the environment.
+
+To build and push the API image, it is necessary to fork this repository and then configure Travis to build it.
+
+You will need to install Ruby and Gem on your computer.
+
+Then, you need to copy the Travis configuration file:
+
+```
+cp .travis.dist.yml .travis.yml
+```
+
+Then you must set the different environment variables needed for the build:
+
+```
+travis env set DOCKER_IMAGE your-docker-hub-repository
+travis encrypt DOCKER_USERNAME=your-docker-hub-username --add env.matrix
+travis encrypt DOCKER_PASSWORD=your-docker-hub-password --add env.matrix
+```
+
+Travis will log in Docker Hub and push the built image on your repository.
+
+Then you will be able to pull the image on the test server :) !
+
 Database migrations
 -------------------
 
