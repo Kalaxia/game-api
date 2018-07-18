@@ -17,9 +17,9 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 	 *
 	 */
 	// string of the request route wich give the fleet id
-	const ID_FLEET string = "idFleet"  //< you migth want to change that
+	const ID_FLEET string = "idFleet"  //< you might want to change that
 	// string of the request route wich give the ship id
-	const ID_SHIP string = "idShip"  //< you migth want to change that
+	const ID_SHIP string = "idShip"  //< you might want to change that
 	
 	player := context.Get(r, "player").(*model.Player)
 	
@@ -42,7 +42,7 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
     }
 	if !isShipInTheCorrectLocation{ // the fleet is on the right plante
-		panic(exception.NewHttpException(400, "wrong location", nil));
+		panic(exception.NewHttpException(400, "Wrong location", nil));
 	}
 	
 	manager.AssignShipToFleet(ship,fleet)
@@ -79,5 +79,5 @@ func RemoveShipFormFleet(w http.ResponseWriter, r *http.Request){
 	}
 	manager.AssignShipToHangard(ship)
 	
-    utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return
+    utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
 }

@@ -2,7 +2,6 @@ package model
 
 import(
     "time"
-    "kalaxia-game-api/model"
 )
 
 const BuildingStatusConstructing = "constructing"

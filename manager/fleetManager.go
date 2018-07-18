@@ -25,7 +25,7 @@ func GetFleet(uid uint16, playerId uint16) *model.Fleet{
         Column("fleet.*", "Player", "Location", "Journey").
         Where("planet.id = ?", id).
         Select(); err != nil {
-            panic(exception.NewHttpException(404, "Planet not found", err))
+            panic(exception.NewHttpException(404, "Fleet not found", err))
     }
     if fleet.Player != nil && playerId == fleet.Player.Id {
         getShipOwnerData(&fleet)
@@ -51,6 +51,8 @@ func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 		ship.IsShipInFleet = true;
 		ship.Fleet = fleet;
 		ship.FleetId=fleet.Id;
+		
+		return nil;
 	}
 	
 }
@@ -59,4 +61,6 @@ func AssignShipToHangard (ship *model.Ship){
 	ship.IsShipInFleet = false;
 	ship.Hangar = ship.Fleet.Location;
 	ship.HangarId = ship.Hangar.Id;
+	
+	return nil;
 }

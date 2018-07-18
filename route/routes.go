@@ -105,6 +105,20 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Assign Ship To Fleet",
+		"POST",
+		"/api/fleetId/{idFleet}/shipId/{idFleet}",
+		controller.AssignShipToFleet,
+		true,
+	},
+	Route{
+		"Remove Ship Form Fleet",
+		"POST",
+		"/api/fleetId/{idFleet}",
+		controller.RemoveShipFormFleet,
+		true,
+	},
+	Route{
 		"Get Hangar Ships",
 		"GET",
 		"/api/planets/{id}/ships",
