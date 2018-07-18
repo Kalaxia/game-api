@@ -54,7 +54,7 @@ func CreatePlayer(username string, server *model.Server) *model.Player {
 
 func UpdatePlayer(player *model.Player) {
     if err := database.Connection.Update(player); err != nil {
-        panic(exception.NewException("Player could not be updated", err))
+        panic(exception.NewException("Player could not be updated ", err))
     }
 }
 
@@ -102,9 +102,7 @@ func CalculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
     wage += baseWage +  int32( math.Round( float64(value.Settings.ServicesPoints) * serviceWageRatio))
   }
   UpdatePlayerWallet(&player, wage)
-  if err := database.Connection.Update(player); err != nil {
-      panic(err)
-  }
+  UpdatePlayer(&player)
 }
 
 func CalculatePlayersWage() {
@@ -117,8 +115,10 @@ func CalculatePlayersWage() {
         players := getPlayers(offset, limit)
 
         for _, player := range players {
-          wg.Add(1)
-          go CalculatePlayerWage(player, &wg)
+          if player.IsActive==true {
+            wg.Add(1)
+            go CalculatePlayerWage(player, &wg)
+          }
         }
         wg.Wait()
     }
@@ -131,7 +131,7 @@ func getPlayers(offset int, limit int) []model.Player {
         Limit(limit).
         Offset(offset).
         Select(); err != nil {
-            panic(exception.NewException("Players could not be rertrieved", err))
+            panic(exception.NewException("Players could not be retrieved", err))
     }
     return players
 }
