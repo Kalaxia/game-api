@@ -6,7 +6,6 @@ import(
     "io/ioutil"
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
-    "kalaxia-game-api/manager"
     "kalaxia-game-api/model"
 )
 
