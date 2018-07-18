@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+        "time"
+)
 
 const ShipTypeFighter = "fighter"
 const ShipTypeBomber = "bomber"
@@ -71,13 +73,15 @@ type(
         Id uint32 `json:"id"`
         HangarId uint16 `json:"-"`
         Hangar *Planet `json:"hangar"`
-        // FleetId uint16 `json:"-"`
-        // Fleet *Fleet `json:"fleet"`
+        FleetId uint16 `json:"-"`
+        Fleet *Fleet `json:"fleet"`
+        IsShipInFleet bool `json:"isShipInFleet"` //< this is used when a ship is try to be removed form the hangard in order to avoid teleporting ships
         ModelId uint `json:"-"`
         Model *ShipModel `json:"model"`
         CreatedAt time.Time `json:"created_at"`
         ConstructionStateId uint32 `json:"-"`
         ConstructionState *ShipConstructionState `json:"construction_state"`
+        
     }
     ShipSlot struct {
         TableName struct{} `json:"-" sql:"ship__slots"`
@@ -126,3 +130,4 @@ func (sm *ShipModel) CalculatePrices() {
         sm.Price = append(sm.Price, price)
     }
 }
+

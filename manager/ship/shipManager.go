@@ -167,3 +167,30 @@ func finishShipConstruction(ship *model.Ship) {
         panic(exception.NewException("Ship Construction State could not be removed", err))
     }
 }
+
+func GetShip(id uint16, playerId uint16) *model.Ship{
+    /**
+     * Get Ship data ( may return incomplete information).
+     *  If the player is the owner of the ship all the data are send
+     * 
+     */
+    // TODO Someone pls check if
+    
+    var ship model.Ship
+    if err := database.
+        Connection.
+        Model(&ship).
+        Column("ship.*", "Id", "Hangar", "IsShipInFleet", "Fleet", "Model").
+        Where("planet.id = ?", id).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    if ship.Hangar.Player != nil && playerId == ship.Hangar.Player.Id {
+        getShipOwnerData(&ship)
+    }
+    return &ship
+}
+
+func getShipOwnerData(ship *model.ship) {
+   // TODO 
+}
