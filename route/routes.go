@@ -107,14 +107,14 @@ var routes = Routes{
 	Route{
 		"Assign Ship To Fleet",
 		"POST",
-		"/api/fleetId/{idFleet}/shipId/{idFleet}",
+		"/api/fleetId/{idFleet}/shipId/{idFleet}/assign",
 		controller.AssignShipToFleet,
 		true,
 	},
 	Route{
 		"Remove Ship Form Fleet",
 		"POST",
-		"/api/fleetId/{idFleet}",
+		"/api/fleetId/{idFleet}/remove",
 		controller.RemoveShipFormFleet,
 		true,
 	},

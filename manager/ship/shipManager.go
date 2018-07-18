@@ -191,6 +191,6 @@ func GetShip(id uint16, playerId uint16) *model.Ship{
     return &ship
 }
 
-func getShipOwnerData(ship *model.ship) {
+func getShipOwnerData(ship *model.Ship) {
    // TODO 
 }

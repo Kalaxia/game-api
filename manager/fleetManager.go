@@ -1,15 +1,12 @@
 package manager
 
 import(
-    "time"
-    "encoding/json"
-    "io/ioutil"
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
 )
 
-func GetFleet(uid uint16, playerId uint16) *model.Fleet{
+func GetFleet(id uint16, playerId uint16) *model.Fleet{
 	/**
      * Get Fleet data ( may return incomplete information).
      *  If the player is the owner of the ship all the data are send
@@ -33,7 +30,7 @@ func GetFleet(uid uint16, playerId uint16) *model.Fleet{
 }
 
 
-func getPlanetFleetData(fleet *model.Fleet) {
+func getShipOwnerData(fleet *model.Fleet) {
    // TODO 
 }
 
@@ -41,7 +38,7 @@ func getPlanetFleetData(fleet *model.Fleet) {
 func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 	
 	isShipInTheCorrectLocation := ( ! ship.IsShipInFleet && fleet.Location.Id !=  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
-	  (ship.IsShipInFleet && ship.fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
+	  (ship.IsShipInFleet && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
 	
 	if !isShipInTheCorrectLocation{
 		panic(exception.NewHttpException(400, "wrong location", nil));
@@ -51,7 +48,6 @@ func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 		ship.Fleet = fleet;
 		ship.FleetId=fleet.Id;
 		
-		return nil;
 	}
 	
 }
@@ -60,6 +56,4 @@ func AssignShipToHangard (ship *model.Ship){
 	ship.IsShipInFleet = false;
 	ship.Hangar = ship.Fleet.Location;
 	ship.HangarId = ship.Hangar.Id;
-	
-	return nil;
 }
