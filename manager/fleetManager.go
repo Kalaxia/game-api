@@ -57,3 +57,33 @@ func AssignShipToHangard (ship *model.Ship){
 	ship.Hangar = ship.Fleet.Location;
 	ship.HangarId = ship.Hangar.Id;
 }
+
+
+func CreatFleet (player *model.Player, planet *model.Planet) *model.Fleet{
+	
+	/*
+	fleetJourney := model.FleetJourney{ // TODO ?
+		
+	}
+	
+	if err := database.Connection.Insert(&fleetJourney); err != nil {
+      panic(exception.NewHttpException(500, "Fleet Journey could not be created", err))
+    }
+    */
+	
+	//fleetJourney = nil;
+	
+	fleet := model.Fleet{
+        Player : player,
+        Location : planet,
+        //Journey : &fleetJourney,
+	};
+	
+	if err := database.Connection.Insert(&fleet); err != nil {
+      panic(exception.NewHttpException(500, "Fleet could not be created", err))
+    }
+	
+	
+	
+	return &fleet;
+}

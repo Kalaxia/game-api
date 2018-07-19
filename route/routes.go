@@ -119,6 +119,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Creat Fleet",
+		"POST",
+		"/api/planets/{id}/creatfleet",
+		controller.CreatFleet,
+		true,
+	},
+	Route{
 		"Get Hangar Ships",
 		"GET",
 		"/api/planets/{id}/ships",

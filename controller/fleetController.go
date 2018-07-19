@@ -81,3 +81,21 @@ func RemoveShipFormFleet(w http.ResponseWriter, r *http.Request){
 	
     utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
 }
+
+func CreatFleet(w http.ResponseWriter, r *http.Request){
+	player := context.Get(r, "player").(*model.Player)
+	
+	// string of the request route wich give the planet id
+	const ID_PLANET string = "id"  //< you migth want to change that
+	
+	idPlanet, _ := strconv.ParseUint(mux.Vars(r)[ID_PLANET], 10, 16)
+	
+	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
+	
+	if (player.Id != planet.Player.Id) { // the player does not own the planet
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+	} else{
+		utils.SendJsonResponse(w, 200,manager.CreatFleet(player,planet));
+	}
+	
+}
