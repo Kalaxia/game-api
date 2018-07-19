@@ -18,15 +18,12 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 	 * treat the http request to assign a ship in  a fleet
 	 *
 	 */
-	// string of the request route wich give the fleet id
-	const ID_FLEET string = "idFleet"  //< you might want to change that
-	// string of the request route wich give the ship id
-	const ID_SHIP string = "idShip"  //< you might want to change that
+	
 	
 	player := context.Get(r, "player").(*model.Player)
 	
-	idFleet, _ := strconv.ParseUint(mux.Vars(r)[ID_FLEET], 10, 16);
-	idShip, _ := strconv.ParseUint(mux.Vars(r)[ID_SHIP], 10, 16)
+	idFleet, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16);
+	idShip, _ := strconv.ParseUint(mux.Vars(r)["shipId"], 10, 16)
 	
 	ship := shipManager.GetShip(uint16(idShip), player.Id)
 	fleet := manager.GetFleet(uint16(idFleet), player.Id)
@@ -52,19 +49,17 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func RemoveShipFormFleet(w http.ResponseWriter, r *http.Request){
+func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 	/**
 	 * treat the http request to remove a ship form a fleet into an hangar
 	 *
 	 *
 	 */
 	
-	// string of the request route wich give the ship id
-	const ID_SHIP string = "idShip"  //< you migth want to change that
 	
 	player := context.Get(r, "player").(*model.Player)
 	
-	idShip, _ := strconv.ParseUint(mux.Vars(r)[ID_SHIP], 10, 16)
+	idShip, _ := strconv.ParseUint(mux.Vars(r)["shipId"], 10, 16)
 	
 	ship := shipManager.GetShip(uint16(idShip), player.Id)
 	
@@ -82,20 +77,19 @@ func RemoveShipFormFleet(w http.ResponseWriter, r *http.Request){
     utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
 }
 
-func CreatFleet(w http.ResponseWriter, r *http.Request){
+func CreateFleet(w http.ResponseWriter, r *http.Request){
 	player := context.Get(r, "player").(*model.Player)
 	
-	// string of the request route wich give the planet id
-	const ID_PLANET string = "id"  //< you migth want to change that
+	data := utils.DecodeJsonRequest(r)
 	
-	idPlanet, _ := strconv.ParseUint(mux.Vars(r)[ID_PLANET], 10, 16)
+	idPlanet, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16)
 	
 	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
 	
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
 	} else{
-		utils.SendJsonResponse(w, 200,manager.CreatFleet(player,planet));
+		utils.SendJsonResponse(w, 200,manager.CreateFleet(player,planet));
 	}
 	
 }

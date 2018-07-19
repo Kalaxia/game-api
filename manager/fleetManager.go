@@ -59,7 +59,7 @@ func AssignShipToHangard (ship *model.Ship){
 }
 
 
-func CreatFleet (player *model.Player, planet *model.Planet) *model.Fleet{
+func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	
 	/*
 	fleetJourney := model.FleetJourney{ // TODO ?
