@@ -4,6 +4,7 @@ import(
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
+	"kalaxia-game-api/manager/ship"
 )
 
 func GetFleet(id uint16, playerId uint16) *model.Fleet{
@@ -47,15 +48,22 @@ func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 		ship.IsShipInFleet = true;
 		ship.Fleet = fleet;
 		ship.FleetId=fleet.Id;
-		
+		ship.Hangar = nil;
+		shipManager.UpdateShipDataHangardAndFleet(ship);
 	}
 	
 }
 
 func AssignShipToHangard (ship *model.Ship){
-	ship.IsShipInFleet = false;
-	ship.Hangar = ship.Fleet.Location;
-	ship.HangarId = ship.Hangar.Id;
+	if ship.Fleet != nil {
+		ship.IsShipInFleet = false;
+		ship.Hangar = ship.Fleet.Location;
+		ship.HangarId = ship.Hangar.Id;
+		ship.Fleet = nil;
+		shipManager.UpdateShipDataHangardAndFleet(ship);
+	} else{
+		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+	}
 }
 
 
@@ -76,14 +84,15 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	fleet := model.Fleet{
         Player : player,
         Location : planet,
-        //Journey : &fleetJourney,
+        Journey : nil,
 	};
 	
 	if err := database.Connection.Insert(&fleet); err != nil {
-      panic(exception.NewHttpException(500, "Fleet could not be created", err))
+		panic(exception.NewHttpException(500, "Fleet could not be created", err))
     }
 	
 	
 	
 	return &fleet;
 }
+

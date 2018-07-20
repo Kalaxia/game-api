@@ -194,3 +194,22 @@ func GetShip(id uint16, playerId uint16) *model.Ship{
 func getShipOwnerData(ship *model.Ship) {
    // TODO 
 }
+
+func UpdateShipDataHangardAndFleet(ship *model.Ship){
+    if err := database.Connection.Update(ship.Hangar); err != nil {
+        panic(exception.NewException("ship Hangar could not be updated", err))
+    }
+    if err := database.Connection.Update(ship.HangarId); err != nil {
+        panic(exception.NewException("ship HangarId could not be updated", err))
+    }
+    if err := database.Connection.Update(ship.Fleet); err != nil {
+        panic(exception.NewException("ship Fleet could not be updated", err))
+    }
+    if err := database.Connection.Update(ship.FleetId); err != nil {
+        panic(exception.NewException("ship FleetId could not be updated", err))
+    }
+    if err := database.Connection.Update(ship.IsShipInFleet); err != nil {
+        panic(exception.NewException("ship IsShipInFleet could not be updated", err))
+    }
+    
+}

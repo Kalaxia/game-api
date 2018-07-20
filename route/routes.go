@@ -107,18 +107,18 @@ var routes = Routes{
 	Route{
 		"Assign Ship To Fleet",
 		"PATCH",
-		"/api/fleets/{fleetId}/ships/{shipId}/assign",
+		"/api/fleets/{fleetId}/ships/{shipId}", 
 		controller.AssignShipToFleet,
 		true,
 	},
 	Route{
 		"Remove Ship From Fleet",
 		"DELETE",
-		"/api/ships/{shipId}/remove",
+		"/api/ships/{shipId}",
 		controller.RemoveShipFromFleet,
 		true,
 	},
-	Route{
+	Route{ // data of the planet send in json
 		"Create Fleet",
 		"POST",
 		"/api/fleets",

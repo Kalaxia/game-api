@@ -72,6 +72,9 @@ func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 	if ! ship.IsShipInFleet { // the ship is not in a fleet
 		panic(exception.NewHttpException(400, "Ship already in hangard", nil));
 	}
+	if ship.Fleet == nil{ // normaly this does not triger if the data of ship.IsShipInFleet is correct
+		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+	}
 	manager.AssignShipToHangard(ship)
 	
     utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
