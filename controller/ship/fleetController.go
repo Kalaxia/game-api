@@ -81,6 +81,9 @@ func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 }
 
 func CreateFleet(w http.ResponseWriter, r *http.Request){
+	/*
+	 * Create fleet on a given planet
+	 */
 	player := context.Get(r, "player").(*model.Player)
 	
 	data := utils.DecodeJsonRequest(r)
@@ -95,4 +98,47 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 		utils.SendJsonResponse(w, 200,shipManager.CreateFleet(player,planet));
 	}
 	
+}
+
+func GetAllFleets (w http.ResponseWriter, r *http.Request){
+	/*
+	 * return all the fleets a player controll
+	 */
+	player := context.Get(r, "player").(*model.Player)
+	
+	utils.SendJsonResponse(w, 200,shipManager.GetAllFleets(player));
+}
+
+func GetFleet (w http.ResponseWriter, r *http.Request){
+	/*
+	 * return a specifique fleet by id
+	 */
+	player := context.Get(r, "player").(*model.Player)
+	
+	idFleet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	
+	fleet := shipManager.GetFleet(uint16(idFleet));
+	
+	if fleet.Player.Id != player.Id {
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+	}
+	
+	utils.SendJsonResponse(w, 200,fleet);
+}
+
+func GetFleetsOnPlanet (w http.ResponseWriter, r *http.Request){
+	/*
+	 * return all the fleet on a fiven planet
+	 */
+	
+	player := context.Get(r, "player").(*model.Player)
+	
+	idPlanet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
+	
+	if (player.Id != planet.Player.Id) { // the player does not own the planet
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+	}
+	
+	utils.SendJsonResponse(w, 200,shipManager.GetFleetsOnPlanet(player,planet));
 }

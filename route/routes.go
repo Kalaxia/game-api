@@ -126,6 +126,27 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Current Player Fleets",
+		"GET",
+		"/api/fleets",
+		shipController.GetAllFleets,
+		true,
+	},
+	Route{
+		"Get Current Player Fleets on Planet",
+		"GET",
+		"/api/planets/{id}/fleets",
+		shipController.GetFleetsOnPlanet,
+		true,
+	},
+	Route{
+		"Get Fleet",
+		"GET",
+		"/api/fleets/{id}",
+		shipController.GetFleetsOnPlanet,
+		true,
+	},
+	Route{
 		"Get Hangar Ships",
 		"GET",
 		"/api/planets/{id}/ships",

@@ -8,7 +8,9 @@ type(
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`
+        PlayerId uint16 `json:"-"`
         Location *Planet `json:"location"`
+        LocationId uint16 `json:"-"`
         Journey *FleetJourney `json:"journey"`
     }
     FleetJourney struct {

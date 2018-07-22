@@ -20,7 +20,7 @@ func GetFleet(id uint16) *model.Fleet{
         Connection.
         Model(&fleet).
         Column("fleet.*", "Player", "Location", "Journey").
-        Where("planet.id = ?", id).
+        Where("fleet.player_id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err))
     }
@@ -50,7 +50,9 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	
 	fleet := model.Fleet{
         Player : player,
+		PlayerId : player.Id,
         Location : planet,
+		LocationId : planet.Id,
         Journey : nil,
 	};
 	
@@ -93,3 +95,31 @@ func AssignShipToHangard (ship *model.Ship){
 	}
 }
 
+func GetAllFleets(player *model.Player) []model.Fleet{
+	var fleets []model.Fleet
+    if err := database.
+        Connection.
+        Model(&fleets).
+        Column("fleet.*", "Player","Location").
+        Where("fleet.player_id = ?", player.Id).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "Fleets not found", err))
+    }
+    return fleets
+}
+
+
+func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet{
+	var fleets []model.Fleet
+    if err := database.
+        Connection.
+        Model(&fleets).
+        Column("fleet.*", "Player","Location").
+        Where("fleet.player_id = ?", player.Id).
+		Where("fleet.location_id = ?", planet.Id).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "Fleets not found", err))
+    }
+	
+    return fleets
+}
