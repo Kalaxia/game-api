@@ -71,12 +71,12 @@ type(
         TableName struct{} `json:"-" sql:"ship__ships"`
 
         Id uint32 `json:"id"`
-        HangarId uint16 `json:"-"`
-        Hangar *Planet `json:"hangar"`
-        FleetId uint16 `json:"-"`
-        Fleet *Fleet `json:"fleet"`
-        IsShipInFleet bool `json:"isShipInFleet"` //< this is used when a ship is try to be removed form the hangard in order to avoid teleporting ships
-        ModelId uint `json:"-"`
+        HangarId uint16 `json:"-"` //< if  the ship is not in a hangar the id wil be nil.
+        Hangar *Planet `json:"hangar"` //< if  the ship is not in a hangar  the pointer will be nil
+        FleetId uint16 `json:"-"` //< if  the ship is not in a fleet the id wil be nil
+        Fleet *Fleet `json:"fleet"` //< if  the ship is not in a fleet the pointer will be nil
+        //IsShipInFleet bool `json:"isShipInFleet"` //< Depreciated : this is used when a ship is try to be removed form the hangard in order to avoid teleporting ships
+        ModelId uint `json:"-"` 
         Model *ShipModel `json:"model"`
         CreatedAt time.Time `json:"created_at"`
         ConstructionStateId uint32 `json:"-"`

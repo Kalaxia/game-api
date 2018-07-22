@@ -1,4 +1,4 @@
-package controller
+package shipController
 
 
 import (
@@ -25,15 +25,14 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 	idFleet, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16);
 	idShip, _ := strconv.ParseUint(mux.Vars(r)["shipId"], 10, 16)
 	
-	ship := shipManager.GetShip(uint16(idShip), player.Id)
-	fleet := manager.GetFleet(uint16(idFleet), player.Id)
+	ship := shipManager.GetShip(uint16(idShip))
+	fleet := shipManager.GetFleet(uint16(idFleet))
 	
 	
 	// TODO check on the Journey ?
 	// there is no verification if the this is in another fleet or not we can move ship inbetween fleet
 	
-	isShipInTheCorrectLocation := ( ! ship.IsShipInFleet && fleet.Location.Id !=  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
-	  (ship.IsShipInFleet && ship.Fleet.Location.Id !=  fleet.Location.Id) // ship in fleet  and both fleet are a the same place
+	isShipInTheCorrectLocation := shipManager.IsShipInSamePositionAsFleet(*ship, *fleet);
 	
 	if ( player.Id != fleet.Player.Id || // this is the owner of the fleet
 	  player.Id != ship.Hangar.Player.Id){// this is the owner of the ship
@@ -61,20 +60,21 @@ func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 	
 	idShip, _ := strconv.ParseUint(mux.Vars(r)["shipId"], 10, 16)
 	
-	ship := shipManager.GetShip(uint16(idShip), player.Id)
+	ship := shipManager.GetShip(uint16(idShip))
 	
 	// TODO check on the Journey ?
-	
+	if ship.Fleet == nil{ // the ship is not in a fleet
+		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+	}
 	if player.Id != ship.Hangar.Player.Id || // this is the owner of the fleet
 	  ship.Fleet.Location.Player.Id !=   player.Id { // if the hangard is on a planet the player owns
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
     }
-	if ! ship.IsShipInFleet { // the ship is not in a fleet
+	/* Depreciated
+	if ! ship.IsShipInFleet { 
 		panic(exception.NewHttpException(400, "Ship already in hangard", nil));
 	}
-	if ship.Fleet == nil{ // normaly this does not triger if the data of ship.IsShipInFleet is correct
-		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
-	}
+	*/
 	shipManager.AssignShipToHangard(ship)
 	
     utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
@@ -92,7 +92,7 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
 	} else{
-		utils.SendJsonResponse(w, 200,manager.CreateFleet(player,planet));
+		utils.SendJsonResponse(w, 200,shipManager.CreateFleet(player,planet));
 	}
 	
 }
