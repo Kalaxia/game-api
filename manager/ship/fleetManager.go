@@ -53,7 +53,7 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 		PlayerId : player.Id,
         Location : planet,
 		LocationId : planet.Id,
-        Journey : nil,
+		
 	};
 	
 	if err := database.Connection.Insert(&fleet); err != nil {

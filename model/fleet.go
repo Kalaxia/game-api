@@ -12,6 +12,7 @@ type(
         Location *Planet `json:"location"`
         LocationId uint16 `json:"-"`
         Journey *FleetJourney `json:"journey"`
+        JourneyId uint16 `json:"-"`
     }
     FleetJourney struct {
         TableName struct{} `json:"-" sql:"fleet__journeys"`
