@@ -8,7 +8,6 @@ import(
     "kalaxia-game-api/utils"
     "sync"
     "math"
-    "fmt"
 )
 
 func init() {
@@ -92,7 +91,7 @@ func UpdatePlayerWallet(player *model.Player, amount  int32) {
     }
 }
 
-func CalculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
+func calculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
   defer wg.Done()
   defer utils.CatchException()
   baseWage := int32(50)
@@ -103,10 +102,6 @@ func CalculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
     wage += baseWage +  int32( math.Round( float64(value.Settings.ServicesPoints) * serviceWageRatio))
   }
   UpdatePlayerWallet(&player, wage)
-  fmt.Println("wage:")
-  fmt.Println(wage)
-  fmt.Println("wallet:")
-  fmt.Println(player.Wallet)
   UpdatePlayer(&player)
 }
 
@@ -120,11 +115,9 @@ func CalculatePlayersWage() {
         players := getPlayers(offset, limit)
 
         for _, player := range players {
-          fmt.Println(player.Id)
           if player.IsActive==true {
-            fmt.Println(player.Id)
             wg.Add(1)
-            go CalculatePlayerWage(player, &wg)
+            go calculatePlayerWage(player, &wg)
           }
         }
         wg.Wait()
