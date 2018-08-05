@@ -23,7 +23,7 @@ You can use your favorite packet manager to install the package `docker`
 
 Notice that docker-compose is a package in your packet manager but it might be outdated. The authors advice following the [official documentation](https://docs.docker.com/compose/install/)
 
-Then in order to use docker without being rooted create a new user group called docker using  
+Normally your user should have permission to use docker. If it is not the case create enter
 ```Bash
 sudo groupadd docker
 ```
@@ -47,21 +47,17 @@ Please refer to the [official documentation](https://docs.docker.com/docker-for-
 ### Repository setup
 The first step is to clone the repository using 
 ```Bash
-git clone https://github.com/Kalaxia/game-api.git
-``` 
-or
-```Bash
 git clone git@github.com:Kalaxia/game-api.git
 ```
-Once the repository is cloned create a folder 'volumes' inside the 'game-api'  folder. You can use `mkdir volumes`.
-
-Then clone the game-front inside 'volumes/app' using 
+Once the repository is cloned you will need to clone the front in 'volumes/app' using
 ```Bash
-git clone https://github.com/Kalaxia/game-front.git app
+git clone git@github.com:Kalaxia/game-front.git volumes/app
 ```
 inside  'volumes'.
 
-Navigate back to 'game-api'. Copy the files '.dist.env' to '.env' and 'kalaxia.dist.env' to 'kalaxia.env'. You can do that by using `cp .dist.env .env` and `cp kalaxia.dist.env kalaxia.env`. Optionally you can change both of the new files. But the authors recommend keeping as it is. And at this time the authors do not provide information in order to work properly if these files are changed.
+Navigate back to 'game-api'. Copy the files '.dist.env' to '.env' and 'kalaxia.dist.env' to 'kalaxia.env'. You can do that by using `cp .dist.env .env` and `cp kalaxia.dist.env kalaxia.env`. 
+Now open the file `.env` using a text editor ( like vim, emacs, nano, gedit, ...) and change the  `NGINX_PORT` and `NGINX_HTTPS_PORT` to your liking. `NGINX_PORT`is the port nginx will listen to.
+Optionally you can change the other values both of the new files.  But the authors recommend keeping as it is except for `NGINX_PORT` et `NGINX_HTTPS_PORT`. And at this time the authors do not provide information in order to work properly if these files are changed.
 
 ### Container setup
 
@@ -88,7 +84,7 @@ To launch the container use
 ```Bash
 docker-compose up -d
 ```
-where the `-d` flag means to detatch the container and run it in background. 
+where the `-d` flag means to detach the container and run it in background. 
 
 ### Database setup
 
@@ -100,30 +96,7 @@ more informations are provided in the 'Database migrations' section below.
 
 ### Setup the game
 
-In order to setup the game the API need to creat data in the database. In order to inialize these data you will need to do the folowing request
-```JSON
-url : "<address of your server>:<port>/api/servers",
-methode : "POST",
-Body : {
-		"name": "<name>",
-		"type" : "multiplayer",
-		"signature":"<signature>",
-		"factions": [
-					 {"name":"<facion name>",
-					 "description":"<description>",
-					 "color":"<color>",
-					 "banner":"<banner>"}
-					 ]
-		"map_size":100
-},
-Header : {
-	"Authorization" : "Bearer <your Bearer token>"
-}
-```
- by default the port is 8004. You can also add multiple faction following the previous example.
- 
- The proper authorization header for user kalaxia is required.
- TODO : authorization
+To setup the game you will need to setup the [portal](https://github.com/Kalaxia/portal). 
 
 Administration
 ------------
@@ -154,7 +127,7 @@ You can connect to the database using
 ```Bash
 docker exec -it kalaxia_postgresql psql -U kalaxia kalaxia_game
 ```
-in this mode you can directly type SQL commande. To quit type `\q` then press enter.
+in this mode you can directly type SQL queries. To quit type `\q` then press enter.
 
 #### Database migrations
 
@@ -187,7 +160,7 @@ docker exec -it kalaxia_api make migrate-latest
 
 You can adapt the full-command in this file to do your stuff, for example rollback or use a specific version.
 
-#### Advance database migrations
+#### Advanced database migrations
 
 TODO
 
@@ -254,12 +227,16 @@ and there type one by one the SQL request you copy before, correcting where ther
 
 If you give up on solving all the problem in the SQL command go to step 5.
 
-Once this is finish type `\q` and enter to exit.
+
 
 #### Step 3
 
+Now update the table  `schema_migrations` in the postgresql environment using
+```SQL
+UPDATE schema_migrations SET dirty=f WHERE dirty=t;
+```
 
-Run
+Or you can run
 ```Bash
 docker exec -it kalaxia_api migrate -database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable -source file://build/migrations force <v>
 ```
