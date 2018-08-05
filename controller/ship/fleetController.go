@@ -94,9 +94,10 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 	
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
-	} else{
-		utils.SendJsonResponse(w, 200,shipManager.CreateFleet(player,planet));
 	}
+	// else
+	utils.SendJsonResponse(w, 200,shipManager.CreateFleet(player,planet));
+	
 	
 }
 

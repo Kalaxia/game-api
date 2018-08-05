@@ -11,21 +11,19 @@ func GetFleet(id uint16) *model.Fleet{
 	/**
      * Get Fleet data ( may return incomplete information).
      *  If the player is the owner of the ship all the data are send
-     * 
      */
-    // TODO Someone pls check if
     
-    var fleet model.Fleet
+    var fleet *model.Fleet
     if err := database.
         Connection.
-        Model(&fleet).
+        Model(fleet).
         Column("fleet.*", "Player", "Location", "Journey").
         Where("fleet.player_id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err))
     }
     
-    return &fleet
+    return fleet
 }
 
 
@@ -53,7 +51,7 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 		PlayerId : player.Id,
         Location : planet,
 		LocationId : planet.Id,
-		
+		Journey : nil,
 	};
 	
 	if err := database.Connection.Insert(&fleet); err != nil {
