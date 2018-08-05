@@ -213,3 +213,32 @@ func UpdateShipDataHangardAndFleet(ship *model.Ship){
     }
     
 }
+
+func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
+	
+	isShipInTheCorrectLocation := ( ! ship.IsShipInFleet && fleet.Location.Id !=  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
+	  (ship.IsShipInFleet && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
+	
+	if !isShipInTheCorrectLocation{
+		panic(exception.NewHttpException(400, "wrong location", nil));
+	} else{
+		ship.IsShipInFleet = true;
+		ship.Fleet = fleet;
+		ship.FleetId=fleet.Id;
+		ship.Hangar = nil;
+		UpdateShipDataHangardAndFleet(ship);
+	}
+	
+}
+
+func AssignShipToHangard (ship *model.Ship){
+	if ship.Fleet != nil {
+		ship.IsShipInFleet = false;
+		ship.Hangar = ship.Fleet.Location;
+		ship.HangarId = ship.Hangar.Id;
+		ship.Fleet = nil;
+		UpdateShipDataHangardAndFleet(ship);
+	} else{
+		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+	}
+}

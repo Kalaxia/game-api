@@ -4,7 +4,6 @@ import(
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
-	"kalaxia-game-api/manager/ship"
 )
 
 func GetFleet(id uint16, playerId uint16) *model.Fleet{
@@ -25,46 +24,17 @@ func GetFleet(id uint16, playerId uint16) *model.Fleet{
             panic(exception.NewHttpException(404, "Fleet not found", err))
     }
     if fleet.Player != nil && playerId == fleet.Player.Id {
-        getShipOwnerData(&fleet)
+        getFleetOwnerData(&fleet)
     }
     return &fleet
 }
 
 
-func getShipOwnerData(fleet *model.Fleet) {
+func getFleetOwnerData(fleet *model.Fleet) {
    // TODO 
 }
 
 
-func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
-	
-	isShipInTheCorrectLocation := ( ! ship.IsShipInFleet && fleet.Location.Id !=  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
-	  (ship.IsShipInFleet && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
-	
-	if !isShipInTheCorrectLocation{
-		panic(exception.NewHttpException(400, "wrong location", nil));
-	}
-	else{
-		ship.IsShipInFleet = true;
-		ship.Fleet = fleet;
-		ship.FleetId=fleet.Id;
-		ship.Hangar = nil;
-		shipManager.UpdateShipDataHangardAndFleet(ship);
-	}
-	
-}
-
-func AssignShipToHangard (ship *model.Ship){
-	if ship.Fleet != nil {
-		ship.IsShipInFleet = false;
-		ship.Hangar = ship.Fleet.Location;
-		ship.HangarId = ship.Hangar.Id;
-		ship.Fleet = nil;
-		shipManager.UpdateShipDataHangardAndFleet(ship);
-	} else{
-		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
-	}
-}
 
 
 func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
