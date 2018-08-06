@@ -167,3 +167,39 @@ func finishShipConstruction(ship *model.Ship) {
         panic(exception.NewException("Ship Construction State could not be removed", err))
     }
 }
+
+func GetShip(id uint16) *model.Ship{
+    /**
+     * Get Ship data ( may return incomplete information).
+     *  If the player is the owner of the ship all the data are send
+     * 
+     */
+    
+    var ship model.Ship
+    if err := database.
+        Connection.
+        Model(&ship).
+        Column("ship.*", "Hangar", "Fleet", "Model").
+        Where("ship.id = ?", id).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "ship not found", err))
+    }
+    return &ship
+}
+
+
+
+func UpdateShip(ship *model.Ship){
+    
+    if err := database.Connection.Update(ship); err != nil {
+        panic(exception.NewException("ship could not be updated", err))
+    }
+    
+}
+
+func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
+    
+    return ( ship.Fleet == nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
+	  (ship.Fleet != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
+    
+}
