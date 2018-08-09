@@ -199,7 +199,7 @@ func UpdateShip(ship *model.Ship){
 
 func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
     
-    return ( ship.Fleet == nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
+    return ( ship.Fleet == nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
 	  (ship.Fleet != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
     
 }

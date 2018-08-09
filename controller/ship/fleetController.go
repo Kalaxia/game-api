@@ -67,15 +67,15 @@ func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
 	}
 	if player.Id != ship.Hangar.Player.Id || // this is the owner of the fleet
-	  ship.Fleet.Location.Player.Id !=   player.Id { // if the hangard is on a planet the player owns
+	  ship.Fleet.Location.Player.Id !=   player.Id { // if the hangar is on a planet the player owns
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
     }
 	/* Depreciated
 	if ! ship.IsShipInFleet { 
-		panic(exception.NewHttpException(400, "Ship already in hangard", nil));
+		panic(exception.NewHttpException(400, "Ship already in hangar", nil));
 	}
 	*/
-	shipManager.AssignShipToHangard(ship)
+	shipManager.AssignShipToHangar(ship)
 	
     utils.SendJsonResponse(w, 200, nil /*TODO*/) // What do I return ?
 }

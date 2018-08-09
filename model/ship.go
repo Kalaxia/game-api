@@ -75,7 +75,7 @@ type(
         Hangar *Planet `json:"hangar"` //< if  the ship is not in a hangar  the pointer will be nil
         FleetId uint16 `json:"-"` //< if  the ship is not in a fleet the id wil be nil
         Fleet *Fleet `json:"fleet"` //< if  the ship is not in a fleet the pointer will be nil
-        //IsShipInFleet bool `json:"isShipInFleet"` //< Depreciated : this is used when a ship is try to be removed form the hangard in order to avoid teleporting ships
+        //IsShipInFleet bool `json:"isShipInFleet"` //< Depreciated : this is used when a ship is try to be removed form the hangar in order to avoid teleporting ships
         ModelId uint `json:"-"` 
         Model *ShipModel `json:"model"`
         CreatedAt time.Time `json:"created_at"`

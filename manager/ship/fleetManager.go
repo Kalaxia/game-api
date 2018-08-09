@@ -80,7 +80,7 @@ func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 	
 }
 
-func AssignShipToHangard (ship *model.Ship){
+func AssignShipToHangar (ship *model.Ship){
 	if ship.Fleet != nil {
 		//ship.IsShipInFleet = false;
 		ship.Hangar = ship.Fleet.Location;
