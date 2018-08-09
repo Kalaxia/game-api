@@ -13,17 +13,17 @@ func GetFleet(id uint16) *model.Fleet{
      *  If the player is the owner of the ship all the data are send
      */
     
-    var fleet *model.Fleet
+    var fleet model.Fleet
     if err := database.
         Connection.
-        Model(fleet).
+        Model(&fleet).
         Column("fleet.*", "Player", "Location", "Journey").
         Where("fleet.player_id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err))
     }
     
-    return fleet
+    return &fleet
 }
 
 
