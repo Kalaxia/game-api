@@ -1,3 +1,10 @@
+## [0.1.11] - 2018-08-10
+### Added
+- Hourly money income
+- Fleets model and migration scripts
+- Fleet creation webservice
+- Player fleets and planet fleets retrieval webservices
+
 ## [0.1.10] - 2018-07-17
 ### Added
 - Player wallet
