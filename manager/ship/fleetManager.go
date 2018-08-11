@@ -107,7 +107,7 @@ func GetAllFleets(player *model.Player) []model.Fleet{
 }
 
 
-func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet{
+func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet {
 	var fleets []model.Fleet
     if err := database.
         Connection.
@@ -120,4 +120,36 @@ func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet
     }
 	
     return fleets
+}
+
+func AssignMultipleShipsToFleet ( ships []*model.Ship, fleet *model.Fleet){
+    for i := range ships {
+        AssignShipToFleet(ships[i],fleet);
+    }
+}
+
+func RemoveMultipleShipsFromFleet (ships []*model.Ship){
+    
+    for i := range ships {
+        AssignShipToHangar(ships[i]);
+    }
+    
+}
+
+func GetFleetShip (fleet model.Fleet) []model.Ship{
+    /*
+     * get all ships in a fleet
+     */
+    var ships []model.Ship
+    
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ship.*", "Hangar", "Fleet", "Model").
+        Where("ship.fleet_id = ?", fleet.Id).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "ship not found", err));
+    }
+    
+    return ships;
 }
