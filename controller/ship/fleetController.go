@@ -145,7 +145,7 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
      */
     player := context.Get(r, "player").(*model.Player)
     
-    idFleet, _ := strconv.ParseUint(mux.Vars(r)["idFleet"], 10, 16)
+    idFleet, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16)
     fleet := shipManager.GetFleet(uint16(idFleet));
     data := utils.DecodeJsonRequest(r)["data-ships"].([]interface{});
     
@@ -156,7 +156,7 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
 	}
     
     for i := range data {
-        idShip, _ := strconv.ParseUint(data[i].(string), 10, 16);
+        idShip, _ := data[i].(float64)
         ship := shipManager.GetShip(uint16(idShip));
         
         // TODO check on the Journey ?
@@ -190,7 +190,7 @@ func RemoveMultipleShipsFromFleet (w http.ResponseWriter, r *http.Request){
     var ships []*model.Ship
     
     for i := range data {
-        idShip, _ := strconv.ParseUint(data[i].(string), 10, 16);
+        idShip, _ := data[i].(float64);
         ship := shipManager.GetShip(uint16(idShip));
         
         // TODO check on the Journey ?

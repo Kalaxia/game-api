@@ -104,6 +104,8 @@ var routes = Routes{
 		shipController.CreateShip,
 		true,
 	},
+	/*******************************/
+	// Fleets 
 	Route{
 		"Get Fleet Ships",
 		"GET",
@@ -128,14 +130,14 @@ var routes = Routes{
 	Route{
 		"Remove Ship From Fleet",
 		"DELETE",
-		"/api/ships/{shipId}",
+		"/api/fleets/ships/{shipId}",
 		shipController.RemoveShipFromFleet,
 		true,
 	},
 	Route{
 		"Remove Multiple Ship From Fleet",
 		"DELETE",
-		"/api/ships",
+		"/api/fleets/ships",
 		shipController.RemoveMultipleShipsFromFleet,
 		true,
 	},
@@ -167,6 +169,7 @@ var routes = Routes{
 		shipController.GetFleet,
 		true,
 	},
+	/*******************************/
 	Route{
 		"Get Hangar Ships",
 		"GET",
