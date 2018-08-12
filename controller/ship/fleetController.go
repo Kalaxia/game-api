@@ -34,6 +34,8 @@ func AssignShipToFleet(w http.ResponseWriter, r *http.Request) {
 	
 	isShipInTheCorrectLocation := shipManager.IsShipInSamePositionAsFleet(*ship, *fleet);
 	
+    
+    
 	if ( player.Id != fleet.Player.Id || // this is the owner of the fleet
          player.Id != ship.Hangar.Player.Id ) { // this is the owner of the ship
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
@@ -60,7 +62,7 @@ func RemoveShipFromFleet(w http.ResponseWriter, r *http.Request){
 	
 	// TODO check on the Journey ?
 	if ship.Fleet == nil{ // the ship is not in a fleet
-		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
 	}
 	if player.Id != ship.Hangar.Player.Id || // this is the owner of the fleet
 	   ship.Fleet.Location.Player.Id !=   player.Id { // if the hangar is on a planet the player owns
@@ -143,6 +145,7 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
     /*
      * Assign mutliple ship to a fleet by theire id given in the body ( json) {"data-ships" : [id,id,id]}
      */
+    
     player := context.Get(r, "player").(*model.Player)
     
     idFleet, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16)
@@ -156,7 +159,7 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
 	}
     
     for i := range data {
-        idShip, _ := data[i].(float64)
+        idShip := data[i].(float64)
         ship := shipManager.GetShip(uint16(idShip));
         
         // TODO check on the Journey ?
@@ -167,6 +170,8 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
     	if (player.Id != ship.Hangar.Player.Id) { // this is the owner of the ship
     		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
         }
+        
+        
     	if !isShipInTheCorrectLocation { // the fleet is on the right plante
     		panic(exception.NewHttpException(400, "Wrong location", nil));
     	}
@@ -175,7 +180,7 @@ func AssignMultipleShipsToFleet (w http.ResponseWriter, r *http.Request){
     }
     
     shipManager.AssignMultipleShipsToFleet(ships,fleet);
-    utils.SendJsonResponse(w, 201,"");
+    utils.SendJsonResponse(w, 202,"");
     
     
     
@@ -190,13 +195,16 @@ func RemoveMultipleShipsFromFleet (w http.ResponseWriter, r *http.Request){
     var ships []*model.Ship
     
     for i := range data {
-        idShip, _ := data[i].(float64);
+        
+        idShip := data[i].(float64);
         ship := shipManager.GetShip(uint16(idShip));
         
         // TODO check on the Journey ?
-    	if ship.Fleet == nil{ // the ship is not in a fleet
-    		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+        
+    	if ship.Fleet == nil { // the ship is not in a fleet
+    		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
     	}
+        
     	if ( player.Id != ship.Hangar.Player.Id || // this is the owner of the fleet
     	     ship.Fleet.Location.Player.Id !=   player.Id ) { // if the hangar is on a planet the player owns
     		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
@@ -206,7 +214,7 @@ func RemoveMultipleShipsFromFleet (w http.ResponseWriter, r *http.Request){
     }
     
     shipManager.RemoveMultipleShipsFromFleet(ships);
-    utils.SendJsonResponse(w, 201,"");
+    utils.SendJsonResponse(w, 202,"");
     
 }
 

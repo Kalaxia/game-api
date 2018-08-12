@@ -71,23 +71,56 @@ func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
 		panic(exception.NewHttpException(400, "wrong location", nil));
 	} else{
 		//ship.IsShipInFleet = true;
+        
 		ship.Fleet = fleet;
-		ship.FleetId=fleet.Id;
+		ship.FleetId =fleet.Id;
 		ship.Hangar = nil;
-		//ship.HangarId = nil;
+        ship.HangarId = 0;
+        
+		/*shipToUpdate := model.Ship{
+            Id : ship.Id,
+            FleetId : fleet.Id,
+            ModelId : ship.ModelId,
+            ConstructionStateId : ship.ConstructionStateId,
+        }*/
+        
 		UpdateShip(ship);
+        
+        /*if err := database.Connection.Delete(ship.HangarId); err != nil {
+            panic(exception.NewException("Ship Hangar could not be removed", err))
+        }*/
 	}
 	
 }
 
 func AssignShipToHangar (ship *model.Ship){
 	if ship.Fleet != nil {
-		//ship.IsShipInFleet = false;
-		ship.Hangar = ship.Fleet.Location;
-		ship.HangarId = ship.Hangar.Id;
-		ship.Fleet = nil;
-		//ship.FleetId = nil;
-		UpdateShip(ship);
+		if (ship.Fleet.Location != nil) {
+            //ship.IsShipInFleet = false;
+            
+    		ship.Hangar = ship.Fleet.Location;
+    		ship.HangarId = ship.Fleet.Location.Id;
+    		ship.Fleet = nil;
+            ship.FleetId = 0;
+            
+            /*
+            shipToUpdate := model.Ship{
+                Id : ship.Id,
+                HangarId : ship.Fleet.Location.Id,
+                ModelId : ship.ModelId,
+                ConstructionStateId : ship.ConstructionStateId,
+            }
+    		*/
+    		UpdateShip(ship);
+            
+            /*
+            if err := database.Connection.Delete(ship.FleetId); err != nil {
+                panic(exception.NewException("Ship Fleet could not be removed", err))
+            }
+            */
+        } else {
+            panic(exception.NewHttpException(400, "Fleet not stationed", nil));
+        }
 	} else{
 		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
 	}

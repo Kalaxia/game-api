@@ -179,7 +179,7 @@ func GetShip(id uint16) *model.Ship{
     if err := database.
         Connection.
         Model(&ship).
-        Column("ship.*", "Hangar", "Fleet", "Model").
+        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player").
         Where("ship.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err))
@@ -199,7 +199,7 @@ func UpdateShip(ship *model.Ship){
 
 func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
     
-    return ( ship.Fleet == nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
-	  (ship.Fleet != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
+    return ( ship.Fleet == nil &&  fleet.Location != nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
+	  (ship.Fleet != nil && fleet.Location != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
     
 }
