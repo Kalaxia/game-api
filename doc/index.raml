@@ -121,6 +121,22 @@ version: v0.1.7
                 body:
                     application/json:
                         type: !include planets/settings.raml
+        /fleets:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include fleets/fleet.raml
+        /ships:
+            get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: object[]
+                            items: !include ships/ship.raml
 /servers:
     post:
         body:
@@ -150,3 +166,54 @@ version: v0.1.7
                     body:
                         application/json:
                             type: !include maps/system.raml
+/fleets:
+    /{id}:
+        get:
+            responses:
+                200:
+                    body:
+                        application/json:
+                            type: object[]
+                            items: !include fleets/fleet.raml
+        /ships:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include ships/ship.raml
+            /{id}:
+                patch:
+                responses:
+            patch:
+                body:
+                    application/json:
+                        type: object
+                        properties:
+                            data-ships: integer[]
+                responses:
+    get:
+        responses:
+            200:
+                body:
+                    application/json:
+                        type: object[]
+                        items: !include fleets/fleet.raml
+    post:
+        body:
+            application/json:
+                type: object
+                properties:
+                    "planet_id" : integer
+    /ships:
+        /{id}:
+            delete:
+                body:
+                    application/json:
+                        type: object
+                        properties:
+                            data-ships: integer[]
+                responses:
+        delete:
+            responses:

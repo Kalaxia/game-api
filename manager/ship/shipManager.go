@@ -179,7 +179,7 @@ func GetShip(id uint16) *model.Ship{
     if err := database.
         Connection.
         Model(&ship).
-        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player").
+        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
         Where("ship.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err))

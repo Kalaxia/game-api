@@ -205,7 +205,7 @@ func RemoveMultipleShipsFromFleet (w http.ResponseWriter, r *http.Request){
     		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
     	}
         
-    	if ( player.Id != ship.Hangar.Player.Id || // this is the owner of the fleet
+    	if ( player.Id != ship.Fleet.Player.Id || // this is the owner of the fleet
     	     ship.Fleet.Location.Player.Id !=   player.Id ) { // if the hangar is on a planet the player owns
     		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
         }

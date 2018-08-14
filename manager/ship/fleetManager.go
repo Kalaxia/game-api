@@ -122,7 +122,7 @@ func AssignShipToHangar (ship *model.Ship){
             panic(exception.NewHttpException(400, "Fleet not stationed", nil));
         }
 	} else{
-		panic(exception.NewHttpException(400, "Ship already is not in a fleet", nil));
+		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
 	}
 }
 
