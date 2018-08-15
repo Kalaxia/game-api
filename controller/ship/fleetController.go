@@ -180,3 +180,35 @@ func GetFleetShip (w http.ResponseWriter, r *http.Request){
     
     utils.SendJsonResponse(w, 200,shipManager.GetFleetShip(*fleet));
 }
+
+func DeleteFleet (w http.ResponseWriter, r *http.Request){
+	/*
+	 * Delete a fleet
+	 */
+	player := context.Get(r, "player").(*model.Player)
+	
+	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	
+	fleet := shipManager.GetFleet(uint16(fleetId));
+	
+    
+    
+	if fleet.Player.Id != player.Id {
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+	}
+    
+    if (fleet.Journey != nil){
+        panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil));
+    }
+    
+    ships := shipManager.GetFleetShip(*fleet);
+    
+    if (len(ships) != 0){
+        panic(exception.NewHttpException(400, "Cannot delete fleet id there is ships", nil));
+    }
+    
+	
+    shipManager.DeleteFleet(fleet);
+    
+	utils.SendJsonResponse(w, 202,"");
+}

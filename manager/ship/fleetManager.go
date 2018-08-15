@@ -105,8 +105,6 @@ func AssignShipsToFleet ( ships []*model.Ship, fleet *model.Fleet){
 		ship.Hangar = nil;
         ship.HangarId = 0;
     	
-        
-        
     }
     
     UpdateShips(ships);
@@ -123,8 +121,6 @@ func RemoveShipsFromFleet (ships []*model.Ship){
         		ship.HangarId = ship.Fleet.Location.Id;
         		ship.Fleet = nil;
                 ship.FleetId = 0;
-                
-                
                 
             } else {
                 panic(exception.NewHttpException(400, "Fleet not stationed", nil));
@@ -154,4 +150,11 @@ func GetFleetShip (fleet model.Fleet) []model.Ship{
     }
     
     return ships;
+}
+
+func DeleteFleet(fleet *model.Fleet){
+    
+    if err := database.Connection.Delete(fleet); err != nil {
+        panic(exception.NewException("Fleet could not be deleted", err));
+    }
 }
