@@ -23,13 +23,8 @@ func GetFleet(id uint16) *model.Fleet{
             panic(exception.NewHttpException(404, "Fleet not found", err))
     }
     
-    return &fleet
+    return &fleet;
 }
-
-
-
-
-
 
 
 func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
@@ -63,68 +58,7 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	return &fleet;
 }
 
-func AssignShipToFleet (ship *model.Ship,fleet *model.Fleet) {
-	
-	isShipInTheCorrectLocation := IsShipInSamePositionAsFleet(*ship, *fleet);
-	
-	if !isShipInTheCorrectLocation{
-		panic(exception.NewHttpException(400, "wrong location", nil));
-	} else{
-		//ship.IsShipInFleet = true;
-        
-		ship.Fleet = fleet;
-		ship.FleetId =fleet.Id;
-		ship.Hangar = nil;
-        ship.HangarId = 0;
-        
-		/*shipToUpdate := model.Ship{
-            Id : ship.Id,
-            FleetId : fleet.Id,
-            ModelId : ship.ModelId,
-            ConstructionStateId : ship.ConstructionStateId,
-        }*/
-        
-		UpdateShip(ship);
-        
-        /*if err := database.Connection.Delete(ship.HangarId); err != nil {
-            panic(exception.NewException("Ship Hangar could not be removed", err))
-        }*/
-	}
-	
-}
 
-func AssignShipToHangar (ship *model.Ship){
-	if ship.Fleet != nil {
-		if (ship.Fleet.Location != nil) {
-            //ship.IsShipInFleet = false;
-            
-    		ship.Hangar = ship.Fleet.Location;
-    		ship.HangarId = ship.Fleet.Location.Id;
-    		ship.Fleet = nil;
-            ship.FleetId = 0;
-            
-            /*
-            shipToUpdate := model.Ship{
-                Id : ship.Id,
-                HangarId : ship.Fleet.Location.Id,
-                ModelId : ship.ModelId,
-                ConstructionStateId : ship.ConstructionStateId,
-            }
-    		*/
-    		UpdateShip(ship);
-            
-            /*
-            if err := database.Connection.Delete(ship.FleetId); err != nil {
-                panic(exception.NewException("Ship Fleet could not be removed", err))
-            }
-            */
-        } else {
-            panic(exception.NewHttpException(400, "Fleet not stationed", nil));
-        }
-	} else{
-		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
-	}
-}
 
 func GetAllFleets(player *model.Player) []model.Fleet{
 	var fleets []model.Fleet
@@ -155,17 +89,52 @@ func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet
     return fleets
 }
 
-func AssignMultipleShipsToFleet ( ships []*model.Ship, fleet *model.Fleet){
-    for i := range ships {
-        AssignShipToFleet(ships[i],fleet);
+func AssignShipsToFleet ( ships []*model.Ship, fleet *model.Fleet){
+    
+    for _,ship := range ships {
+        isShipInTheCorrectLocation := IsShipInSamePositionAsFleet(*ship, *fleet);
+    	
+    	if !isShipInTheCorrectLocation{
+    		panic(exception.NewHttpException(400, "wrong location", nil));
+    	} 
+        //ELSE
+		//ship.IsShipInFleet = true;
+        
+		ship.Fleet = fleet;
+		ship.FleetId =fleet.Id;
+		ship.Hangar = nil;
+        ship.HangarId = 0;
+    	
+        
+        
     }
+    
+    UpdateShips(ships);
 }
 
-func RemoveMultipleShipsFromFleet (ships []*model.Ship){
+func RemoveShipsFromFleet (ships []*model.Ship){
     
-    for i := range ships {
-        AssignShipToHangar(ships[i]);
+    for _,ship := range ships {
+        if ship.Fleet != nil {
+    		if (ship.Fleet.Location != nil) {
+                //ship.IsShipInFleet = false;
+                
+        		ship.Hangar = ship.Fleet.Location;
+        		ship.HangarId = ship.Fleet.Location.Id;
+        		ship.Fleet = nil;
+                ship.FleetId = 0;
+                
+                
+                
+            } else {
+                panic(exception.NewHttpException(400, "Fleet not stationed", nil));
+            }
+    	} else{
+    		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
+    	}
     }
+    
+    UpdateShips(ships);
     
 }
 
