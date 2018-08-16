@@ -22,8 +22,8 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 	
 	data := utils.DecodeJsonRequest(r)
 	
-	idPlanet, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16)
-	
+	//idPlanet, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16);
+	idPlanet := data["planet_id"].(float64);
 	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
 	
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
