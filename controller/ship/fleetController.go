@@ -194,17 +194,17 @@ func DeleteFleet (w http.ResponseWriter, r *http.Request){
     
     
 	if fleet.Player.Id != player.Id {
-		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+		panic(exception.NewHttpException(http.StatusForbidden, "{\"text\" : \"You do not controll this fleet\" : \"forbidden\"}", nil));
 	}
     
     if (fleet.Journey != nil){
-        panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil));
+        panic(exception.NewHttpException(400, "{\"text\" : \"Cannot delete moving fleet\",\"translate\" : \"moving_fleet\"}", nil));
     }
     
     ships := shipManager.GetFleetShip(*fleet);
     
     if (len(ships) != 0){
-        panic(exception.NewHttpException(400, "Cannot delete fleet id there is ships", nil));
+        panic(exception.NewHttpException(400, "{\"text\" : \"Cannot delete moving fleet\",\"translate\" : \"ship_in_fleet\"}", nil));
     }
     
 	
