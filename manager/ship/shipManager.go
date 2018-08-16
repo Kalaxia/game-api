@@ -179,12 +179,31 @@ func GetShip(id uint16) *model.Ship{
     if err := database.
         Connection.
         Model(&ship).
-        Column("ship.*", "Hangar", "Fleet", "Model").
+        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
         Where("ship.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err))
     }
     return &ship
+}
+
+func GetShipsByIds(ids []uint16) []*model.Ship{
+    /**
+     * Get Ships data ( may return incomplete information).
+     *  If the player is the owner of the ship all the data are send
+     * 
+     */
+    
+    var ships []*model.Ship
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        WhereIn("ship.id IN ?", ids).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "ship not found", err))
+    }
+    return ships
 }
 
 
@@ -197,9 +216,24 @@ func UpdateShip(ship *model.Ship){
     
 }
 
+func UpdateShips(ships []*model.Ship){
+    
+    /*
+    if _,err := database.Connection.Model(&ships).Update(); err != nil { //< [Exception]: ship could not be updated; [Error]: ERROR #42804 column "hangar_id" is of type integer but expression is of type text
+        panic(exception.NewException("ship could not be updated", err))
+    }
+    */
+    
+    for _,ship := range ships {
+        UpdateShip(ship);
+    }
+    
+}
+
+
 func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
     
-    return ( ship.Fleet == nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangard and hangard same pos as the fleet
-	  (ship.Fleet != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
+    return ( ship.Fleet == nil &&  fleet.Location != nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
+	  (ship.Fleet != nil && fleet.Location != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
     
 }

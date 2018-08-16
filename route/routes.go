@@ -104,18 +104,27 @@ var routes = Routes{
 		shipController.CreateShip,
 		true,
 	},
+	/*******************************/
+	// Fleets 
 	Route{
-		"Assign Ship To Fleet",
-		"PATCH",
-		"/api/fleets/{fleetId}/ships/{shipId}", 
-		shipController.AssignShipToFleet,
+		"Get Fleet Ships",
+		"GET",
+		"/api/fleets/{id}/ships",
+		shipController.GetFleetShip,
 		true,
 	},
 	Route{
-		"Remove Ship From Fleet",
+		"Assign Multiple Ships To Fleet",
+		"PATCH",
+		"/api/fleets/{fleetId}/ships", 
+		shipController.AssignShipsToFleet,
+		true,
+	},
+	Route{
+		"Remove Multiple Ship From Fleet",
 		"DELETE",
-		"/api/ships/{shipId}",
-		shipController.RemoveShipFromFleet,
+		"/api/fleets/ships",
+		shipController.RemoveShipsFromFleet,
 		true,
 	},
 	Route{ // data of the planet send in json
@@ -143,9 +152,10 @@ var routes = Routes{
 		"Get Fleet",
 		"GET",
 		"/api/fleets/{id}",
-		shipController.GetFleetsOnPlanet,
+		shipController.GetFleet,
 		true,
 	},
+	/*******************************/
 	Route{
 		"Get Hangar Ships",
 		"GET",
