@@ -149,14 +149,14 @@ var routes = Routes{
 		true,
 	},
 	Route{
-		"Get Fleet",
+		"Delete Fleet",
 		"DELETE",
 		"/api/fleets/{id}",
 		shipController.DeleteFleet,
 		true,
 	},
 	Route{
-		"Delete Fleet",
+		"Get Fleet",
 		"GET",
 		"/api/fleets/{id}",
 		shipController.GetFleet,
