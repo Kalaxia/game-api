@@ -180,6 +180,7 @@ func GetShip(id uint16) *model.Ship{
         Connection.
         Model(&ship).
         Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        Where("construction_state_id IS NULL").
         Where("ship.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err))
@@ -199,6 +200,7 @@ func GetShipsByIds(ids []uint16) []*model.Ship{
         Connection.
         Model(&ships).
         Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        Where("construction_state_id IS NULL").
         WhereIn("ship.id IN ?", ids).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err))

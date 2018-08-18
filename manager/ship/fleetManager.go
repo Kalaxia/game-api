@@ -144,6 +144,7 @@ func GetFleetShip (fleet model.Fleet) []model.Ship{
         Connection.
         Model(&ships).
         Column("ship.*", "Hangar", "Fleet", "Model").
+        Where("construction_state_id IS NULL").
         Where("ship.fleet_id = ?", fleet.Id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "ship not found", err));
