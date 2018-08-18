@@ -151,6 +151,9 @@ func RemoveShipsFromFleet (w http.ResponseWriter, r *http.Request){
     	if ships[i].Fleet == nil { // the ship is not in a fleet
     		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil));
     	}
+        if ships[i].Fleet.Location == nil { // the ship is not in a fleet
+    		panic(exception.NewHttpException(400, "Fleet not on a planet", nil));
+    	}
         
     	if ( player.Id != ships[i].Fleet.Player.Id || // this is the owner of the fleet
     	     ships[i].Fleet.Location.Player.Id != player.Id ) { // if the hangar is on a planet the player owns
