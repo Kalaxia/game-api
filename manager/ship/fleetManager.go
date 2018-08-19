@@ -159,3 +159,9 @@ func DeleteFleet(fleet *model.Fleet){
         panic(exception.NewException("Fleet could not be deleted", err));
     }
 }
+
+func UpdateFleet (fleet *model.Fleet){
+    if err := database.Connection.Update(fleet); err != nil {
+        panic(exception.NewException("Fleet could not be updated", err))
+    }
+}
