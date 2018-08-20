@@ -163,6 +163,15 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
+	// journeys
+	Route{
+		"Send Fleet On Journey",
+		"POST",
+		"/api/fleets/{id}/journey",
+		shipController.SendFleetOnJourney,
+		true,
+	},
+	/*******************************/
 	Route{
 		"Get Hangar Ships",
 		"GET",

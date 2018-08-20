@@ -76,9 +76,16 @@ type(
     TimeLawsContainer struct{
         WarmTime TimeLawsConfig `json:"warm_time"`
         TravelTime TimeLawsConfig `json:"travel_time"`
-        Cooldown TimeLawsConfig `json:"cooldown"`
+        Cooldown TimeLawsConfig `json:"cooldown"` //< cooldown unimplemented
     }
     
+    RangeContainer struct{
+        SameSystem float64 `json:"same_system"`
+        PlanetToPlanet float64 `json:"planet_to_planet"`
+        PlanetToPosition float64 `json:"planet_to_position"`
+        PositionToPosition float64 `json:"position_to_position"`
+        PositionToPlanet float64 `json:"position_to_planet"`
+    }
     
 )
 /********************************************/
@@ -109,6 +116,30 @@ func (fleet Fleet) GetPositionOnMap () ([2]float64 , bool) {
 // FleetJourneyStep
 func (journeyStep FleetJourneyStep) GetNextStep () FleetJourneyStep{
     return *(journeyStep.NextStep);
+}
+
+func (journeyStep FleetJourneyStep) GetDistance () float64{
+    if journeyStep.PlanetStart != nil{
+        if journeyStep.PlanetFinal != nil {
+            if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
+                return 0.;
+            } else {
+                distance := math.Pow(math.Pow(float64( float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
+                return distance;
+            }
+        } else {
+            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
+            return distance;
+        }
+    } else{
+        if journeyStep.PlanetFinal != nil {
+            distance := math.Pow(math.Pow(float64(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart),2.) + math.Pow(float64(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart),2.) , 0.5);
+            return distance;
+        } else {
+            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - journeyStep.MapPosXStart),2.) + math.Pow(float64(journeyStep.MapPosYFinal - journeyStep.MapPosYStart),2.) , 0.5);
+            return distance;
+        }
+    }
 }
 
 /*------------------------------------------*/
@@ -146,3 +177,31 @@ func (law TimeLawsConfig) GetTimeForStep(journeyStep *FleetJourneyStep) float64 
         }
     }
 }
+/*------------------------------------------*/
+// RangeContainer
+func (rangeC RangeContainer) IsOnRange(journeyStep *FleetJourneyStep) bool {
+    if journeyStep.PlanetStart != nil{
+        if journeyStep.PlanetFinal != nil {
+            if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
+                return rangeC.SameSystem >= 0.;
+            } else {
+                distance := math.Pow(math.Pow(float64( float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
+                return rangeC.PlanetToPlanet >= distance;
+            }
+        } else {
+            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
+            return rangeC.PlanetToPosition >= distance;
+        }
+    } else{
+        if journeyStep.PlanetFinal != nil {
+            distance := math.Pow(math.Pow(float64(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart),2.) + math.Pow(float64(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart),2.) , 0.5);
+            return rangeC.PositionToPlanet >= distance;
+        } else {
+            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - journeyStep.MapPosXStart),2.) + math.Pow(float64(journeyStep.MapPosYFinal - journeyStep.MapPosYStart),2.) , 0.5);
+            return rangeC.PositionToPosition >= distance;
+        }
+    }
+}
+
+/*------------------------------------------*/
+// utils

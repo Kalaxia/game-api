@@ -12,6 +12,7 @@ import(
 )
 
 var journeyTimeData model.TimeLawsContainer
+var journeyRangeData model.RangeContainer
 
 func init() {
     defer utils.CatchException(); // defer is a "stack" (first in last out) so we call utils.CatchException() after the other defer of this function
@@ -21,6 +22,14 @@ func init() {
         panic(exception.NewException("Can't open journey time configuration file", err));
     }
     if err := json.Unmarshal(journeyTimeDataJSON, &journeyTimeData); err != nil {
+        panic(exception.NewException("Can't read journey time configuration file", err));
+    }
+    
+    journeyRangeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_range.json")
+    if err != nil {
+        panic(exception.NewException("Can't open journey time configuration file", err));
+    }
+    if err := json.Unmarshal(journeyRangeDataJSON, &journeyRangeData); err != nil {
         panic(exception.NewException("Can't read journey time configuration file", err));
     }
     
@@ -36,7 +45,7 @@ func init() {
                 utils.Scheduler.AddTask(uint(now.Sub(step.TimeArrival).Seconds()), func () { // TODO review this uint
                     finishStep(step);
                 }); //< Do I need to defer that to be safe ? (see comment below)
-            } else{// if the time is already passed we directly execute it
+            } else {// if the time is already passed we directly execute it
                 defer func () {go finishStep(step);}();
                 // defer for concurency reason 
                 //
@@ -205,4 +214,115 @@ func GetJourneyStep(id uint16) *model.FleetJourneyStep {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
     return &steps;
+}
+
+func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *model.Fleet) []*model.FleetJourneyStep{
+    var steps []*model.FleetJourneyStep
+    
+    journey := &model.FleetJourney{
+        CreatedAt : time.Now(),
+    };
+    
+    var planetPrevId uint16 = fleet.LocationId;
+    var PosPrevX float64 = fleet.MapPosX;
+    var PosPrevY float64 = fleet.MapPosY;
+    time_Last := time.Now();
+    for i,_ := range planetIds {
+        var step *model.FleetJourneyStep;
+        if planetIds[i] != 0 {
+            if planetPrevId !=0 {
+                step = &model.FleetJourneyStep{
+                    PlanetStartId : planetPrevId,
+                    PlanetFinalId : planetIds[i],
+                    StepNumber : uint32(i+1),
+                };
+            } else{
+                step = &model.FleetJourneyStep{
+                    PlanetFinalId : planetIds[i],
+                    MapPosXStart : PosPrevX,
+                    MapPosYStart : PosPrevY,
+                    StepNumber : uint32(i+1),
+                };
+            }
+        } else{
+            if planetPrevId !=0 {
+                step = &model.FleetJourneyStep{
+                    PlanetStartId : planetPrevId,
+                    MapPosXFinal : x[i],
+                    MapPosYFinal : y[i],
+                    StepNumber : uint32(i+1),
+                };
+            } else{
+                step = &model.FleetJourneyStep{
+                    MapPosXStart : PosPrevX,
+                    MapPosYStart : PosPrevY,
+                    MapPosXFinal : x[i],
+                    MapPosYFinal : y[i],
+                    StepNumber : uint32(i+1),
+                };
+            }
+        }
+        
+        //TODO implement cooldown ?
+        step.TimeStart = time_Last;
+    
+        step.TimeJump = step.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.GetTimeForStep(step)) * time.Second );
+        
+        step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second);
+        if ! journeyRangeData.IsOnRange(step){
+            panic(exception.NewHttpException(400, "Step not in range", nil));
+        }
+        steps = append(steps,step)
+        planetPrevId = planetIds[i];
+        PosPrevX = x[i];
+        PosPrevY = y[i];
+    }
+    
+    journey.EndedAt =  steps[len(steps)-1].TimeArrival;
+    
+    if err := database.Connection.Insert(journey); err != nil {
+		panic(exception.NewHttpException(500, "Journey could not be created", err))
+    }
+    
+    for i := len(steps)-1; i >= 0; i-- { //< we read the table in reverse
+        stepC := steps[i];
+        stepC.Journey = journey;
+        stepC.JourneyId = journey.Id;
+        if i < len(steps) -1{
+            stepC.NextStep =  steps[i+1]
+            stepC.NextStepId =  steps[i+1].Id
+        } else {
+            stepC.NextStep = nil;
+            stepC.NextStepId = 0;
+        }
+        
+        if err := database.Connection.Insert(stepC); err != nil {
+    		panic(exception.NewHttpException(500, "Step could not be created", err))
+        }
+    }
+    
+    journey.CurrentStep = steps[0];
+    journey.CurrentStepId = steps[0].Id;
+    UpdateJourney(journey);
+    
+    fleet.Location = nil;
+    fleet.LocationId =0;
+    fleet.Journey = journey;
+    fleet.JourneyId = journey.Id;
+    
+    UpdateFleet(fleet);
+    
+    now := time.Now();
+    
+    if now.Before(journey.CurrentStep.TimeArrival){
+        utils.Scheduler.AddTask(uint(now.Sub(journey.CurrentStep.TimeArrival).Seconds()), func () {
+            finishStep(journey.CurrentStep);
+        });
+    } else {
+        defer finishStep(journey.CurrentStep); // if the time is already passed we directly execute it
+        //
+    }
+    
+    
+    return steps;
 }

@@ -1,0 +1,7 @@
+{
+	"same_system" : 100.0,
+	"planet_to_planet" : 100.0,
+	"planet_to_position" : 100.0,
+	"position_to_position" : 100.0,
+	"position_to_planet" : 100.0
+}
