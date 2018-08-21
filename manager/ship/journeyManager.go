@@ -129,7 +129,7 @@ func beginNextStep(step *model.FleetJourneyStep){
         UpdateJourneyStep(step.NextStep);
     }
     
-    nextStep := GetJourneyStep(step.NextStep.Id); //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.* 
+    nextStep := GetStep(step.NextStep.Id); //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.* 
     now := time.Now();
     if now.Before(nextStep.TimeArrival){
         utils.Scheduler.AddTask(uint(now.Sub(nextStep.TimeArrival).Seconds()), func () {
@@ -204,106 +204,52 @@ func GetAllJourneySteps() []*model.FleetJourneyStep {
     return steps;
 }
 
-func GetJourneyStep(id uint16) *model.FleetJourneyStep {
+func GetStep(stepId uint16) *model.FleetJourneyStep {
     var steps model.FleetJourneyStep;
     if err := database.
         Connection.
         Model(&steps).
-        Column("step.*", "step.Journey", "step.NextStep", "step.Journey.CurrentStep", "step.NextStep.PlanetStart", "step.NextStep.PlanetFinal.System", "step.NextStep.PlanetStart.System", "step.NextStep.PlanetFinal.System").
+        Column("step.*", "step.Journey", "step.NextStep", "step.Journey.CurrentStep", "step.NextStep.PlanetStart", "step.NextStep.PlanetFinal.System", "step.NextStep.PlanetStart.System", "step.NextStep.PlanetFinal.System","step.PlanetFinal", "step.PlanetStart","step.PlanetFinal.System", "step.PlanetStart.System").
+        Where("step.id = ?",stepId).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
     return &steps;
 }
 
+func GetStepsByJourneyId(journeyId uint16) []*model.FleetJourneyStep {
+    var steps []*model.FleetJourneyStep;
+    if err := database.
+        Connection.
+        Model(&steps).
+        Column("step.*", "step.Journey", "step.NextStep", "step.Journey.CurrentStep", "step.NextStep.PlanetStart", "step.NextStep.PlanetFinal.System", "step.NextStep.PlanetStart.System", "step.NextStep.PlanetFinal.System","step.PlanetFinal", "step.PlanetStart","step.PlanetFinal.System", "step.PlanetStart.System").
+        Where("step.journey_id = ?",journeyId).
+        Select(); err != nil {
+            panic(exception.NewHttpException(404, "Fleets not found", err));
+    }
+    return steps;
+}
+
 func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *model.Fleet) []*model.FleetJourneyStep{
-    var steps []*model.FleetJourneyStep
+    var steps []*model.FleetJourneyStep;
     
-    journey := &model.FleetJourney{
+    journey := &model.FleetJourney{ // a new Journey is created 
         CreatedAt : time.Now(),
     };
     
-    var planetPrevId uint16 = fleet.LocationId;
-    var PosPrevX float64 = fleet.MapPosX;
-    var PosPrevY float64 = fleet.MapPosY;
-    time_Last := time.Now();
-    for i,_ := range planetIds {
-        var step *model.FleetJourneyStep;
-        if planetIds[i] != 0 {
-            if planetPrevId !=0 {
-                step = &model.FleetJourneyStep{
-                    PlanetStartId : planetPrevId,
-                    PlanetFinalId : planetIds[i],
-                    StepNumber : uint32(i+1),
-                };
-            } else{
-                step = &model.FleetJourneyStep{
-                    PlanetFinalId : planetIds[i],
-                    MapPosXStart : PosPrevX,
-                    MapPosYStart : PosPrevY,
-                    StepNumber : uint32(i+1),
-                };
-            }
-        } else{
-            if planetPrevId !=0 {
-                step = &model.FleetJourneyStep{
-                    PlanetStartId : planetPrevId,
-                    MapPosXFinal : x[i],
-                    MapPosYFinal : y[i],
-                    StepNumber : uint32(i+1),
-                };
-            } else{
-                step = &model.FleetJourneyStep{
-                    MapPosXStart : PosPrevX,
-                    MapPosYStart : PosPrevY,
-                    MapPosXFinal : x[i],
-                    MapPosYFinal : y[i],
-                    StepNumber : uint32(i+1),
-                };
-            }
-        }
-        
-        //TODO implement cooldown ?
-        step.TimeStart = time_Last;
+    steps = createStepStruct (fleet.Location, fleet.MapPosX, fleet.MapPosY, time.Now(),planetIds, x, y,0); //< we create the structurs
     
-        step.TimeJump = step.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.GetTimeForStep(step)) * time.Second );
-        
-        step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second);
-        if ! journeyRangeData.IsOnRange(step){
-            panic(exception.NewHttpException(400, "Step not in range", nil));
-        }
-        steps = append(steps,step)
-        planetPrevId = planetIds[i];
-        PosPrevX = x[i];
-        PosPrevY = y[i];
-    }
-    
-    journey.EndedAt =  steps[len(steps)-1].TimeArrival;
+    journey.EndedAt =  steps[len(steps)-1].TimeArrival; 
     
     if err := database.Connection.Insert(journey); err != nil {
 		panic(exception.NewHttpException(500, "Journey could not be created", err))
     }
     
-    for i := len(steps)-1; i >= 0; i-- { //< we read the table in reverse
-        stepC := steps[i];
-        stepC.Journey = journey;
-        stepC.JourneyId = journey.Id;
-        if i < len(steps) -1{
-            stepC.NextStep =  steps[i+1]
-            stepC.NextStepId =  steps[i+1].Id
-        } else {
-            stepC.NextStep = nil;
-            stepC.NextStepId = 0;
-        }
-        
-        if err := database.Connection.Insert(stepC); err != nil {
-    		panic(exception.NewHttpException(500, "Step could not be created", err))
-        }
-    }
+    insetFollowingStepInDBWithLinkCreation(steps,journey);
     
     journey.CurrentStep = steps[0];
     journey.CurrentStepId = steps[0].Id;
-    UpdateJourney(journey);
+    UpdateJourney(journey); 
     
     fleet.Location = nil;
     fleet.LocationId =0;
@@ -323,6 +269,135 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
         //
     }
     
+    return steps;
+}
+
+func AddStepsToJourney (journey *model.FleetJourney, planetIds []uint16, x []float64, y []float64 ) []*model.FleetJourneyStep { 
+    if journey == nil || journey.CurrentStep == nil {
+        panic(exception.NewHttpException(400, "Journey is already finished or does not exist", nil))
+    }
+    
+    previousSteps := GetStepsByJourneyId(journey.Id);
+    var oldLastStep *model.FleetJourneyStep = previousSteps[0];
+    
+    for _,step := range previousSteps {
+        if step.StepNumber > oldLastStep.StepNumber { // we search for the higher step number; this should be the last step
+            oldLastStep = step;
+        }
+    }
+    
+    if oldLastStep.NextStep != nil {
+        panic(exception.NewHttpException(400, "The step with the higher step number is not the last step. Potential loop : abording", nil))
+    }
+    
+    var steps []*model.FleetJourneyStep = createStepStruct (oldLastStep.PlanetFinal, oldLastStep.MapPosXFinal, oldLastStep.MapPosYFinal, oldLastStep.TimeArrival,planetIds, x, y,oldLastStep.StepNumber);
+    
+    journey.EndedAt =  steps[len(steps)-1].TimeArrival;
+    UpdateJourney(journey);
+    
+    insetFollowingStepInDBWithLinkCreation(steps,journey);
+    
+    oldLastStep.NextStep = steps[0];
+    oldLastStep.NextStepId = steps[0].Id;
+    
+    UpdateJourneyStep(oldLastStep);
     
     return steps;
+}
+
+func createStepStruct (firstPlanet *model.Planet, firstPosX float64, firstPosY float64, timeStart time.Time,planetIds []uint16, x []float64, y []float64, stepNumberOffset uint32) []*model.FleetJourneyStep {
+    // Create the step structurs without the linking 
+    // The step is return in the correct order of execution
+    // if the first location is not a planet, input firstPlanet as nil
+    // The stepNumberOffset is the should be the StepNumber of pervious steps if there is otherwise input 0 ( infact you can input any number but prefer using 0)
+    // if the stepNumberOffset is too low you may have error in the future
+    if len(planetIds) != len(x) || len(x) != len(y)  {// the len(planetIds) != len(y) is unessesary
+        panic(exception.NewHttpException(400, "Invalid input : planetIds, x and y should be of the same length", nil))
+    }
+    
+    var steps []*model.FleetJourneyStep;
+    var planetPrevId uint16 ;
+    if firstPlanet != nil {
+        planetPrevId = firstPlanet.Id;
+    } else {
+        planetPrevId = 0;
+    }
+    
+    var PosPrevX float64 = firstPosX;
+    var PosPrevY float64 = firstPosY;
+    time_Last := timeStart;
+    
+    for i,_ := range planetIds {
+        var step *model.FleetJourneyStep;
+        if planetIds[i] != 0 {
+            if planetPrevId !=0 {
+                step = &model.FleetJourneyStep{
+                    PlanetStartId : planetPrevId,
+                    PlanetFinalId : planetIds[i],
+                    StepNumber : uint32(i+1)+stepNumberOffset,
+                };
+            } else{
+                step = &model.FleetJourneyStep{
+                    MapPosXStart : PosPrevX,
+                    MapPosYStart : PosPrevY,
+                    PlanetFinalId : planetIds[i],
+                    StepNumber : uint32(i+1)+stepNumberOffset,
+                };
+            }
+        } else {
+            if planetPrevId !=0 {
+                step = &model.FleetJourneyStep{
+                    PlanetStartId : planetPrevId,
+                    MapPosXFinal : x[i],
+                    MapPosYFinal : y[i],
+                    StepNumber : uint32(i+1)+stepNumberOffset,
+                };
+            } else{
+                step = &model.FleetJourneyStep{
+                    MapPosXStart : PosPrevX,
+                    MapPosYStart : PosPrevY,
+                    MapPosXFinal : x[i],
+                    MapPosYFinal : y[i],
+                    StepNumber : uint32(i+1)+stepNumberOffset,
+                };
+            }
+        }
+        
+        //TODO implement cooldown ?
+        step.TimeStart = time_Last;
+    
+        step.TimeJump = step.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.GetTimeForStep(step)) * time.Second );
+        
+        step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second);
+        if ! journeyRangeData.IsOnRange(step){
+            panic(exception.NewHttpException(400, "Step not in range", nil));
+        }
+        steps = append(steps,step)
+        planetPrevId = planetIds[i];
+        PosPrevX = x[i];
+        PosPrevY = y[i];
+        time_Last = step.TimeArrival;
+    }
+    
+    return steps;
+}
+
+
+func insetFollowingStepInDBWithLinkCreation (steps []*model.FleetJourneyStep,journey *model.FleetJourney) {
+    for i := len(steps)-1; i >= 0; i-- { //< we read the table in reverse
+        stepC := steps[i];
+        stepC.Journey = journey;
+        stepC.JourneyId = journey.Id;
+        if i < len(steps) -1{ //< normaly this steps is already in the DB
+            stepC.NextStep =  steps[i+1]
+            stepC.NextStepId =  steps[i+1].Id
+        } else {
+            stepC.NextStep = nil;
+            stepC.NextStepId = 0;
+        }
+        
+        if err := database.Connection.Insert(stepC); err != nil {
+    		panic(exception.NewHttpException(500, "Step could not be created", err));
+        }
+    }
 }

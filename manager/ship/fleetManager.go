@@ -156,12 +156,12 @@ func GetFleetShip (fleet model.Fleet) []model.Ship{
 func DeleteFleet(fleet *model.Fleet){
     
     if err := database.Connection.Delete(fleet); err != nil {
-        panic(exception.NewException("Fleet could not be deleted", err));
+        panic(exception.NewHttpException(500, "Fleet could not be deleted", err));
     }
 }
 
 func UpdateFleet (fleet *model.Fleet){
     if err := database.Connection.Update(fleet); err != nil {
-        panic(exception.NewException("Fleet could not be updated", err))
+        panic(exception.NewHttpException(500, "Fleet could not be updated", err))
     }
 }

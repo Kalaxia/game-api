@@ -171,6 +171,13 @@ var routes = Routes{
 		shipController.SendFleetOnJourney,
 		true,
 	},
+	Route{
+		"Add Steps To Journey",
+		"PATCH",
+		"/api/fleets/{id}/journey",
+		shipController.AddStepsToJourney,
+		true,
+	},
 	/*******************************/
 	Route{
 		"Get Hangar Ships",
