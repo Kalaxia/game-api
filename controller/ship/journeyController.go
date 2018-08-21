@@ -16,8 +16,8 @@ import (
 func GetJourney (w http.ResponseWriter, r *http.Request){
 	
 	player := context.Get(r, "player").(*model.Player)
-	idJourney, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16);
-	fleet := shipManager.GetFleetOnJourney (uint16(idJourney));
+	idFleet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16);
+	fleet := shipManager.GetFleetOnJourney (uint16(idFleet));
 	
 	
 	if player.Id != fleet.Player.Id { // the player does not own the planet
@@ -28,6 +28,21 @@ func GetJourney (w http.ResponseWriter, r *http.Request){
 	}
 	
 	utils.SendJsonResponse(w, 200,fleet.Journey);
+}
+
+func GetFleetSteps (w http.ResponseWriter, r *http.Request){
+    player := context.Get(r, "player").(*model.Player)
+    idFleet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16);
+	fleet := shipManager.GetFleetOnJourney (uint16(idFleet));
+    
+    if player.Id != fleet.Player.Id { // the player does not own the planet
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
+	}
+	if !fleet.IsOnJourney() {
+		panic(exception.NewHttpException(400, "This journey has ended", nil));
+	}
+    
+    utils.SendJsonResponse(w, 200,shipManager.GetStepsByJourneyId(fleet.Journey.Id));
 }
 
 func CreateJourney (w http.ResponseWriter, r *http.Request) {
@@ -101,4 +116,16 @@ func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
     
     utils.SendJsonResponse(w, 202, steps);
     
+}
+
+func GetRange(w http.ResponseWriter, r *http.Request){
+    
+    // ID for later if diffrent fleet have diffrent range 
+    utils.SendJsonResponse(w, 202, shipManager.GetRange());
+}
+
+func GetTimeLaws(w http.ResponseWriter, r *http.Request){
+    
+    // ID for later if diffrent fleet have diffrent range 
+    utils.SendJsonResponse(w, 202, shipManager.GetTimeLaws());
 }

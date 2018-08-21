@@ -14,6 +14,14 @@ import(
 var journeyTimeData model.TimeLawsContainer
 var journeyRangeData model.RangeContainer
 
+func GetRange () model.RangeContainer{
+    return journeyRangeData;
+}
+
+func GetTimeLaws() model.TimeLawsContainer{
+    return journeyTimeData;
+}
+
 func init() {
     defer utils.CatchException(); // defer is a "stack" (first in last out) so we call utils.CatchException() after the other defer of this function
     
@@ -40,7 +48,6 @@ func init() {
             // we only treat the step if it is the current step
             // Indeed in finishStep we sheldur ( or do if the time has passed) finishStep for step.NextStep so we don't reshedur it
             // (It also resolve some proble with step deletion and concurency problem )
-            
             if now.Before(step.TimeArrival){
                 utils.Scheduler.AddTask(uint(now.Sub(step.TimeArrival).Seconds()), func () { // TODO review this uint
                     finishStep(step);
@@ -76,12 +83,10 @@ func finishStep(step *model.FleetJourneyStep) {
             } else {
                 finishJourney(step.Journey);
                 hasToDeleteJourney = true;
-                
             }
         } else {
             // we do nothing this is an old step already finished
             // we could delete 
-            
         }
         
     } else {
@@ -105,11 +110,9 @@ func finishStep(step *model.FleetJourneyStep) {
 func beginNextStep(step *model.FleetJourneyStep){
     step.Journey.CurrentStep = step.NextStep;
     step.Journey.CurrentStepId = step.NextStepId;
-    
     UpdateJourney(step.Journey);
     
     var needToUpdateNextStep = false;
-    
     var defaultTime time.Time // This varaible is not set so it give the default time for unset varaible
     if step.NextStep.TimeStart == defaultTime { // TODO think of when we do this assignation
         //step.NextStep.TimeStart = step.TimeArrival.Add( time.Duration(journeyTimeData.Cooldown.GetTimeForStep(step.NextStep)) * time.Second );
@@ -232,7 +235,6 @@ func GetStepsByJourneyId(journeyId uint16) []*model.FleetJourneyStep {
 
 func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *model.Fleet) []*model.FleetJourneyStep{
     var steps []*model.FleetJourneyStep;
-    
     journey := &model.FleetJourney{ // a new Journey is created 
         CreatedAt : time.Now(),
     };
@@ -240,7 +242,6 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
     steps = createStepStruct (fleet.Location, fleet.MapPosX, fleet.MapPosY, time.Now(),planetIds, x, y,0); //< we create the structurs
     
     journey.EndedAt =  steps[len(steps)-1].TimeArrival; 
-    
     if err := database.Connection.Insert(journey); err != nil {
 		panic(exception.NewHttpException(500, "Journey could not be created", err))
     }
@@ -255,18 +256,15 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
     fleet.LocationId =0;
     fleet.Journey = journey;
     fleet.JourneyId = journey.Id;
-    
     UpdateFleet(fleet);
     
     now := time.Now();
-    
     if now.Before(journey.CurrentStep.TimeArrival){
         utils.Scheduler.AddTask(uint(now.Sub(journey.CurrentStep.TimeArrival).Seconds()), func () {
             finishStep(journey.CurrentStep);
         });
     } else {
         defer finishStep(journey.CurrentStep); // if the time is already passed we directly execute it
-        //
     }
     
     return steps;
@@ -285,21 +283,17 @@ func AddStepsToJourney (journey *model.FleetJourney, planetIds []uint16, x []flo
             oldLastStep = step;
         }
     }
-    
     if oldLastStep.NextStep != nil {
         panic(exception.NewHttpException(400, "The step with the higher step number is not the last step. Potential loop : abording", nil))
     }
-    
     var steps []*model.FleetJourneyStep = createStepStruct (oldLastStep.PlanetFinal, oldLastStep.MapPosXFinal, oldLastStep.MapPosYFinal, oldLastStep.TimeArrival,planetIds, x, y,oldLastStep.StepNumber);
     
     journey.EndedAt =  steps[len(steps)-1].TimeArrival;
     UpdateJourney(journey);
-    
     insetFollowingStepInDBWithLinkCreation(steps,journey);
     
     oldLastStep.NextStep = steps[0];
     oldLastStep.NextStepId = steps[0].Id;
-    
     UpdateJourneyStep(oldLastStep);
     
     return steps;
