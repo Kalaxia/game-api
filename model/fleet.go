@@ -7,7 +7,7 @@ import(
 
 type(
     Fleet struct {
-        TableName struct{} `json:"-" sql:"fleet__fleets"`
+        TableName struct{} `json:"-" sql:"fleet__fleets" pg:",discard_unknown_columns"` //TEMP discard_unknown_columns
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`

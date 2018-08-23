@@ -220,6 +220,13 @@ var routes = Routes{
 		shipController.GetTimeLaws,
 		true,
 	},
+	Route{
+		"Remove Step And Following Form Journey Associated With Fleet",
+		"DELETE",
+		"/api/fleets/{id}/steps/{idStep}",
+		shipController.RemoveStepAndFollowingFormJourneyAssociatedWithFleet,
+		true,
+	},
 	/*******************************/
 	Route{
 		"Get Hangar Ships",

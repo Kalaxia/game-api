@@ -17,7 +17,7 @@ func GetFleet(id uint16) *model.Fleet{
     if err := database.
         Connection.
         Model(&fleet).
-        Column("fleet.*", "Player", "Location", "Journey").
+        Column("fleet.*", "Player", "Location", "Journey","Journey.CurrentStep","Location.System").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err))
@@ -163,5 +163,11 @@ func DeleteFleet(fleet *model.Fleet){
 func UpdateFleet (fleet *model.Fleet){
     if err := database.Connection.Update(fleet); err != nil {
         panic(exception.NewHttpException(500, "Fleet could not be updated", err))
+    }
+}
+
+func UpdateFleetInternal (fleet *model.Fleet){
+    if err := database.Connection.Update(fleet); err != nil {
+        panic(exception.NewException("Fleet could not be updated", err))
     }
 }
