@@ -30,7 +30,7 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil));
 	}
 	// else
-	utils.SendJsonResponse(w, 200,shipManager.CreateFleet(player,planet));
+	utils.SendJsonResponse(w, 201,shipManager.CreateFleet(player,planet));
 	
 	
 }

@@ -105,7 +105,7 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
-	// Fleets 
+	// Fleets
 	Route{
 		"Get Fleet Ships",
 		"GET",
@@ -116,7 +116,7 @@ var routes = Routes{
 	Route{
 		"Assign Multiple Ships To Fleet",
 		"PATCH",
-		"/api/fleets/{fleetId}/ships", 
+		"/api/fleets/{fleetId}/ships",
 		shipController.AssignShipsToFleet,
 		true,
 	},

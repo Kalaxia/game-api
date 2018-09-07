@@ -120,12 +120,14 @@ func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
 
 func GetRange(w http.ResponseWriter, r *http.Request){
     
-    // ID for later if diffrent fleet have diffrent range 
+    // ID for later if diffrent fleet have diffrent range
     utils.SendJsonResponse(w, 202, shipManager.GetRange());
 }
 
 func GetTimeLaws(w http.ResponseWriter, r *http.Request){
     
-    // ID for later if diffrent fleet have diffrent range 
+    // ID for later if diffrent fleet have diffrent range
     utils.SendJsonResponse(w, 202, shipManager.GetTimeLaws());
 }
+
+// TODO remove steps
