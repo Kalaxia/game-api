@@ -128,15 +128,15 @@ version: v0.1.7
                         body:
                             application/json:
                                 type: object[]
-                                items: !include fleets/fleet.raml
+                                items: !include fleets/fleet-lowlink.raml
         /ships:
             get:
-            responses:
-                200:
-                    body:
-                        application/json:
-                            type: object[]
-                            items: !include ships/ship.raml
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: object[]
+                                items: !include ships/ship-lowlink-planet.raml
 /servers:
     post:
         body:
@@ -169,34 +169,139 @@ version: v0.1.7
 /fleets:
     /{id}:
         get:
+            description: Get fleet
             responses:
                 200:
                     body:
                         application/json:
                             type: object[]
-                            items: !include fleets/fleet.raml
+                            items: !include fleets/fleet-lowlink.raml
         /ships:
             get:
+                description: Get ships in the fleet
                 responses:
                     200:
                         body:
                             application/json:
                                 type: object[]
-                                items: !include ships/ship.raml
-            /{id}:
-                patch:
-                responses:
+                                items: !include ships/ship-lowlink.raml
+            #/{id}:
+            #    patch:
+            #        responses:
             patch:
+                description: move the ships with the given id into the fleet
                 body:
                     application/json:
                         type: object
                         properties:
                             data-ships: integer[]
                 responses:
+                    202:
+                        body:
+                            application/json:
+                                type: string
+                                default : ""
+                        
         delete:
+            description: move the ships with the given id into the hangard
+            body:
+                application/json:
+                    type: object
+                    properties:
+                        data-ships: integer[]
             responses:
                 204:
+                    body:
+                        application/json:
+                            type: string
+                            default : Deleted
+        /journey:
+            post:
+                description : send fleet on journey sith steps given in input
+                body:
+                    application/json:
+                        type: object[]
+                        items:
+                            type : object
+                            properties:
+                                planetId : integer
+                                x:
+                                    type: number
+                                    format: float
+                                y:
+                                    type: number
+                                    format: float
+                responses:
+                    202:
+                        body:
+                            application/json:
+                                type : object[]
+                                items: !include journeys/journeyStep-lowlink.raml
+            patch:
+                description : add step to journey
+                body:
+                    application/json:
+                        type: object[]
+                        items:
+                            type : object
+                            properties:
+                                planetId : integer
+                                x:
+                                    type: number
+                                    format: float
+                                y:
+                                    type: number
+                                    format: float
+                responses:
+                    202:
+                        body:
+                            application/json:
+                                type : object[]
+                                items: !include journeys/journeyStep-lowlink.raml
+            get:
+                description: Get journey if exist
+                responses:
+                    200:
+                        body:
+                            application/json:
+                                type: !include journeys/journey-nolink.raml
+        /steps:
+            get:
+                description: Get all steps remaining
+                responses:
+                    200:
+                        body:
+                            application/json: !include journeys/journeyStep-highlink.raml
+        /range:
+            get:
+                description: Get maximum one jump distance
+                responses:
+                    200:
+                        body:
+                            application/json: !include fleets/range.raml
+        /time:
+            get:
+                description: get time laws
+                responses:
+                    200:
+                        body:
+                            application/json: !include fleets/time.raml
+    /range:
+        get:
+            description: "same as fleet/{id}/range : GET"
+            responses:
+                200:
+                    body:
+                        application/json: !include fleets/range.raml
+    /time:
+        get:
+            description: "same as fleet/{id}/time : GET"
+            responses:
+                200:
+                    body:
+                        application/json: !include fleets/time.raml
     get:
+        description: Get all fleets a player controlle
         responses:
             200:
                 body:
@@ -204,19 +309,35 @@ version: v0.1.7
                         type: object[]
                         items: !include fleets/fleet.raml
     post:
+        description: Crate a new fleet on selected planet id
         body:
             application/json:
                 type: object
                 properties:
                     "planet_id" : integer
-    /ships:
-        /{id}:
-            delete:
+        responses:
+            201:
                 body:
-                    application/json:
-                        type: object
-                        properties:
-                            data-ships: integer[]
-                responses:
+                    application/json: !include fleets/fleet-lowlink.raml
+    /ships:
+        # /{id}:
+        #     delete:
+        #         body:
+        #             application/json:
+        #                 type: object
+        #                 properties:
+        #                     data-ships: integer[]
+        #         responses:
+        #             204:
+        #                 body:
+        #                     application/json:
+        #                         type: string
+        #                         default : Deleted
         delete:
+            description: move ships with selected id to hangar
             responses:
+                204:
+                    body:
+                        application/json:
+                            type: string
+                            default : Deleted

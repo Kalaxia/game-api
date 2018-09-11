@@ -1,0 +1,17 @@
+#%RAML 1.0 DataType
+type: object
+displayName: JourneyStep (next)
+properties:
+    id: integer
+    journey: !include journey-nolink.raml
+    next_step: !include journeyStep-nolink.raml
+    planet_start: !include ../planets/planet-nolink.raml
+    map_pos_x_start: integer
+    map_pos_y_start: integer
+    planet_final: !include ../planets/planet-nolink.raml
+    map_pos_x_final: integer
+    map_pos_y_final: integer
+    time_start: datetime
+    time_jump: datetime
+    time_arrival: datetime
+    step_number: integer
