@@ -32,6 +32,37 @@ import(
 //     return offers
 // }
 
+func SearchOffers(data map[string]interface{}) []model.OfferInterface {
+    offers := make([]model.OfferInterface, 0)
+
+    operation := data["operation"].(string)
+
+    resourceOffers := make([]*model.ResourceOffer, 0)
+    if err := database.Connection.Model(&resourceOffers).Column("Location", "Location.Player", "Location.Player.Faction").Where("operation = ?", operation).Select(); err != nil {
+        panic(exception.NewHttpException(500, "Resource offers could not be retrieved", err))
+    }
+    // shipOffers := make([]*model.ShipOffer, 0)
+    // if err := database.Connection.Model(&shipOffers).Where("operation = ?", operation).Select(); err != nil {
+    //     panic(exception.NewHttpException(500, "Ship offers could not be retrieved", err))
+    // }
+    // modelOffers := make([]*model.ModelOffer, 0)
+    // if err := database.Connection.Model(&modelOffers).Where("operation = ?", operation).Select(); err != nil {
+    //     panic(exception.NewHttpException(500, "Model offers could not be retrieved", err))
+    // }
+
+    for _, offer := range resourceOffers {
+        offers = append(offers, offer)
+    }
+    // for _, offer := range shipOffers {
+    //     offers = append(offers, offer)
+    // }
+    // for _, offer := range modelOffers {
+    //     offers = append(offers, offer)
+    // }
+
+    return offers
+}
+
 func CreateOffer(planet *model.Planet, data map[string]interface{}) model.OfferInterface {
     var offer model.OfferInterface
     switch goodType := data["good_type"].(string); goodType {
