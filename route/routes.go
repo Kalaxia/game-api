@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/handlers"
 
 	"kalaxia-game-api/controller/ship"
+	"kalaxia-game-api/controller/trade"
 	"kalaxia-game-api/controller"
 	"kalaxia-game-api/handler"
 	"kalaxia-game-api/utils"
@@ -105,7 +106,7 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
-	// Fleets 
+	// Fleets
 	Route{
 		"Get Fleet Ships",
 		"GET",
@@ -116,7 +117,7 @@ var routes = Routes{
 	Route{
 		"Assign Multiple Ships To Fleet",
 		"PATCH",
-		"/api/fleets/{fleetId}/ships", 
+		"/api/fleets/{fleetId}/ships",
 		shipController.AssignShipsToFleet,
 		true,
 	},
@@ -177,6 +178,15 @@ var routes = Routes{
 		shipController.GetConstructingShips,
 		true,
 	},
+	/************** TRADE **********/
+	Route{
+		"Create offer",
+		"POST",
+		"/api/planets/{id}/offers",
+		tradeController.CreateOffer,
+		true,
+	},
+	/************** PLAYER *********/
 	Route{
 		"Register Player",
 		"POST",
