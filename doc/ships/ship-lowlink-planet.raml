@@ -1,0 +1,12 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+    id: integer
+    hangar:
+        type: object
+        default : {}
+    fleet :
+        type : object
+        default : {}
+    model : !include model-nolink.raml
+    created_at : datetime

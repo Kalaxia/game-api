@@ -1,0 +1,12 @@
+#%RAML 1.0 SecurityScheme
+type: x-custom
+describedBy:
+    headers:
+        Authorization:
+            type: string
+            description: use to send the Bearer token
+    responses:
+        403:
+            description: Forbidden access
+        401:
+            description: Bad token
