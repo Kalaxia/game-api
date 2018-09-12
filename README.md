@@ -39,6 +39,7 @@
 			- [Step 3](#step-3)
 			- [Step 4](#step-4)
 			- [Step 5](#step-5)
+	- [API documentation](#api-documentation)
 	- [The code](#the-code)
 		- [Containers](#containers)
 		- [API code](#api-code)
@@ -153,7 +154,7 @@ Now that the container is running you will need to create all the table in the d
 ```Bash
 docker exec -it kalaxia_api make migrate-latest
 ```
-more informations are provided in the 'Database migrations' section below.
+more information are provided in the 'Database migrations' section below.
 
 ### Setup the game
 
@@ -280,7 +281,7 @@ Let `<v>` the version given by the error message.  And `<v+1>` the version numbe
 
 #### Step 0 (Optional)
 Debug your migration files.
-Once they are debug you still need to folow the next step to go back to a clean version.
+Once they are debug you still need to follow the next step to go back to a clean version.
 
 
 #### Step 1
@@ -354,7 +355,7 @@ If your contribution include some data that need to be stored in the database re
 
 #### Routes
 
-In order for the application to call some function associated to an http request you need to âdd a new route inside `./route/route.go`.   
+In order for the application to call some function associated to an http request you need to add a new route inside `./route/route.go`.   
 By instance the route to get the planets a player control
 ```Go
 Route{
@@ -405,5 +406,11 @@ Under `./resources/` you can add some json file containing variable changing dif
 
 ### Library used
 
- - [pg](https://github.com/go-pg/pg): PostgreSQL ORM for Golang
- - TODO
+ - [pg](https://github.com/go-pg/pg): PostgreSQL ORM for Golang.
+ - [mux](https://github.com/gorilla/mux): A powerful URL router and dispatcher for golang.
+ - [handlers](https://github.com/gorilla/handlers): A collection of useful handlers for Go's net/http package.
+ - [jwt-go](https://github.com/dgrijalva/jwt-go): Golang implementation of JSON Web Tokens (JWT)
+ - [context](github.com/gorilla/context): A golang registry for global request variables.
+ - [slug](github.com/gosimple/slug): URL-friendly slugify with multiple languages support.
+ - [unidecode](github.com/rainycape/unidecode): Unicode transliterator in Golang - Replaces non-ASCII characters with their ASCII approximations.
+ - [inflection](github.com/jinzhu/inflection): Pluralizes and singularizes English nouns
