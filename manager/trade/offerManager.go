@@ -38,7 +38,7 @@ func SearchOffers(data map[string]interface{}) []model.OfferInterface {
     operation := data["operation"].(string)
 
     resourceOffers := make([]*model.ResourceOffer, 0)
-    if err := database.Connection.Model(&resourceOffers).Column("Location", "Location.Player", "Location.Player.Faction").Where("operation = ?", operation).Select(); err != nil {
+    if err := database.Connection.Model(&resourceOffers).Column("Location.Player.Faction", "Location.System").Where("operation = ?", operation).Select(); err != nil {
         panic(exception.NewHttpException(500, "Resource offers could not be retrieved", err))
     }
     // shipOffers := make([]*model.ShipOffer, 0)
