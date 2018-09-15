@@ -60,7 +60,7 @@ func createResourceOffer(location *model.Planet, data map[string]interface{}) *m
         panic(exception.NewHttpException(400, "Lot quantity cannot be lesser than total quantity", nil))
     }
     if err := database.Connection.Insert(offer); err != nil {
-        panic(exception.NewHttpException(500, "Ship offer could not be created", err))
+        panic(exception.NewHttpException(500, "Resource offer could not be created", err))
     }
     return offer
 }
