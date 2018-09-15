@@ -23,3 +23,7 @@ func CreateOffer(w http.ResponseWriter, r *http.Request) {
     }
     utils.SendJsonResponse(w, 201, tradeManager.CreateOffer(planet, utils.DecodeJsonRequest(r)))
 }
+
+func SearchOffers(w http.ResponseWriter, r *http.Request) {
+    utils.SendJsonResponse(w, 200, tradeManager.SearchOffers(utils.DecodeJsonRequest(r)))
+}
