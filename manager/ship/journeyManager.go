@@ -1,5 +1,5 @@
 package shipManager
-
+// TODO remove duplicated code
 
 import(
     "kalaxia-game-api/database"
@@ -9,6 +9,7 @@ import(
     "encoding/json"
     "io/ioutil"
     "time"
+    "fmt"
 )
 
 var journeyTimeData model.TimeLawsContainer
@@ -53,7 +54,7 @@ func init() {
                     finishStep(step);
                 }); //< Do I need to defer that to be safe ? (see comment below)
             } else {// if the time is already passed we directly execute it
-                defer func () { go finishStep(step); }(); //< finishStep delete step in DB
+                defer func () { /*go*/ finishStep(step); }(); //< finishStep delete step in DB
                 // defer for concurency reason
                 //
                 // * In the case of go replacing defer
@@ -71,7 +72,10 @@ func init() {
 }
 
 func finishStep(step *model.FleetJourneyStep) {
+    //defer utils.CatchException();
+    fmt.Println("flag")
     var hasToDeleteJourney bool = false;
+    var journey *model.FleetJourney;
     if step.Journey.CurrentStep != nil {
         if step.Journey.CurrentStep.Id == step.Id {
             if step.NextStep != nil {
@@ -95,16 +99,17 @@ func finishStep(step *model.FleetJourneyStep) {
     }
     
     // delete old step
-    journey := step.Journey;
+    journey = step.Journey;
     if err := database.Connection.Delete(step); err != nil {
         panic(exception.NewException("Journey step could not be deleted", err));
     }
     
     if hasToDeleteJourney {
         if err := database.Connection.Delete(journey); err != nil {
-            panic(exception.NewException("Journey step could not be deleted", err));
+            panic(exception.NewException("Journey could not be deleted", err));
         }
     }
+    
 }
 
 func beginNextStep(step *model.FleetJourneyStep){
@@ -148,6 +153,8 @@ func beginNextStep(step *model.FleetJourneyStep){
 func finishJourney(journey *model.FleetJourney){
     
     fleet := GetFleetOnJourneyInternal(journey.Id);
+    journey = GetJourneyByIdInternal(journey.Id); // we refresh the journy to get all the data
+    // TODO ^ is nessesary ?
     
     fleet.Journey = nil;
     fleet.JourneyId = 0;
@@ -168,6 +175,21 @@ func finishJourney(journey *model.FleetJourney){
     UpdateFleetInternal(fleet);
 }
 
+func GetJourneyByIdInternal(idJourney uint16) *model.FleetJourney {
+    journey := &model.FleetJourney{
+        Id: idJourney,
+    }
+    if err := database.
+        Connection.
+        Model(journey).
+        Column("CurrentStep.PlanetFinal").
+        Where("fleet_journey.id = ?", idJourney  ).
+        Select(); err != nil {
+            panic(exception.NewException("journey not found", err));
+        }
+    return journey;
+}
+
 func UpdateJourney(journey *model.FleetJourney){
     
     if err := database.Connection.Update(journey); err != nil {
@@ -175,6 +197,7 @@ func UpdateJourney(journey *model.FleetJourney){
     }
     
 }
+
 func UpdateJourneyStep(step *model.FleetJourneyStep){
     
     if err := database.Connection.Update(step); err != nil {
@@ -188,8 +211,8 @@ func GetFleetOnJourney (idJourney uint16) *model.Fleet{
     if err := database.
         Connection.
         Model(&fleet).
-        Column("fleet.*", "Player", "Journey").
-        Where("fleet.journey_id = ?", idJourney).
+        Column("Player", "Journey").
+        Where("journey_id = ?", idJourney).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err));
         }
@@ -197,14 +220,15 @@ func GetFleetOnJourney (idJourney uint16) *model.Fleet{
 }
 
 func GetFleetOnJourneyInternal (idJourney uint16) *model.Fleet{
+    fmt.Println(idJourney);
     var fleet model.Fleet
     if err := database.
         Connection.
         Model(&fleet).
-        Column("fleet.*", "Player", "Journey").
-        Where("fleet.journey_id = ?", idJourney).
+        Column("Player", "Journey").
+        Where("journey_id = ?", idJourney).
         Select(); err != nil {
-            panic(exception.NewException("Fleet not found", err));
+            panic(exception.NewException("Fleet not found on GetFleetOnJourneyInternal", err));
         }
     return &fleet;
 }
@@ -214,7 +238,7 @@ func GetAllJourneySteps() []*model.FleetJourneyStep {
     if err := database.
         Connection.
         Model(&steps).
-        Column("*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
+        Column("Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
@@ -226,7 +250,7 @@ func GetAllJourneyStepsInternal() []*model.FleetJourneyStep {
     if err := database.
         Connection.
         Model(&steps).
-        Column("*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
+        Column("Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
         Select(); err != nil {
             panic(exception.NewException("steps not found", err));
     }
@@ -238,8 +262,8 @@ func GetStep(stepId uint16) *model.FleetJourneyStep {
     if err := database.
         Connection.
         Model(&step).
-        Column("step.*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
-        Where("step.id = ?",stepId).
+        Column("Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","NextStep.Journey", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
+        Where("id = ?",stepId).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
@@ -247,16 +271,19 @@ func GetStep(stepId uint16) *model.FleetJourneyStep {
 }
 
 func GetStepInternal(stepId uint16) *model.FleetJourneyStep {
-    var step model.FleetJourneyStep;
+    fmt.Println(stepId);
+    step := &model.FleetJourneyStep {
+        Id : stepId,
+    }
     if err := database.
         Connection.
-        Model(&step).
-        Column("step.*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
-        Where("step.id = ?",stepId).
+        Model(step).
+        Column("Journey.CurrentStep", "NextStep.Journey", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","PlanetFinal.System", "PlanetStart.System").
+        Where( "fleet_journey_step.id = ?",stepId).
         Select(); err != nil {
-            panic(exception.NewException("step not found", err));
+            panic(exception.NewException("step not found in GetStepInternal", err));
     }
-    return &step;
+    return step;
 }
 
 func GetStepsById(ids []uint16) []*model.FleetJourneyStep {
@@ -264,8 +291,8 @@ func GetStepsById(ids []uint16) []*model.FleetJourneyStep {
     if err := database.
         Connection.
         Model(&steps).
-        Column("step.*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
-        WhereIn("step.id IN ?", ids).
+        Column("Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
+        WhereIn("id IN ?", ids).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
@@ -277,8 +304,8 @@ func GetStepsByJourneyId(journeyId uint16) []*model.FleetJourneyStep {
     if err := database.
         Connection.
         Model(&steps).
-        Column("step.*", "Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
-        Where("step.journey_id = ?",journeyId).
+        Column("Journey", "NextStep", "Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "NextStep.PlanetFinal.System","PlanetFinal", "PlanetStart","PlanetFinal.System", "PlanetStart.System").
+        Where("journey_id = ?",journeyId).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleets not found", err));
     }
@@ -290,20 +317,15 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
     journey := &model.FleetJourney{ // a new Journey is created
         CreatedAt : time.Now(),
     };
-    
     steps = createStepStruct (fleet.Location, fleet.MapPosX, fleet.MapPosY, time.Now(),planetIds, x, y,0); //< we create the structurs
-    
     journey.EndedAt =  steps[len(steps)-1].TimeArrival;
     if err := database.Connection.Insert(journey); err != nil {
 		panic(exception.NewHttpException(500, "Journey could not be created", err))
     }
-    
     insetFollowingStepInDBWithLinkCreation(steps,journey);
-    
     journey.CurrentStep = steps[0];
     journey.CurrentStepId = steps[0].Id;
     UpdateJourney(journey);
-    
     fleet.Location = nil;
     fleet.LocationId =0;
     fleet.Journey = journey;
@@ -318,7 +340,6 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
     } else {
         defer finishStep(journey.CurrentStep); // if the time is already passed we directly execute it
     }
-    
     return steps;
 }
 
@@ -358,7 +379,7 @@ func createStepStruct (firstPlanet *model.Planet, firstPosX float64, firstPosY f
     // The stepNumberOffset is the should be the StepNumber of pervious steps if there is otherwise input 0 ( infact you can input any number but prefer using 0)
     // if the stepNumberOffset is too low you may have error in the future
     if len(planetIds) != len(x) || len(x) != len(y)  {// the len(planetIds) != len(y) is unessesary
-        panic(exception.NewHttpException(400, "Invalid input : planetIds, x and y should be of the same length", nil))
+        panic(exception.NewHttpException(400, "Invalid input : planetIds, x and y should be of the same length", nil));
     }
     
     var steps []*model.FleetJourneyStep;
@@ -416,7 +437,7 @@ func createStepStruct (firstPlanet *model.Planet, firstPosX float64, firstPosY f
         
         step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second);
         if ! journeyRangeData.IsOnRange(step){
-            panic(exception.NewHttpException(400, "Step not in range", nil));
+            panic(exception.NewHttpException(400, "Step not in range", nil)); // TODO bug planet to pos
         }
         steps = append(steps,step)
         planetPrevId = planetIds[i];

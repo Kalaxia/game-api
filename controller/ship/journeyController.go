@@ -11,6 +11,7 @@ import (
 	"kalaxia-game-api/utils"
     "strconv"
     "math"
+    "fmt"
 )
 
 func GetJourney (w http.ResponseWriter, r *http.Request){
@@ -59,12 +60,15 @@ func SendFleetOnJourney (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(400, "Fleet already on journey", nil));
 	}
     
-    data := utils.DecodeJsonRequest(r)["steps"].([]map[string]interface{});
+    data := utils.DecodeJsonRequest(r)["steps"].([]interface{});
     var planetIds []uint16;
     var xPos []float64;
     var yPos []float64;
     
     planetIds, xPos, yPos = decodeStepData(data);
+    fmt.Println(planetIds); // TODO remove
+    fmt.Println(xPos);
+    fmt.Println(yPos);
     
     steps := shipManager.SendFleetOnJourney(planetIds,xPos,yPos,fleet);
     
@@ -85,13 +89,14 @@ func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(400, "Fleet is not on journey", nil));
 	}
     
-    data := utils.DecodeJsonRequest(r)["steps"].([]map[string]interface{}); //TODO remove ["steps"] or json data decoded cannot be read as an array ?
+    data := utils.DecodeJsonRequest(r)["steps"].([]interface{}); //TODO remove ["steps"] or json data decoded cannot be read as an array ?
     var planetIds []uint16;
     var xPos []float64;
     var yPos []float64;
     
     
     planetIds, xPos, yPos = decodeStepData(data);
+    
     
     steps := shipManager.AddStepsToJourney(fleet.Journey,planetIds,xPos,yPos);
     
@@ -111,18 +116,21 @@ func GetTimeLaws(w http.ResponseWriter, r *http.Request){
     utils.SendJsonResponse(w, 200, shipManager.GetTimeLaws());
 }
 
-func decodeStepData (data []map[string]interface{}) ([]uint16, []float64, []float64){
+func decodeStepData (data []interface{}) ([]uint16, []float64, []float64){
     var planetIds []uint16;
     var xPos []float64;
     var yPos []float64;
     
-    for i,_ := range data {
-        if data[i]["planetId"].(float64) == 0. && (data[i]["x"].(float64) == math.NaN() || data[i]["y"].(float64) == math.NaN() ){
+    for _, dataElement := range data {
+        dataElementCast := dataElement.(map[string]interface{});
+        planetIdCast, _ := strconv.ParseUint(dataElementCast["planetId"].(string), 10, 16);
+        
+        if planetIdCast == 0 && (dataElementCast["x"].(float64) == math.NaN() || dataElementCast["y"].(float64) == math.NaN() ){
             panic(exception.NewHttpException(400, "step not well defined", nil));
         }
-        planetIds = append(planetIds,uint16(data[i]["planetId"].(float64)));
-        xPos = append(xPos,data[i]["x"].(float64));
-        yPos = append(xPos,data[i]["y"].(float64));
+        planetIds = append(planetIds,uint16(planetIdCast));
+        xPos = append(xPos,dataElementCast["x"].(float64));
+        yPos = append(yPos,dataElementCast["y"].(float64));
     }
     
     return planetIds, xPos, yPos;

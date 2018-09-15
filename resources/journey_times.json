@@ -1,81 +1,81 @@
 {
 	"warm_time" : {
 		"same_system" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"planet_to_planet" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"planet_to_position" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"position_to_position" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"position_to_planet" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		}
 	},
 	"travel_time" : {
 		"same_system" : {
-			"constante" : 90,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"planet_to_planet" : {
 			"constante" : 0,
-			"linear" : 60,
+			"linear" : 2,
 			"quadratic" : 0
 		},
 		"planet_to_position" : {
 			"constante" : 0,
-			"linear" : 60,
+			"linear" : 2,
 			"quadratic" : 0
 		},
 		"position_to_position" : {
 			"constante" : 0,
-			"linear" : 60,
+			"linear" : 2,
 			"quadratic" : 0
 		},
 		"position_to_planet" : {
 			"constante" : 0,
-			"linear" : 60,
+			"linear" : 2,
 			"quadratic" : 0
 		}
 	},
 	"cooldown" : {
 		"same_system" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"planet_to_planet" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"planet_to_position" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"position_to_position" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		},
 		"position_to_planet" : {
-			"constante" : 30,
+			"constante" : 10,
 			"linear" : 0,
 			"quadratic" : 0
 		}

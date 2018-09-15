@@ -7,7 +7,7 @@ import(
 
 type(
     Fleet struct {
-        TableName struct{} `json:"-" sql:"fleet__fleets" pg:",discard_unknown_columns"` //TEMP discard_unknown_columns
+        TableName struct{} `json:"-" sql:"fleet__fleets"` //TEMP discard_unknown_columns
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`
@@ -16,8 +16,8 @@ type(
         LocationId uint16 `json:"-"`
         Journey *FleetJourney `json:"journey"`
         JourneyId uint16 `json:"-"`
-        MapPosX float64 `json:"map_pos_x"`
-        MapPosY float64 `json:"map_pos_y"`
+        MapPosX float64 `json:"map_pos_x" sql:"map_pos_x"`
+        MapPosY float64 `json:"map_pos_y" sql:"map_pos_y"`
     }
     
     
@@ -26,7 +26,7 @@ type(
         TableName struct{} `json:"-" sql:"fleet__journeys"`
 
         Id uint16 `json:"id"`
-        CreatedAt time.Time `json:"created_at"`
+        CreatedAt time.Time `json:"created_at" sql:"created_at"`
         EndedAt time.Time `json:"ended_at"`
         //FistStep *FleetJourneyStep `json:"first_step"`
         //FistStepId uint16 `json:"-"` //TODO remove unsed code
@@ -97,7 +97,7 @@ func (fleet Fleet) IsOnPlanet () bool{
     return fleet.Location == nil;
 }
 func (fleet Fleet) IsOnJourney () bool{
-    return fleet.Journey == nil;
+    return fleet.Journey != nil;
 }
 func (fleet Fleet) IsOnMap () bool{
     booleanX := ! math.IsNaN(fleet.MapPosX) && fleet.MapPosX >= 0;
