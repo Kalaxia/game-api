@@ -1,3 +1,13 @@
+## [0.1.12] - 2018-09-15
+### Added
+- Trade sale offer creation
+- Trade offers list
+- Fleet ship assignment
+- Fleet removal
+
+### Fixed
+- Fleet creation
+
 ## [0.1.11] - 2018-08-10
 ### Added
 - Hourly money income
