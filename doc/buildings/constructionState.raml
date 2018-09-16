@@ -1,0 +1,13 @@
+#%RAML 1.0 DataType
+type: object
+properties:
+    id: integer
+    built_at : datetime
+    current_points:
+        type: integer
+        minimum: 0
+        maximum: 255
+    points:
+        type: integer
+        minimum: 0
+        maximum: 255

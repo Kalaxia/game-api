@@ -6,9 +6,13 @@ properties:
     population: integer
     buildings:
         type: object[]
-        items: !include building.raml
+        default : []
     available_buildings:
         type: object[]
-        items: !include building_plan.raml
-    settings: !include settings.raml
-    system: !include system-nolink.raml
+        default : []
+    settings:
+        type: object
+        default : {}
+    system: 
+        type: object
+        default : {}
