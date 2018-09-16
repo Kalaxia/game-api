@@ -63,7 +63,7 @@ It is used to develop, build and ship the game, but we recommend the [Docker Com
 ## Introduction
 
 What is kalaxia ?
-Kalaxia is an old school multilayer browser strategy game on real time with semi persistent session.
+Kalaxia is an old school multiplayer browser strategy game on real time with semi persistent session.
 This is an open source game. You can find more information on the project on our website [kalaxia.org](https://kalaxia.org), or on our [discord](https://discordapp.com/invite/bSQ3WV).
 
 
@@ -85,7 +85,7 @@ You can use your favorite packet manager to install the package `docker`
 
 Notice that docker-compose is a package in your packet manager but it might be outdated. The authors advice following the [official documentation](https://docs.docker.com/compose/install/)
 
-Normally your user should have permission to use docker. If it is not the case enter
+Normally your user should have permission to use docker. If it is not the case type
 ```Bash
 sudo groupadd docker
 ```
@@ -115,7 +115,7 @@ Once the repository is cloned you will need to clone the front in 'volumes/app' 
 ```Bash
 git clone git@github.com:Kalaxia/game-front.git volumes/app
 ```
-inside  'volumes'.
+
 
 Navigate back to 'game-api'. Copy the files '.dist.env' to '.env' and 'kalaxia.dist.env' to 'kalaxia.env'. You can do that by using `cp .dist.env .env` and `cp kalaxia.dist.env kalaxia.env`.
 Now open the file `.env` using a text editor ( like vim, emacs, nano, gedit, ...) and change the  `NGINX_PORT` and `NGINX_HTTPS_PORT` to your liking. `NGINX_PORT`is the port nginx will listen to.
@@ -300,7 +300,7 @@ docker exec -it kalaxia_postgresql psql -U kalaxia kalaxia_game
 ```
 and there type one by one the SQL request you copy before, correcting where there is problem. Error like this table does not exist or this column does not exist can be safely ignored.
 
-If you give up on solving all the problem in the SQL command go to ste5.
+If you give up on solving all the problem in the SQL command go to step 5.
 
 
 
