@@ -259,17 +259,20 @@ securedBy: bearer-token
                 description : send fleet on journey sith steps given in input
                 body:
                     application/json:
-                        type: object[]
-                        items:
-                            type : object
-                            properties:
-                                planetId : integer
-                                x:
-                                    type: number
-                                    format: float
-                                y:
-                                    type: number
-                                    format: float
+                        type: object
+                        properties: 
+                            steps:
+                                type: object[]
+                                items:
+                                    type : object
+                                    properties:
+                                        planetId : integer
+                                        x:
+                                            type: number
+                                            format: float
+                                        y:
+                                            type: number
+                                            format: float
                 responses:
                     202:
                         body:
@@ -280,17 +283,20 @@ securedBy: bearer-token
                 description : add step to journey
                 body:
                     application/json:
-                        type: object[]
-                        items:
-                            type : object
-                            properties:
-                                planetId : integer
-                                x:
-                                    type: number
-                                    format: float
-                                y:
-                                    type: number
-                                    format: float
+                        type: object
+                        properties: 
+                            steps:
+                                type: object[]
+                                items:
+                                    type : object
+                                    properties:
+                                        planetId : integer
+                                        x:
+                                            type: number
+                                            format: float
+                                        y:
+                                            type: number
+                                            format: float
                 responses:
                     202:
                         body:
