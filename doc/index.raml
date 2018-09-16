@@ -2,6 +2,9 @@
 title: Kalaxia Game API
 baseUri: /api
 version: v0.1.7
+securitySchemes: 
+    bearer-token: !include security.raml
+securedBy: bearer-token
 
 /auth:
     post:
@@ -30,7 +33,7 @@ version: v0.1.7
                         description: "The crypted JWT token for the user session"
                         type: string
                         example: "sq5f4g65df565sq2d652fqsd2qs52d56qsd"
-
+        securedBy: null
 /factions:
     get:
         responses:
@@ -44,8 +47,7 @@ version: v0.1.7
             responses:
                 200:
                     body:
-                        application/json:
-                            type: !include factions/faction.raml
+                        application/json: !include factions/faction.raml
         /members:
             get:
                 responses:
@@ -69,8 +71,7 @@ version: v0.1.7
         responses:
             200:
                 body:
-                    application/json:
-                        type: !include maps/map.raml
+                    application/json: !include maps/map.raml
 
 /players:
     post:
@@ -90,15 +91,13 @@ version: v0.1.7
             responses:
                 200:
                     body:
-                        application/json:
-                            type: !include players/player.raml
+                        application/json: !include players/player.raml
     /{id}:
         get:
             responses:
                 200:
                     body:
-                        application/json:
-                            type: !include players/player.raml
+                        application/json: !include players/player.raml
         /planets:
             get:
                 responses:
@@ -114,13 +113,21 @@ version: v0.1.7
             responses:
                 200:
                     body:
-                        application/json:
-                            type: !include planets/planet.raml
+                        application/json: !include planets/planet.raml
         /settings:
-            put:
+            put: #TODO
                 body:
-                    application/json:
-                        type: !include planets/settings.raml
+                    application/json: !include planets/settings.raml
+        /building:
+            post:
+                body:
+                    application/json: !include buildings/building-input.raml
+                responses:
+                    201:
+                        body:
+                            application/json: !include buildings/building-lowlink.raml
+            /constructing:
+                get: #TOD                        
         /fleets:
             get:
                 responses:
@@ -137,6 +144,9 @@ version: v0.1.7
                             application/json:
                                 type: object[]
                                 items: !include ships/ship-lowlink-planet.raml
+            post: #TODO
+                body:
+                    application/json:
 /servers:
     post:
         body:
@@ -157,15 +167,43 @@ version: v0.1.7
                 body:
                     application/json:
                         type: !include servers/server.raml
-
+        securedBy: null
 /systems:
     /{id}:
         get:
             responses:
                 200:
                     body:
+                        application/json: !include maps/system.raml
+/me:
+    /ship-models:
+        get:
+            responses:
+                200:
+                    body:
                         application/json:
-                            type: !include maps/system.raml
+                            type: object[]
+                            items: !include ships/shipModel-nolink.raml
+        post:
+            body:
+                application/json:
+                    type: object
+                    properties:
+                            frame : string
+                            name: string
+                            slots:
+                                type : object[]
+                                items : !include ships/slot-nolink.raml
+            responses:
+                201:
+                    body:
+                        application/json: !include ships/shipModel-lowlink.raml
+        /{id}:
+            get:
+                responses:
+                    200:
+                        body:
+                            application/json: !include ships/shipModel-nolink.raml
 /fleets:
     /{id}:
         get:
@@ -202,26 +240,27 @@ version: v0.1.7
                                 type: string
                                 default : ""
                         
-        delete:
-            description: move the ships with the given id into the hangard
-            body:
-                application/json:
-                    type: object
-                    properties:
-                        data-ships: integer[]
-            responses:
-                204:
-                    body:
-                        application/json:
-                            type: string
-                            default : Deleted
+            delete:
+                description: move the ships with the given id into the hangard
+                body:
+                    application/json:
+                        type : object
+                        properties:    
+
+                            data-ships: integer[]
+                responses:
+                    204:
+                        body:
+                            application/json:
+                                type: string
+                                default : Deleted
         /journey:
             post:
                 description : send fleet on journey sith steps given in input
                 body:
                     application/json:
                         type: object
-                        properties:
+                        properties: 
                             steps:
                                 type: object[]
                                 items:
@@ -245,7 +284,7 @@ version: v0.1.7
                 body:
                     application/json:
                         type: object
-                        properties:
+                        properties: 
                             steps:
                                 type: object[]
                                 items:
@@ -269,8 +308,7 @@ version: v0.1.7
                 responses:
                     200:
                         body:
-                            application/json:
-                                type: !include journeys/journey-nolink.raml
+                            application/json: !include journeys/journey-nolink.raml
         /steps:
             get:
                 description: Get all steps remaining
@@ -278,6 +316,16 @@ version: v0.1.7
                     200:
                         body:
                             application/json: !include journeys/journeyStep-highlink.raml
+            /{idStep}:
+                delete:
+                    description: Cancel step ad the folowing ones
+                    responses:
+                        204:
+                            body:
+                                application/json:
+                                    type: string
+                                    default : Deleted
+                
         /range:
             get:
                 description: Get maximum one jump distance

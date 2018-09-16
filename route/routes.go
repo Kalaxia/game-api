@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/handlers"
 
 	"kalaxia-game-api/controller/ship"
+	"kalaxia-game-api/controller/trade"
 	"kalaxia-game-api/controller"
 	"kalaxia-game-api/handler"
 	"kalaxia-game-api/utils"
@@ -242,6 +243,22 @@ var routes = Routes{
 		shipController.GetConstructingShips,
 		true,
 	},
+	/************** TRADE **********/
+	Route{
+		"Create offer",
+		"POST",
+		"/api/planets/{id}/offers",
+		tradeController.CreateOffer,
+		true,
+	},
+	Route{
+		"Search offers",
+		"POST",
+		"/api/offers",
+		tradeController.SearchOffers,
+		true,
+	},
+	/************** PLAYER *********/
 	Route{
 		"Register Player",
 		"POST",
