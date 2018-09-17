@@ -2,7 +2,6 @@ package utils
 
 import(
     "kalaxia-game-api/exception"
-    //"math/rand" // TODO remove
     "time"
 )
 
@@ -16,17 +15,17 @@ type Task struct {
 }
 
 var Scheduler Scheduling
-var counter uint32
+var counter uint64
 
 func init() {
-    counter = 0;
+    counter = 0
     Scheduler = Scheduling{
         Queue: make(map[string]Task, 0),
     }
 }
 
 func (s *Scheduling) AddTask(seconds uint, callback func()) {
-    id := getNewIdForTask();
+    id := getNewIdForTask()
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
@@ -66,8 +65,12 @@ func (s *Scheduling) CancelTask(id string) {
 
 
 func getNewIdForTask () string{
-    //  string(rand.Intn(100000)) +"-"+   // TODO remove
-    id := string(counter)+"-"+ time.Now().Format(time.UnixDate); // this sould be more robust than a random number
-    counter++;
-    return id;
+    id := string(counter)+"-"+ time.Now().Format(time.UnixDate) // this sould be more robust than a random number
+    if counter == 18446744073709551615{ // maxvalue for uint64
+        counter = 0
+    } else {
+        counter++
+    }
+    
+    return id
 }

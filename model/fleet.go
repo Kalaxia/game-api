@@ -3,11 +3,12 @@ package model
 import( 
     "time"
     "math"
+    "fmt"
 )
 
 type(
     Fleet struct {
-        TableName struct{} `json:"-" sql:"fleet__fleets"` //TEMP discard_unknown_columns
+        TableName struct{} `json:"-" sql:"fleet__fleets"`
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`
@@ -28,8 +29,6 @@ type(
         Id uint16 `json:"id"`
         CreatedAt time.Time `json:"created_at" sql:"created_at"`
         EndedAt time.Time `json:"ended_at"`
-        //FistStep *FleetJourneyStep `json:"first_step"`
-        //FistStepId uint16 `json:"-"` //TODO remove unsed code
         CurrentStep *FleetJourneyStep `json:"current_step"`
         CurrentStepId uint16 `json:"-"`
     }
@@ -94,50 +93,50 @@ type(
 //Fleets
 
 func (fleet Fleet) IsOnPlanet () bool{
-    return fleet.Location == nil;
+    return fleet.Location == nil
 }
 func (fleet Fleet) IsOnJourney () bool{
-    return fleet.Journey != nil;
+    return fleet.Journey != nil
 }
 func (fleet Fleet) IsOnMap () bool{
-    booleanX := ! math.IsNaN(fleet.MapPosX) && fleet.MapPosX >= 0;
-    booleanY := ! math.IsNaN(fleet.MapPosY) && fleet.MapPosY >= 0;
-    return booleanX && booleanY;
+    booleanX := ! math.IsNaN(fleet.MapPosX) && fleet.MapPosX >= 0
+    booleanY := ! math.IsNaN(fleet.MapPosY) && fleet.MapPosY >= 0
+    return booleanX && booleanY
 }
 func (fleet Fleet) GetPositionOnMap () ([2]float64 , bool) {
     if (fleet.IsOnMap()){
-        return [2]float64{fleet.MapPosX,fleet.MapPosY} , true;
+        return [2]float64{fleet.MapPosX,fleet.MapPosY} , true
     } else {
-        return [2]float64{math.NaN(),math.NaN()} , false;
+        return [2]float64{math.NaN(),math.NaN()} , false
     }
 }
 
 /*------------------------------------------*/
 // FleetJourneyStep
 func (journeyStep FleetJourneyStep) GetNextStep () FleetJourneyStep{
-    return *(journeyStep.NextStep);
+    return *(journeyStep.NextStep)
 }
 
 func (journeyStep FleetJourneyStep) GetDistance () float64{
     if journeyStep.PlanetStart != nil{
         if journeyStep.PlanetFinal != nil {
             if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return 0.;
+                return 0.
             } else {
-                distance := math.Pow(math.Pow(float64( float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-                return distance;
+                distance := math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X),2.) + math.Pow( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y),2.) , 0.5)
+                return distance
             }
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-            return distance;
+            distance := math.Pow(math.Pow(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X),2.) + math.Pow(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y),2.) , 0.5)
+            return distance
         }
     } else{
         if journeyStep.PlanetFinal != nil {
-            distance := math.Pow(math.Pow(float64(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart),2.) + math.Pow(float64(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart),2.) , 0.5);
-            return distance;
+            distance := math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart,2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart,2.) , 0.5)
+            return distance
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - journeyStep.MapPosXStart),2.) + math.Pow(float64(journeyStep.MapPosYFinal - journeyStep.MapPosYStart),2.) , 0.5);
-            return distance;
+            distance := math.Pow(math.Pow(journeyStep.MapPosXFinal - journeyStep.MapPosXStart,2.) + math.Pow(journeyStep.MapPosYFinal - journeyStep.MapPosYStart,2.) , 0.5)
+            return distance
         }
     }
 }
@@ -146,34 +145,34 @@ func (journeyStep FleetJourneyStep) GetDistance () float64{
 // TimeDistanceLaw
 
 func (law TimeDistanceLaw) GetTime(distance float64) float64{
-    return law.Constane+ law.Linear*distance+ law.Quadratic * distance*distance;
+    return law.Constane+ law.Linear*distance+ law.Quadratic * distance*distance
 }
 
 /*------------------------------------------*/
 // TimeLawsConfig
 
 func (law TimeLawsConfig) GetTimeForStep(journeyStep *FleetJourneyStep) float64 {
-    // I use the Euclidian metric; I am too lazy to implement other metric which will probaly not be used
+    // I use the Euclidian metric I am too lazy to implement other metric which will probaly not be used
     // NOTE this function will need to be modified if we add other "location"
     if journeyStep.PlanetStart != nil{
         if journeyStep.PlanetFinal != nil {
             if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return law.SameSystem.GetTime(0.);
+                return law.SameSystem.GetTime(0.)
             } else {
-                distance := math.Pow(math.Pow(float64( float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-                return law.PlanetToPlanet.GetTime(distance);
+                distance := journeyStep.GetDistance()
+                return law.PlanetToPlanet.GetTime(distance)
             }
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-            return law.PlanetToPosition.GetTime(distance);
+            distance := journeyStep.GetDistance()
+            return law.PlanetToPosition.GetTime(distance)
         }
     } else{
         if journeyStep.PlanetFinal != nil {
-            distance := math.Pow(math.Pow(float64(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart),2.) + math.Pow(float64(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart),2.) , 0.5);
-            return law.PositionToPlanet.GetTime(distance);
+            distance := journeyStep.GetDistance()
+            return law.PositionToPlanet.GetTime(distance)
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - journeyStep.MapPosXStart),2.) + math.Pow(float64(journeyStep.MapPosYFinal - journeyStep.MapPosYStart),2.) , 0.5);
-            return law.PositionToPosition.GetTime(distance);
+            distance := journeyStep.GetDistance()
+            return law.PositionToPosition.GetTime(distance)
         }
     }
 }
@@ -183,22 +182,24 @@ func (rangeC RangeContainer) IsOnRange(journeyStep *FleetJourneyStep) bool {
     if journeyStep.PlanetStart != nil{
         if journeyStep.PlanetFinal != nil {
             if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return rangeC.SameSystem >= 0.;
+                return rangeC.SameSystem >= 0.
             } else {
-                distance := math.Pow(math.Pow(float64( float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-                return rangeC.PlanetToPlanet >= distance;
+                distance := journeyStep.GetDistance()
+                return rangeC.PlanetToPlanet >= distance
             }
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X)),2.) + math.Pow(float64(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y)),2.) , 0.5);
-            return rangeC.PlanetToPosition >= distance;
+            distance := journeyStep.GetDistance()
+            fmt.Println(distance)
+            fmt.Println(rangeC.PlanetToPosition)
+            return rangeC.PlanetToPosition >= distance
         }
     } else{
         if journeyStep.PlanetFinal != nil {
-            distance := math.Pow(math.Pow(float64(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart),2.) + math.Pow(float64(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart),2.) , 0.5);
-            return rangeC.PositionToPlanet >= distance;
+            distance := journeyStep.GetDistance()
+            return rangeC.PositionToPlanet >= distance
         } else {
-            distance := math.Pow(math.Pow(float64(journeyStep.MapPosXFinal - journeyStep.MapPosXStart),2.) + math.Pow(float64(journeyStep.MapPosYFinal - journeyStep.MapPosYStart),2.) , 0.5);
-            return rangeC.PositionToPosition >= distance;
+            distance := journeyStep.GetDistance()
+            return rangeC.PositionToPosition >= distance
         }
     }
 }
