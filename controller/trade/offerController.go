@@ -27,3 +27,14 @@ func CreateOffer(w http.ResponseWriter, r *http.Request) {
 func SearchOffers(w http.ResponseWriter, r *http.Request) {
     utils.SendJsonResponse(w, 200, tradeManager.SearchOffers(utils.DecodeJsonRequest(r)))
 }
+
+func CancelOffer(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*model.Player)
+    offerId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    offer := tradeManager.GetOffer(uint32(offerId))
+
+    tradeManager.CancelOffer(offer, player)
+
+    w.WriteHeader(204)
+    w.Write([]byte(""))
+}
