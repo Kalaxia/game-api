@@ -91,6 +91,20 @@ func getPlanets(offset int, limit int) []model.Planet {
     return planets
 }
 
+func GetPlanetsById(ids []uint16) []*model.Planet {
+    var planets []*model.Planet
+    
+    if err := database.
+        Connection.
+        Model(&planets).
+        Column("System", "Player", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
+        WhereIn("planet.id IN ?",ids).
+        Select(); err != nil {
+            panic(exception.NewException("Planets could not be retrieved", err))
+    }
+    return planets
+}
+
 func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
     defer wg.Done()
     defer utils.CatchException()

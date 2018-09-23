@@ -164,6 +164,71 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
+	// journeys
+	Route{
+		"Send Fleet On Journey",
+		"POST",
+		"/api/fleets/{id}/journey",
+		shipController.SendFleetOnJourney,
+		true,
+	},
+	Route{
+		"Add Steps To Journey",
+		"PATCH",
+		"/api/fleets/{id}/journey",
+		shipController.AddStepsToJourney,
+		true,
+	},
+	Route{
+		"Get Journey",
+		"GET",
+		"/api/fleets/{id}/journey",
+		shipController.GetJourney,
+		true,
+	},
+	Route{
+		"Get Fleet Steps",
+		"GET",
+		"/api/fleets/{id}/steps",
+		shipController.GetFleetSteps,
+		true,
+	},
+	Route{
+		"Get Range",
+		"GET",
+		"/api/fleets/{id}/range",
+		shipController.GetRange,
+		true,
+	},
+	Route{
+		"Get Time laws",
+		"GET",
+		"/api/fleets/{id}/times",
+		shipController.GetTimeLaws,
+		true,
+	},
+	Route{
+		"Get Range",
+		"GET",
+		"/api/fleets/range",
+		shipController.GetRange,
+		true,
+	},
+	Route{
+		"Get Time laws",
+		"GET",
+		"/api/fleets/times",
+		shipController.GetTimeLaws,
+		true,
+	},
+	Route{
+		"Remove Step And Following Form Journey Associated With Fleet",
+		"DELETE",
+		"/api/fleets/{id}/steps/{idStep}",
+		shipController.RemoveStepAndFollowingFormJourneyAssociatedWithFleet,
+		true,
+	},
+	/*******************************/
 	Route{
 		"Get Hangar Ships",
 		"GET",

@@ -2,7 +2,6 @@ package utils
 
 import(
     "kalaxia-game-api/exception"
-    "math/rand"
     "time"
 )
 
@@ -16,15 +15,17 @@ type Task struct {
 }
 
 var Scheduler Scheduling
+var counter uint64
 
 func init() {
+    counter = 0
     Scheduler = Scheduling{
         Queue: make(map[string]Task, 0),
     }
 }
 
 func (s *Scheduling) AddTask(seconds uint, callback func()) {
-    id := string(rand.Intn(100000)) + time.Now().Format(time.UnixDate)
+    id := getNewIdForTask()
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
@@ -60,4 +61,16 @@ func (s *Scheduling) CancelTask(id string) {
     }
     task.Timer.Stop()
     delete(s.Queue, id)
+}
+
+
+func getNewIdForTask () string{
+    id := string(counter)+"-"+ time.Now().Format(time.UnixDate) // this sould be more robust than a random number
+    if counter == 18446744073709551615{ // maxvalue for uint64
+        counter = 0
+    } else {
+        counter++
+    }
+    
+    return id
 }

@@ -373,11 +373,25 @@ securedBy: bearer-token
             201:
                 body:
                     application/json: !include fleets/fleet-lowlink.raml
-    delete:
-        description: Delete fleet
-        responses:
-            204:
-                body:
-                    application/json:
-                        type: string
-                        default : Deleted
+    /ships:
+        # /{id}:
+        #     delete:
+        #         body:
+        #             application/json:
+        #                 type: object
+        #                 properties:
+        #                     data-ships: integer[]
+        #         responses:
+        #             204:
+        #                 body:
+        #                     application/json:
+        #                         type: string
+        #                         default : Deleted
+        delete:
+            description: move ships with selected id to hangar
+            responses:
+                204:
+                    body:
+                        application/json:
+                            type: string
+                            default : Deleted
