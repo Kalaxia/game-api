@@ -187,6 +187,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Cancel offer",
+		"DELETE",
+		"/api/offers/{id}",
+		tradeController.CancelOffer,
+		true,
+	},
+	Route{
 		"Search offers",
 		"POST",
 		"/api/offers",

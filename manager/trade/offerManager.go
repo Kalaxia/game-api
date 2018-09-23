@@ -8,13 +8,13 @@ import(
     "time"
 )
 
-// func GetOffer(id uint32) model.OfferInterface {
-//     offer := model.Offer{ Id: id }
-//     if err := database.Connection.Select(&offer); err != nil {
-//         panic(exception.NewHttpException(404, "Offer not found", err))
-//     }
-//     return offer
-// }
+func GetOffer(id uint32) *model.ResourceOffer {
+    offer := &model.ResourceOffer{}
+    if err := database.Connection.Model(offer).Column("Location.Player.Faction", "Location.System").Where("resource_offer.id = ?", id).Select(); err != nil {
+        panic(exception.NewHttpException(404, "Offer not found", err))
+    }
+    return offer
+}
 //
 // func GetPlanetOffers(location *model.Planet) []model.OfferInterface {
 //     offers := make([]model.Offer, 0)
@@ -31,6 +31,15 @@ import(
 //     }
 //     return offers
 // }
+
+func CancelOffer(offer *model.ResourceOffer, player *model.Player) {
+    if offer.Location.Player.Id != player.Id {
+        panic(exception.NewHttpException(403, "You do not own this offer", nil))
+    }
+    if err := database.Connection.Delete(offer); err != nil {
+        panic(exception.NewHttpException(500, "Could not delete offer", err))
+    }
+}
 
 func SearchOffers(data map[string]interface{}) []model.OfferInterface {
     offers := make([]model.OfferInterface, 0)
