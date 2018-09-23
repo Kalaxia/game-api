@@ -1,3 +1,8 @@
+## [0.1.13] - 2018-09-23
+### Added
+- Trade resource offer cancellation
+- Improved documentation
+
 ## [0.1.12] - 2018-09-15
 ### Added
 - Trade sale offer creation
