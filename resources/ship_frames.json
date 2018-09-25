@@ -1,18 +1,14 @@
 {
-    "racer": {
-        "slug": "racer",
+    "fighter": {
+        "slug": "fighter",
         "slots": [
             {
-                "shape": "square",
+                "shape": "circle",
                 "size": "small"
             },
             {
                 "shape": "square",
                 "size": "medium"
-            },
-            {
-                "shape": "square",
-                "size": "small"
             }
         ],
         "stats": {
@@ -29,11 +25,11 @@
             }
         ]
     },
-    "corvette": {
-        "slug": "corvette",
+    "bomber": {
+        "slug": "bomber",
         "slots": [
             {
-                "shape": "square",
+                "shape": "circle",
                 "size": "small"
             },
             {
@@ -56,44 +52,6 @@
             {
                 "type": "credits",
                 "amount": 200
-            }
-        ]
-    },
-    "frigate": {
-        "slug": "frigate",
-        "slots": [
-            {
-                "shape": "square",
-                "size": "medium"
-            },
-            {
-                "shape": "rectangle",
-                "size": "medium"
-            },
-            {
-                "shape": "rectangle",
-                "size": "small"
-            },
-            {
-                "shape": "circle",
-                "size": "small"
-            },
-            {
-                "shape": "circle",
-                "size": "small"
-            }
-        ],
-        "stats": {
-            "armor": 80
-        },
-        "price": [
-            {
-                "type": "points",
-                "amount": 8
-            },
-            {
-                "type": "credits",
-                "amount": 350
             }
         ]
     }
