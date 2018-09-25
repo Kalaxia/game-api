@@ -1,3 +1,8 @@
+## [0.1.14] - 2018-09-25
+### Added
+- Fleet journeys
+- New ship frames
+
 ## [0.1.13] - 2018-09-23
 ### Added
 - Trade resource offer cancellation
