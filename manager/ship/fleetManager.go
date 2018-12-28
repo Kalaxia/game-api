@@ -134,22 +134,37 @@ func RemoveShipsFromFleet (ships []*model.Ship){
     
 }
 
-func GetFleetShip (fleet model.Fleet) []model.Ship{
-    /*
-     * get all ships in a fleet
-     */
+func GetFleetShip (fleet model.Fleet) []model.Ship {
     var ships []model.Ship
     
     if err := database.
         Connection.
         Model(&ships).
-        Column("Hangar", "Fleet", "Model").
+        Column("Model").
         Where("construction_state_id IS NULL").
         Where("ship.fleet_id = ?", fleet.Id).
         Select(); err != nil {
-            panic(exception.NewHttpException(404, "ship not found", err))
+            panic(exception.NewHttpException(404, "fleet not found", err))
     }
     
+    return ships
+}
+
+func GetFleetShipGroups(fleet model.Fleet) []model.ShipGroup {
+    ships := make([]model.ShipGroup, 0)
+
+    if err := database.
+        Connection.
+        Model((*model.Ship)(nil)).
+        ColumnExpr("model.id, model.name, model.type, model.frame_slug, count(*) AS quantity").
+        Join("INNER JOIN ship__models as model ON model.id = ship.model_id").
+        Group("model.id").
+        Where("ship.construction_state_id IS NULL").
+        Where("ship.fleet_id = ?", fleet.Id).
+        Select(&ships); err != nil {
+            panic(exception.NewHttpException(404, "fleet not found", err))
+    }
+
     return ships
 }
 

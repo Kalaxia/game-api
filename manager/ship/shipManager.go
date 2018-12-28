@@ -96,6 +96,24 @@ func GetHangarShips(planet *model.Planet) []model.Ship {
     return ships
 }
 
+func GetHangarShipGroups(planet *model.Planet) []model.ShipGroup {
+    ships := make([]model.ShipGroup, 0)
+
+    if err := database.
+        Connection.
+        Model((*model.Ship)(nil)).
+        ColumnExpr("model.id, model.name, model.type, model.frame_slug, count(*) AS quantity").
+        Join("INNER JOIN ship__models as model ON model.id = ship.model_id").
+        Group("model.id").
+        Where("ship.construction_state_id IS NULL").
+        Where("ship.hangar_id = ?", planet.Id).
+        Select(&ships); err != nil {
+            panic(exception.NewHttpException(404, "fleet not found", err))
+    }
+
+    return ships
+}
+
 func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, quantity uint8) uint8 {
     var points uint8
     for _, price := range prices {

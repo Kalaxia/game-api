@@ -115,6 +115,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Fleet Ship Groups",
+		"GET",
+		"/api/fleets/{id}/ships/groups",
+		shipController.GetFleetShipGroups,
+		true,
+	},
+	Route{
 		"Assign Multiple Ships To Fleet",
 		"PATCH",
 		"/api/fleets/{fleetId}/ships",
@@ -237,6 +244,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Hangar Ship Groups",
+		"GET",
+		"/api/planets/{id}/ships/groups",
+		shipController.GetHangarShipGroups,
+		true,
+	},
+	Route{
 		"Get Constructing Ships",
 		"GET",
 		"/api/planets/{id}/ships/constructing",
@@ -256,6 +270,13 @@ var routes = Routes{
 		"DELETE",
 		"/api/offers/{id}",
 		tradeController.CancelOffer,
+		true,
+	},
+	Route{
+		"Get offer",
+		"GET",
+		"/api/offers/{id}",
+		tradeController.GetOffer,
 		true,
 	},
 	Route{

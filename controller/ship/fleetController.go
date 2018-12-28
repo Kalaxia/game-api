@@ -178,7 +178,20 @@ func GetFleetShip (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
 	}
     
-    utils.SendJsonResponse(w, 200,shipManager.GetFleetShip(*fleet))
+    utils.SendJsonResponse(w, 200, shipManager.GetFleetShip(*fleet))
+}
+
+func GetFleetShipGroups (w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*model.Player)
+    
+    fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    fleet := shipManager.GetFleet(uint16(fleetId))
+    
+    if (player.Id != fleet.Player.Id) { // the player does not own the fleet
+		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
+	}
+
+	utils.SendJsonResponse(w, 200, shipManager.GetFleetShipGroups(*fleet))
 }
 
 func DeleteFleet (w http.ResponseWriter, r *http.Request){
