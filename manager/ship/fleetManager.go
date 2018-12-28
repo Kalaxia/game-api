@@ -89,49 +89,27 @@ func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet
     return fleets
 }
 
-func AssignShipsToFleet ( ships []*model.Ship, fleet *model.Fleet){
-    
-    for _,ship := range ships {
-        isShipInTheCorrectLocation := IsShipInSamePositionAsFleet(*ship, *fleet)
-    	
-    	if !isShipInTheCorrectLocation{
-    		panic(exception.NewHttpException(400, "wrong location", nil))
-    	} 
-        //ELSE
-		//ship.IsShipInFleet = true
-        
+func AssignShipsToFleet (fleet *model.Fleet, modelId int, quantity int) {
+    for _, ship := range GetHangarShipsByModel(fleet.Location, modelId, quantity) {
 		ship.Fleet = fleet
-		ship.FleetId =fleet.Id
+		ship.FleetId = fleet.Id
 		ship.Hangar = nil
         ship.HangarId = 0
-    	
+        UpdateShip(&ship)
     }
-    
-    UpdateShips(ships)
 }
 
-func RemoveShipsFromFleet (ships []*model.Ship){
-    
-    for _,ship := range ships {
-        if ship.Fleet != nil {
-    		if (ship.Fleet.Location != nil) {
-                //ship.IsShipInFleet = false
-                
-        		ship.Hangar = ship.Fleet.Location
-        		ship.HangarId = ship.Fleet.Location.Id
-        		ship.Fleet = nil
-                ship.FleetId = 0
-                
-            } else {
-                panic(exception.NewHttpException(400, "Fleet not stationed", nil))
-            }
-    	} else{
-    		panic(exception.NewHttpException(400, "Ship is not in a fleet", nil))
-    	}
+func RemoveShipsFromFleet (fleet *model.Fleet, modelId int, quantity int) {
+    if (fleet.Location == nil) {
+        panic(exception.NewHttpException(400, "Fleet not stationed", nil))
     }
-    
-    UpdateShips(ships)
-    
+    for _, ship := range GetFleetShipsByModel(fleet, modelId, quantity) {
+        ship.Hangar = fleet.Location
+        ship.HangarId = fleet.Location.Id
+        ship.Fleet = nil
+        ship.FleetId = 0
+        UpdateShip(&ship)
+    }
 }
 
 func GetFleetShip (fleet model.Fleet) []model.Ship {
@@ -147,6 +125,23 @@ func GetFleetShip (fleet model.Fleet) []model.Ship {
             panic(exception.NewHttpException(404, "fleet not found", err))
     }
     
+    return ships
+}
+
+
+func GetFleetShipsByModel(fleet *model.Fleet, modelId int, quantity int) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("Hangar", "Fleet").
+        Where("construction_state_id IS NULL").
+        Where("fleet_id = ?", fleet.Id).
+        Where("model_id = ?", modelId).
+        Limit(quantity).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
     return ships
 }
 

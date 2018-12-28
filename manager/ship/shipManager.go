@@ -87,9 +87,25 @@ func GetHangarShips(planet *model.Planet) []model.Ship {
     if err := database.
         Connection.
         Model(&ships).
-        Column( "Model").
+        Column("Model").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", planet.Id).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
+func GetHangarShipsByModel(planet *model.Planet, modelId int, quantity int) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("Hangar", "Fleet").
+        Where("construction_state_id IS NULL").
+        Where("hangar_id = ?", planet.Id).
+        Where("model_id = ?", modelId).
+        Limit(quantity).
         Select(); err != nil {
         panic(exception.NewHttpException(404, "Planet not found", err))
     }
@@ -226,34 +242,8 @@ func GetShipsByIds(ids []uint16) []*model.Ship{
     return ships
 }
 
-
-
-func UpdateShip(ship *model.Ship){
-    
+func UpdateShip(ship *model.Ship) {
     if err := database.Connection.Update(ship); err != nil {
         panic(exception.NewException("ship could not be updated", err))
     }
-    
-}
-
-func UpdateShips(ships []*model.Ship){
-    
-    /*
-    if _,err := database.Connection.Model(&ships).Update(); err != nil { //< [Exception]: ship could not be updated; [Error]: ERROR #42804 column "hangar_id" is of type integer but expression is of type text
-        panic(exception.NewException("ship could not be updated", err))
-    }
-    */
-    
-    for _,ship := range ships {
-        UpdateShip(ship);
-    }
-    
-}
-
-
-func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
-    
-    return ( ship.Fleet == nil &&  fleet.Location != nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
-	  (ship.Fleet != nil && fleet.Location != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
-    
 }

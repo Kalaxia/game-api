@@ -122,17 +122,10 @@ var routes = Routes{
 		true,
 	},
 	Route{
-		"Assign Multiple Ships To Fleet",
+		"Transfer Ships Between Fleet and Hangar",
 		"PATCH",
 		"/api/fleets/{fleetId}/ships",
-		shipController.AssignShipsToFleet,
-		true,
-	},
-	Route{
-		"Remove Multiple Ship From Fleet",
-		"DELETE",
-		"/api/fleets/ships",
-		shipController.RemoveShipsFromFleet,
+		shipController.TransferShips,
 		true,
 	},
 	Route{ // data of the planet send in json
