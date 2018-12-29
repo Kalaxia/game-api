@@ -91,13 +91,17 @@ func TransferShips (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
 	}
 	
+	nbShips := 0
 	if quantity > 0 {
-		shipManager.AssignShipsToFleet(fleet, modelId, quantity)
+		nbShips = shipManager.AssignShipsToFleet(fleet, modelId, quantity)
 	} else {
-		shipManager.RemoveShipsFromFleet(fleet, modelId, -quantity)
+		nbShips = shipManager.RemoveShipsFromFleet(fleet, modelId, -quantity)
 	}
-    w.WriteHeader(204)
-    w.Write([]byte(""))  
+	utils.SendJsonResponse(w, 200, struct {
+		Quantity int `json:"quantity"`
+	}{
+		nbShips,
+	}) 
 }
 
 func GetFleetShip (w http.ResponseWriter, r *http.Request){

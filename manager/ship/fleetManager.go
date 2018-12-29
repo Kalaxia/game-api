@@ -89,27 +89,31 @@ func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet
     return fleets
 }
 
-func AssignShipsToFleet (fleet *model.Fleet, modelId int, quantity int) {
-    for _, ship := range GetHangarShipsByModel(fleet.Location, modelId, quantity) {
+func AssignShipsToFleet (fleet *model.Fleet, modelId int, quantity int) int {
+    ships := GetHangarShipsByModel(fleet.Location, modelId, quantity)
+    for _, ship := range ships {
 		ship.Fleet = fleet
 		ship.FleetId = fleet.Id
 		ship.Hangar = nil
         ship.HangarId = 0
         UpdateShip(&ship)
     }
+    return len(ships)
 }
 
-func RemoveShipsFromFleet (fleet *model.Fleet, modelId int, quantity int) {
+func RemoveShipsFromFleet (fleet *model.Fleet, modelId int, quantity int) int {
     if (fleet.Location == nil) {
         panic(exception.NewHttpException(400, "Fleet not stationed", nil))
     }
-    for _, ship := range GetFleetShipsByModel(fleet, modelId, quantity) {
+    ships := GetFleetShipsByModel(fleet, modelId, quantity)
+    for _, ship := range ships {
         ship.Hangar = fleet.Location
         ship.HangarId = fleet.Location.Id
         ship.Fleet = nil
         ship.FleetId = 0
         UpdateShip(&ship)
     }
+    return -len(ships)
 }
 
 func GetFleetShip (fleet model.Fleet) []model.Ship {
