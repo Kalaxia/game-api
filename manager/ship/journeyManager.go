@@ -9,7 +9,6 @@ import(
     "encoding/json"
     "io/ioutil"
     "time"
-    "strconv"
     "math"
 )
 
@@ -423,12 +422,12 @@ func DecodeStepData (data []interface{}) ([]uint16, []float64, []float64){
     
     for _, dataElement := range data {
         dataElementCast := dataElement.(map[string]interface{})
-        planetIdCast, _ := strconv.ParseUint(dataElementCast["planetId"].(string), 10, 16)
+        planetId := dataElementCast["planetId"].(float64)
         
-        if planetIdCast == 0 && (dataElementCast["x"].(float64) == math.NaN() || dataElementCast["y"].(float64) == math.NaN() ){
+        if planetId == 0 && (dataElementCast["x"].(float64) == math.NaN() || dataElementCast["y"].(float64) == math.NaN() ){
             panic(exception.NewHttpException(400, "step not well defined", nil))
         }
-        planetIds = append(planetIds,uint16(planetIdCast))
+        planetIds = append(planetIds, uint16(planetId))
         xPos = append(xPos,dataElementCast["x"].(float64))
         yPos = append(yPos,dataElementCast["y"].(float64))
     }
