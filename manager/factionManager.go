@@ -31,20 +31,15 @@ func GetServerFactions(serverId uint16) []*model.Faction {
 
 func GetFactionPlanetChoices(factionId uint16) []*model.Planet {
     planets := make([]*model.Planet, 0)
-    faction := &model.Faction{ Id: factionId }
-    if err := database.Connection.Select(faction); err != nil {
-        return planets
-    }
     if _, err := database.
         Connection.
-        Query(&planets, `SELECT p.*
-        FROM map__maps m
-        LEFT JOIN map__systems s ON s.map_id = m.id
-        LEFT JOIN map__planets p ON p.system_id = s.id
+        Query(&planets, `SELECT p.*, s.id AS system__id, s.x AS system__x, s.y AS system__y
+        FROM map__planets p
+        INNER JOIN map__systems s ON p.system_id = s.id
         LEFT JOIN diplomacy__relations d ON d.planet_id = p.id
-        WHERE p.player_id IS NULL AND m.server_id = ? AND d.faction_id = ?
+        WHERE p.player_id IS NULL AND d.faction_id = ?
         ORDER BY d.score DESC
-        LIMIT 4`, faction.ServerId, faction.Id); err != nil {
+        LIMIT 3`, factionId); err != nil {
             return planets
     }
     for _, planet := range planets {
