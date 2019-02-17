@@ -24,6 +24,14 @@ server {
     }
 
     location / {
+        root /srv/app/dist/js;
+    }
+
+    location /dist/js {
+        root /srv/app/dist/js;
+    }
+
+    location /static {
         root /srv/app;
     }
 
