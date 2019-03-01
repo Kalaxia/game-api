@@ -138,10 +138,10 @@ func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, q
                 if price.Amount > *wallet {
                     panic(exception.NewHttpException(400, "Not enough money", nil))
                 }
-                *wallet -= price.Amount
+                *wallet -= price.Amount * uint32(quantity)
                 break
             case model.PRICE_TYPE_POINTS:
-                points = uint8(price.Amount)
+                points = uint8(price.Amount) * quantity
                 break
             case model.PRICE_TYPE_RESOURCE:
                 amount := uint16(price.Amount) * uint16(quantity)
