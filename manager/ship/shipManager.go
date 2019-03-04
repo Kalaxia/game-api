@@ -44,21 +44,20 @@ func CreateShip(player *model.Player, planet *model.Planet, data map[string]inte
         CurrentPoints: 0,
         Points: points,
     }
+    if err := database.Connection.Insert(&constructionState); err != nil {
+        panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
+    }
     ship := model.Ship{
         ModelId: shipModel.Id,
         Model: shipModel,
         HangarId: planet.Id,
         Hangar: planet,
         CreatedAt: time.Now(),
+        ConstructionState: &constructionState,
+        ConstructionStateId: constructionState.Id,
     }
     for i := uint8(0); i < quantity; i++ {
-        cs:= constructionState
         s := ship
-        if err := database.Connection.Insert(&cs); err != nil {
-            panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
-        }
-        s.ConstructionState = &cs
-        s.ConstructionStateId = cs.Id
         if err := database.Connection.Insert(&s); err != nil {
             panic(exception.NewHttpException(500, "Ship could not be created", err))
         }
