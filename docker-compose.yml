@@ -33,6 +33,7 @@ services:
         networks:
             - game
         depends_on:
+            - front
             - api
         env_file:
             - kalaxia.env
