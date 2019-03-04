@@ -244,6 +244,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Currently Constructing Ships",
+		"GET",
+		"/api/planets/{id}/ships/currently-constructing",
+		shipController.GetCurrentlyConstructingShips,
+		true,
+	},
+	Route{
 		"Get Constructing Ships",
 		"GET",
 		"/api/planets/{id}/ships/constructing",

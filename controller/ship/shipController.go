@@ -27,6 +27,17 @@ func CreateShip(w http.ResponseWriter, r *http.Request) {
     )
 }
 
+func GetCurrentlyConstructingShips(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*model.Player)
+    planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    planet := manager.GetPlanet(uint16(planetId), player.Id)
+
+    if planet.Player.Id != player.Id {
+        panic(exception.NewHttpException(403, "You do not control this planet", nil))
+    }
+    utils.SendJsonResponse(w, 200, shipManager.GetCurrentlyConstructingShips(planet))
+}
+
 func GetConstructingShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*model.Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)

@@ -81,6 +81,24 @@ func GetConstructingShips(planet *model.Planet) []model.Ship {
     return ships
 }
 
+func GetCurrentlyConstructingShips(planet *model.Planet) model.ShipConstructionGroup {
+    var scg model.ShipConstructionGroup
+    if _, err := database.
+        Connection.
+        Query(&scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
+        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        FROM ship__ships s
+        INNER JOIN ship__models m ON s.model_id = m.id
+        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        WHERE s.hangar_id = ?
+        GROUP BY cs.id, m.id
+        ORDER BY cs.id DESC
+        LIMIT 1`, planet.Id); err != nil {
+            panic(exception.NewHttpException(404, "No constructing ship found", err))
+    }
+    return scg
+}
+
 func GetHangarShips(planet *model.Planet) []model.Ship {
     ships := make([]model.Ship, 0)
     if err := database.

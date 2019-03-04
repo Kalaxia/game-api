@@ -82,6 +82,13 @@ type(
         ConstructionStateId uint32 `json:"-"`
         ConstructionState *ShipConstructionState `json:"construction_state"`
     }
+    ShipConstructionGroup struct {
+        TableName struct{} `json:"-" pg:",discard_unknown_columns"`
+
+        Model *ShipModel `json:"model"`
+        ConstructionState *ShipConstructionState `json:"construction_state"`
+        Quantity uint `json:"quantity"`
+    }
     ShipGroup struct {
         Id uint `json:"id"`
         Name string `json:"name"`
