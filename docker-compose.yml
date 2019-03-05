@@ -6,6 +6,16 @@ networks:
         driver: bridge
 
 services:
+    front:
+        container_name: ${NETWORK_USER}_front
+        image: kalaxia/front
+        env_file:
+            - kalaxia.env
+        networks:
+            - game
+        volumes:
+            - "./volumes/app:/srv/app"
+
     api:
         container_name: ${NETWORK_USER}_api
         build: .
@@ -23,11 +33,11 @@ services:
         networks:
             - game
         depends_on:
+            - front
             - api
         env_file:
             - kalaxia.env
         volumes:
-            - "./volumes/app:/srv/app"
             # nginx
             - "./volumes/ssl:/etc/ssl"
             - "./volumes/logs/nginx:/var/log/nginx"

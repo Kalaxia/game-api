@@ -2,7 +2,19 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
 
-    server_name local.kalaxia.com;
+    server_name preprod.kalaxia.com;
+
+    return 302 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+
+    ssl_certificate /etc/ssl/live/preprod.kalaxia.com/fullchain.pem;
+    ssl_certificate_key /etc/ssl/live/preprod.kalaxia.com/privkey.pem;
+
+    server_name preprod.kalaxia.com;
 
     access_log /var/log/nginx/https_kalaxia_game.access.log;
     error_log /var/log/nginx/https_kalaxia_game.error.log;

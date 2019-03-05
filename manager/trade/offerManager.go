@@ -13,6 +13,7 @@ func GetOffer(id uint32) *model.ResourceOffer {
     if err := database.Connection.Model(offer).Column("Location.Player.Faction", "Location.System").Where("resource_offer.id = ?", id).Select(); err != nil {
         panic(exception.NewHttpException(404, "Offer not found", err))
     }
+    offer.Type = "resources"
     return offer
 }
 //

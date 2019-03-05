@@ -33,12 +33,10 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
     if player.IsActive == true {
         panic(exception.NewHttpException(http.StatusForbidden, "Player account is already active", nil))
     }
-    factionId, _ := strconv.ParseUint(data["faction_id"].(string), 10, 16)
-    planetId, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16)
     manager.RegisterPlayer(
         player,
-        uint16(factionId),
-        uint16(planetId),
+        uint16(data["faction_id"].(float64)),
+        uint16(data["planet_id"].(float64)),
     )
     w.WriteHeader(204)
     w.Write([]byte(""))

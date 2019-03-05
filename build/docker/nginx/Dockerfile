@@ -1,5 +1,4 @@
 FROM nginx:latest
-MAINTAINER Kern <kern046@gmail.com>
 
 COPY config/nginx.conf /etc/nginx/nginx.conf
 COPY config/sites-available/* /etc/nginx/sites-available/

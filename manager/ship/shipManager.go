@@ -44,21 +44,20 @@ func CreateShip(player *model.Player, planet *model.Planet, data map[string]inte
         CurrentPoints: 0,
         Points: points,
     }
+    if err := database.Connection.Insert(&constructionState); err != nil {
+        panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
+    }
     ship := model.Ship{
         ModelId: shipModel.Id,
         Model: shipModel,
         HangarId: planet.Id,
         Hangar: planet,
         CreatedAt: time.Now(),
+        ConstructionState: &constructionState,
+        ConstructionStateId: constructionState.Id,
     }
     for i := uint8(0); i < quantity; i++ {
-        cs:= constructionState
         s := ship
-        if err := database.Connection.Insert(&cs); err != nil {
-            panic(exception.NewHttpException(500, "Ship construction state could not be created", err))
-        }
-        s.ConstructionState = &cs
-        s.ConstructionStateId = cs.Id
         if err := database.Connection.Insert(&s); err != nil {
             panic(exception.NewHttpException(500, "Ship could not be created", err))
         }
@@ -82,17 +81,69 @@ func GetConstructingShips(planet *model.Planet) []model.Ship {
     return ships
 }
 
+func GetCurrentlyConstructingShips(planet *model.Planet) model.ShipConstructionGroup {
+    var scg model.ShipConstructionGroup
+    if _, err := database.
+        Connection.
+        Query(&scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
+        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        FROM ship__ships s
+        INNER JOIN ship__models m ON s.model_id = m.id
+        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        WHERE s.hangar_id = ?
+        GROUP BY cs.id, m.id
+        ORDER BY cs.id DESC
+        LIMIT 1`, planet.Id); err != nil {
+            panic(exception.NewHttpException(404, "No constructing ship found", err))
+    }
+    return scg
+}
+
 func GetHangarShips(planet *model.Planet) []model.Ship {
     ships := make([]model.Ship, 0)
     if err := database.
         Connection.
         Model(&ships).
-        Column( "Model").
+        Column("Model").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", planet.Id).
         Select(); err != nil {
         panic(exception.NewHttpException(404, "Planet not found", err))
     }
+    return ships
+}
+
+func GetHangarShipsByModel(planet *model.Planet, modelId int, quantity int) []model.Ship {
+    ships := make([]model.Ship, 0)
+    if err := database.
+        Connection.
+        Model(&ships).
+        Column("Hangar", "Fleet").
+        Where("construction_state_id IS NULL").
+        Where("hangar_id = ?", planet.Id).
+        Where("model_id = ?", modelId).
+        Limit(quantity).
+        Select(); err != nil {
+        panic(exception.NewHttpException(404, "Planet not found", err))
+    }
+    return ships
+}
+
+func GetHangarShipGroups(planet *model.Planet) []model.ShipGroup {
+    ships := make([]model.ShipGroup, 0)
+
+    if err := database.
+        Connection.
+        Model((*model.Ship)(nil)).
+        ColumnExpr("model.id, model.name, model.type, model.frame_slug, count(*) AS quantity").
+        Join("INNER JOIN ship__models as model ON model.id = ship.model_id").
+        Group("model.id").
+        Where("ship.construction_state_id IS NULL").
+        Where("ship.hangar_id = ?", planet.Id).
+        Select(&ships); err != nil {
+            panic(exception.NewHttpException(404, "fleet not found", err))
+    }
+
     return ships
 }
 
@@ -104,10 +155,10 @@ func payShipCost(prices []model.Price, wallet *uint32, storage *model.Storage, q
                 if price.Amount > *wallet {
                     panic(exception.NewHttpException(400, "Not enough money", nil))
                 }
-                *wallet -= price.Amount
+                *wallet -= price.Amount * uint32(quantity)
                 break
             case model.PRICE_TYPE_POINTS:
-                points = uint8(price.Amount)
+                points = uint8(price.Amount) * quantity
                 break
             case model.PRICE_TYPE_RESOURCE:
                 amount := uint16(price.Amount) * uint16(quantity)
@@ -208,34 +259,8 @@ func GetShipsByIds(ids []uint16) []*model.Ship{
     return ships
 }
 
-
-
-func UpdateShip(ship *model.Ship){
-    
+func UpdateShip(ship *model.Ship) {
     if err := database.Connection.Update(ship); err != nil {
         panic(exception.NewException("ship could not be updated", err))
     }
-    
-}
-
-func UpdateShips(ships []*model.Ship){
-    
-    /*
-    if _,err := database.Connection.Model(&ships).Update(); err != nil { //< [Exception]: ship could not be updated; [Error]: ERROR #42804 column "hangar_id" is of type integer but expression is of type text
-        panic(exception.NewException("ship could not be updated", err))
-    }
-    */
-    
-    for _,ship := range ships {
-        UpdateShip(ship);
-    }
-    
-}
-
-
-func IsShipInSamePositionAsFleet (ship model.Ship, fleet model.Fleet ) bool {
-    
-    return ( ship.Fleet == nil &&  fleet.Location != nil && fleet.Location.Id ==  ship.Hangar.Id ) || // ship in Hangar and hangar same pos as the fleet
-	  (ship.Fleet != nil && fleet.Location != nil && ship.Fleet.Location.Id !=  fleet.Location.Id); // ship in fleet  and both fleet are a the same place
-    
 }

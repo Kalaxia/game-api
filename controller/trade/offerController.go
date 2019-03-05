@@ -38,3 +38,8 @@ func CancelOffer(w http.ResponseWriter, r *http.Request) {
     w.WriteHeader(204)
     w.Write([]byte(""))
 }
+
+func GetOffer(w http.ResponseWriter, r *http.Request) {
+    offerId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    utils.SendJsonResponse(w, 200, tradeManager.GetOffer(uint32(offerId)))
+}
