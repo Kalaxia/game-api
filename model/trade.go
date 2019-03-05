@@ -10,6 +10,7 @@ type(
     }
     Offer struct {
         Id uint32 `json:"id"`
+        Type string `json:"type" sql:"-"`
         Operation string `json:"operation"`
         LocationId uint16 `json:"-"`
         Location *Planet `json:"location"`
