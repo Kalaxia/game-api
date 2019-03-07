@@ -1,5 +1,7 @@
 {
   "arctic": {
+    "picto": "P_PL_Ice_64.png",
+    "image": "PL_Ice_200px.png",
     "resources" : {
       "resources.a": 60,
       "resources.b": 50,
@@ -8,6 +10,8 @@
     }
   },
   "desert": {
+    "picto": "P_PL_Gaz_64.png",
+    "image": "PL_Gaz_200px.png",
     "resources" : {
       "resources.b": 35,
       "resources.c": 75,
@@ -16,6 +20,8 @@
     }
   },
   "oceanic": {
+    "picto": "P_PL_Wate_64.png",
+    "image": "PL_Wate_200px.png",
     "resources" : {
       "resources.a": 50,
       "resources.b": 55,
@@ -24,6 +30,8 @@
     }
   },
   "temperate": {
+    "picto": "P_PL_Temp_64.png",
+    "image": "PL_Temp_200px.png",
     "resources" : {
       "resources.a": 65,
       "resources.b": 55,
@@ -32,6 +40,8 @@
     }
   },
   "tropical": {
+    "picto": "P_PL_Trop_64.png",
+    "image": "PL_Trop_200px.png",
     "resources" : {
       "resources.c": 75,
       "resources.e": 65,
@@ -39,6 +49,8 @@
     }
   },
   "rocky": {
+    "picto": "P_PL_Rock_64px.png",
+    "image": "PL_Rock_200px.png",
     "resources" : {
       "resources.b": 80,
       "resources.c": 20,
@@ -47,6 +59,8 @@
     }
   },
   "volcanic": {
+    "picto": "P_PL_Volc_64px.png",
+    "image": "PL_Volc_200px.png",
     "resources" : {
       "resources.a": 45,
       "resources.d": 50,

@@ -1,20 +1,26 @@
-[
-  {
-    "name": "resources.a"
+{
+  "liquid": {
+    "picto": "Pc_R_Wat.png",
+    "color": "#00A3CA"
   },
-  {
-    "name": "resources.b"
+  "ore": {
+    "picto": "Pc_R_Vol.png",
+    "color": "#F461BE"
   },
-  {
-    "name": "resources.c"
+  "emerald": {
+    "picto": "Pc_R_Eme.png",
+    "color": "#00704E"
   },
-  {
-    "name": "resources.d"
+  "geode": {
+    "picto": "Pc_R_Geo.png",
+    "color": "#D49F70"
   },
-  {
-    "name": "resources.e"
+  "cristal": {
+    "picto": "Pc_R_Cri.png",
+    "color": "#18ACAC"
   },
-  {
-    "name": "resources.f"
+  "red-ore": {
+    "picto": "Pc_R_Rub.png",
+    "color": "#CD092F"
   }
-]
+}

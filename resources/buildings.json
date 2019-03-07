@@ -1,5 +1,7 @@
 {
-  "bat.prod.a": {
+  "hypodronic-farm": {
+    "picture": "bat_prod_a.png",
+    "category": "resource",
     "type": "resource",
     "parent": null,
     "duration": 1800,
@@ -10,7 +12,9 @@
       }
     ]
   },
-  "bat.prod.b": {
+  "ore-mine": {
+    "picture": "building.png",
+    "category": "resource",
     "type": "resource",
     "parent": null,
     "duration": 1800,
@@ -21,7 +25,9 @@
       }
     ]
   },
-  "bat.shipyard.a": {
+  "shipyard": {
+    "picture": "building.png",
+    "link": "/buildings/shipyard",
     "type": "shipyard",
     "parent": null,
     "duration": 1800,
@@ -36,9 +42,10 @@
       }
     ]
   },
-  "bat.shipyard.b": {
+  "spatial-shipyard": {
+    "picture": "building.png",
     "type": "shipyard",
-    "parent": "bat.shipyard.a",
+    "parent": "shipyard",
     "duration": 1800,
     "price": [
       {
@@ -51,7 +58,9 @@
       }
     ]
   },
-  "bat.trade.a": {
+  "trade-post": {
+    "picture": "building.png",
+    "link": "/buildings/trade",
     "type": "trade",
     "parent": null,
     "duration": 1800,
@@ -62,7 +71,8 @@
       }
     ]
   },
-  "bat.techno.a": {
+  "technolab": {
+    "picture": "building.png",
     "type": "techno",
     "parent": null,
     "duration": 1800,

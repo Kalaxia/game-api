@@ -1,8 +1,11 @@
 {
     "laser-gun": {
+        "picture": "",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
         "slug": "laser-gun",
         "type": "weapon",
-        "shape": "circle",
+        "shape": "square",
         "size": "small",
         "scores": {
             "fighter": 50,
@@ -24,12 +27,15 @@
             },
             {
                 "type": "resource",
-                "resource": "resources.e",
+                "resource": "cristal",
                 "amount": 50
             }
         ]
     },
     "ion-reactor": {
+        "picture": "",
+        "picture_flip_x": false,
+        "picture_flip_y": false,
         "slug": "ion-reactor",
         "type": "engine",
         "shape": "square",
@@ -53,17 +59,20 @@
             },
             {
                 "type": "resource",
-                "resource": "resources.b",
+                "resource": "ore",
                 "amount": 75
             },
             {
                 "type": "resource",
-                "resource": "resources.c",
+                "resource": "emerald",
                 "amount": 60
             }
         ]
     },
     "mark-i-reactor": {
+        "picture": "mark_1.png",
+        "picture_flip_x": false,
+        "picture_flip_y": false,
         "slug": "mark-i-reactor",
         "type": "engine",
         "shape": "square",
@@ -87,17 +96,20 @@
             },
             {
                 "type": "resource",
-                "resource": "resources.b",
+                "resource": "ore",
                 "amount": 60
             },
             {
                 "type": "resource",
-                "resource": "resources.a",
+                "resource": "liquid",
                 "amount": 40
             }
         ]
     },
     "laser-turret-meirrion": {
+        "picture": "laser_01.png",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
         "slug": "laser-turret-meirrion",
         "type": "weapon",
         "shape": "circle",
@@ -123,12 +135,15 @@
             },
             {
                 "type": "resource",
-                "resource": "resources.e",
+                "resource": "cristal",
                 "amount": 50
             }
         ]
     },
     "light-shield-generator": {
+        "picture": "",
+        "picture_flip_x": false,
+        "picture_flip_y": false,
         "slug": "light-shield-generator",
         "type": "shield",
         "shape": "rectangle",
@@ -154,22 +169,25 @@
             },
             {
                 "type": "resource",
-                "resource": "resources.a",
+                "resource": "liquid",
                 "amount": 60
             },
             {
                 "type": "resource",
-                "resource": "resources.e",
+                "resource": "cristal",
                 "amount": 50
             },
             {
                 "type": "resource",
-                "resource": "resources.f",
+                "resource": "red-ore",
                 "amount": 50
             }
         ]
     },
     "light-container": {
+        "picture": "",
+        "picture_flip_x": false,
+        "picture_flip_y": false,
         "slug": "light-container",
         "type": "cargo",
         "shape": "rectangle",
