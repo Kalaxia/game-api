@@ -3,7 +3,7 @@ FROM golang:1.12-alpine
 WORKDIR /go/src/kalaxia-game-api
 COPY . .
 
-RUN apk add git \
+RUN apk add git make \
     && go get -d -v ./... \
     && go install -v ./... \
     && go get -u -d github.com/mattes/migrate/cli github.com/lib/pq \
