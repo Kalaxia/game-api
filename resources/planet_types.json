@@ -3,69 +3,69 @@
     "picto": "P_PL_Ice_64.png",
     "image": "PL_Ice_200px.png",
     "resources" : {
-      "resources.a": 60,
-      "resources.b": 50,
-      "resources.d": 30,
-      "resources.f": 70
+      "liquid": 60,
+      "ore": 50,
+      "food": 30,
+      "red-ore": 70
     }
   },
   "desert": {
     "picto": "P_PL_Gaz_64.png",
     "image": "PL_Gaz_200px.png",
     "resources" : {
-      "resources.b": 35,
-      "resources.c": 75,
-      "resources.d": 35,
-      "resources.e": 50
+      "ore": 35,
+      "emerald": 75,
+      "food": 35,
+      "cristal": 50
     }
   },
   "oceanic": {
     "picto": "P_PL_Wate_64.png",
     "image": "PL_Wate_200px.png",
     "resources" : {
-      "resources.a": 50,
-      "resources.b": 55,
-      "resources.d": 25,
-      "resources.e": 80
+      "liquid": 50,
+      "ore": 55,
+      "food": 25,
+      "cristal": 80
     }
   },
   "temperate": {
     "picto": "P_PL_Temp_64.png",
     "image": "PL_Temp_200px.png",
     "resources" : {
-      "resources.a": 65,
-      "resources.b": 55,
-      "resources.c": 45,
-      "resources.e": 50
+      "liquid": 65,
+      "ore": 55,
+      "emerald": 45,
+      "cristal": 50
     }
   },
   "tropical": {
     "picto": "P_PL_Trop_64.png",
     "image": "PL_Trop_200px.png",
     "resources" : {
-      "resources.c": 75,
-      "resources.e": 65,
-      "resources.f": 60
+      "emerald": 75,
+      "cristal": 65,
+      "red-ore": 60
     }
   },
   "rocky": {
     "picto": "P_PL_Rock_64px.png",
     "image": "PL_Rock_200px.png",
     "resources" : {
-      "resources.b": 80,
-      "resources.c": 20,
-      "resources.e": 25,
-      "resources.f": 60
+      "ore": 80,
+      "emerald": 20,
+      "cristal": 25,
+      "red-ore": 60
     }
   },
   "volcanic": {
     "picto": "P_PL_Volc_64px.png",
     "image": "PL_Volc_200px.png",
     "resources" : {
-      "resources.a": 45,
-      "resources.d": 50,
-      "resources.e": 45,
-      "resources.f": 70
+      "liquid": 45,
+      "food": 50,
+      "cristal": 45,
+      "red-ore": 70
     }
   }
 }

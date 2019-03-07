@@ -25,6 +25,8 @@ type(
     }
     ShipFrame struct {
         Slug string `json:"slug"`
+        Picture string `json:"picture"`
+        Picto string `json:"picto"`
         Slots []ShipSlotPlan `json:"slots"`
         Stats map[string]uint16 `json:"stats"`
         Price []Price `json:"price"`
@@ -42,6 +44,9 @@ type(
         Price []Price `json:"price"`
     }
     ShipModule struct {
+        Picture string `json:"picture"`
+        PictureFlipX bool `json:"picture_flip_x"`
+        PictureFlipY bool `json:"picture_flip_y"`
         Slug string `json:"slug"`
         Type string `json:"type"`
         Shape string `json:"shape"`

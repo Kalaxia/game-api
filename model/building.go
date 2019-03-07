@@ -28,6 +28,7 @@ type(
     Name string `json:"name"`
     ParentName string `json:"parent"`
     Type string `json:"type"`
+    Picture string `json:"picture"`
     Duration uint `json:"duration"`
     Price []Price `json:"price"`
   }

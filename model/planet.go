@@ -58,6 +58,8 @@ type(
       Resources map[string]uint16 `json:"resources"`
   }
   PlanetData struct {
+    Picto string
+    Image string
     Resources map[string]uint8
   }
   PlanetsData map[string]PlanetData

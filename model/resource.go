@@ -2,7 +2,8 @@ package model
 
 type(
   ResourceData struct {
-    Name string
+    Picto string
+    Color string
   }
-  ResourcesData []ResourceData
+  ResourcesData map[string]ResourceData
 )
