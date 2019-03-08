@@ -24,3 +24,20 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     data := utils.DecodeJsonRequest(r)
     utils.SendJsonResponse(w, 201, manager.CreateBuilding(planet, data["name"].(string)))
 }
+
+func CancelBuilding(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    player := context.Get(r, "player").(*model.Player)
+
+    planetId, _ := strconv.ParseUint(vars["planet-id"], 10, 16)
+    buildingId, _ := strconv.ParseUint(vars["building-id"], 10, 16)
+    planet := manager.GetPlanet(uint16(planetId), player.Id)
+
+    if uint16(planetId) != planet.Id {
+        panic(exception.NewHttpException(403, "Forbidden", nil))
+    }
+    manager.CancelBuilding(planet, uint32(buildingId))
+
+    w.WriteHeader(204)
+    w.Write([]byte(""))
+}

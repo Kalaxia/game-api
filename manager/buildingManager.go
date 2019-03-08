@@ -80,6 +80,22 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     return building
 }
 
+func CancelBuilding(planet *model.Planet, id uint32) {
+    building := model.Building{}
+    if err := database.Connection.Model(&building).Column("building.*", "ConstructionState").Where("building.id = ?", id).Select(); err != nil {
+        panic(exception.NewHttpException(404, "Building not found", err))
+    }
+    if building.PlanetId != planet.Id {
+        panic(exception.NewHttpException(400, "Building does not belong to the given planet", nil))
+    }
+    if err := database.Connection.Delete(&building); err != nil {
+        panic(exception.NewException("Building could not be removed", err))
+    }
+    if err := database.Connection.Delete(building.ConstructionState); err != nil {
+        panic(exception.NewException("Construction State could not be removed", err))
+    }
+}
+
 func createConstructionState(buildingPlan model.BuildingPlan) *model.ConstructionState {
     points := uint8(0)
     for _, price := range buildingPlan.Price {
