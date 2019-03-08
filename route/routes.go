@@ -103,6 +103,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Cancel Building Construction",
+		"DELETE",
+		"/api/planets/{planet-id}/buildings/{building-id}",
+		controller.CancelBuilding,
+		true,
+	},
+	Route{
 		"Launch Ship Construction",
 		"POST",
 		"/api/planets/{id}/ships",
