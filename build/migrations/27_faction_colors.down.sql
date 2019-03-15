@@ -1,0 +1,1 @@
+ALTER TABLE faction__factions DROP COLUMN colors, ADD COLUMN color VARCHAR(10);
