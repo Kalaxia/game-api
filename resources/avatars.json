@@ -1,0 +1,14 @@
+{
+    "male": [
+        "astronaut",
+        "cyborg",
+        "dark-lord",
+        "mutant",
+        "trader",
+        "veggie"
+    ],
+    "female": [
+        "amazone",
+        "pilot"
+    ]
+}

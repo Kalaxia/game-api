@@ -9,6 +9,8 @@ type(
     Id uint16 `json:"id"`
     Username string `json:"-" sql:"type:varchar(180);not null;unique"`
     Pseudo string `json:"pseudo" sql:"type:varchar(180);not null;unique"`
+    Gender string `json:"gender"`
+    Avatar string `json:"avatar"`
     ServerId uint16 `json:"-"`
     Server *Server `json:"-"`
     FactionId uint16 `json:"-"`

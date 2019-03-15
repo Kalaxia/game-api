@@ -35,6 +35,9 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
     }
     manager.RegisterPlayer(
         player,
+        data["pseudo"].(string),
+        data["gender"].(string),
+        data["avatar"].(string),
         uint16(data["faction_id"].(float64)),
         uint16(data["planet_id"].(float64)),
     )

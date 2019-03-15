@@ -58,7 +58,7 @@ func UpdatePlayer(player *model.Player) {
     }
 }
 
-func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
+func RegisterPlayer(player *model.Player, pseudo string, gender string, avatar string, factionId uint16, planetId uint16) {
     faction := GetFaction(factionId)
     if faction == nil {
         panic(exception.NewHttpException(404, "faction not found", nil))
@@ -71,6 +71,9 @@ func RegisterPlayer(player *model.Player, factionId uint16, planetId uint16) {
     planet.Player = player
     player.FactionId = faction.Id
     player.Faction = faction
+    player.Pseudo = pseudo
+    player.Avatar = avatar
+    player.Gender = gender
     player.IsActive = true
     player.Wallet = 0
     UpdatePlayerWallet(player, 40000)
