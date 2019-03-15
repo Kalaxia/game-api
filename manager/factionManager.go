@@ -60,11 +60,16 @@ func CreateServerFactions(server *model.Server, factions []interface{}) []*model
     results := make([]*model.Faction, 0)
     for _, factionData := range factions {
         data := factionData.(map[string]interface{})
+        colors := make(map[string]string, 0)
+
+        for k, v := range data["colors"].(map[string]interface{}) {
+            colors[k] = v.(string)
+        }
         faction := &model.Faction{
             Name: data["name"].(string),
             Slug: slug.Make(data["name"].(string)),
             Description: data["description"].(string),
-            Color: data["color"].(string),
+            Colors: colors,
             Banner: data["banner"].(string),
             ServerId: server.Id,
             Server: server,
