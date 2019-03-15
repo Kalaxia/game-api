@@ -1,12 +1,12 @@
 package utils
 
 import(
-    "encoding/json"
-    "io/ioutil"
-    "math/rand"
-    "kalaxia-game-api/database"
-    "kalaxia-game-api/exception"
-    "kalaxia-game-api/model"
+  "encoding/json"
+  "io/ioutil"
+  "math/rand"
+  "kalaxia-game-api/database"
+  "kalaxia-game-api/exception"
+  "kalaxia-game-api/model"
 )
 
 const MIN_PLANETS_PER_SYSTEM = 3
@@ -14,6 +14,7 @@ const MIN_PLANETS_PER_SYSTEM = 3
 var planetsData model.PlanetsData
 var resourcesData model.ResourcesData
 var factions []*model.Faction
+var planetsNameFrequencies []Element
 
 func GenerateMapSystems(gameMap *model.Map, gameFactions []*model.Faction) {
     factions = gameFactions
@@ -48,6 +49,15 @@ func initializeConfiguration() {
     if err := json.Unmarshal(resourcesDataJSON, &resourcesData); err != nil {
 		panic(exception.NewException("Could not read resources configuration file", err))
     }
+    planetNamesJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/planet_names.json")
+    if err != nil {
+        panic(exception.NewException("Could not read names file", err))
+    }
+    planetNames := make([]string, 0)
+    if err := json.Unmarshal(planetNamesJSON, &planetNames); err != nil {
+		panic(exception.NewException("Could not read planet types configuration file", err))
+    }
+    planetsNameFrequencies = generateFrequencies(planetNames)
 }
 
 func generateSystem(gameMap *model.Map, x uint16, y uint16) {
@@ -81,7 +91,7 @@ func generatePlanet(system *model.System, orbit *model.SystemOrbit) *model.Plane
     planetType := choosePlanetType(orbit)
     settings := generateSettings()
     planet := &model.Planet{
-        Name: "Régalion V",
+        Name: generatePlanetName(planetsNameFrequencies),
         Type: planetType,
         System: system,
         SystemId: system.Id,
