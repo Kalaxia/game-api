@@ -5,7 +5,7 @@ before_install:
   - docker build -t kalaxia/api . 
 
 script:
-  - docker run -it -e POSTGRES_HOST="127.0.0.1" -e POSTGRES_USER="root" -e POSTGRES_PASSWORD="test" -e POSTGRES_DB="test_db" -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" kalaxia/api
+  - docker run -it -e POSTGRES_HOST="127.0.0.1" -e POSTGRES_USER="root" -e POSTGRES_PASSWORD="test" -e POSTGRES_DB="test_db" -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" kalaxia/api make coveralls-ci
 
 deploy:
   - provider: script
