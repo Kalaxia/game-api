@@ -60,22 +60,19 @@
 
 This repository is the Golang API for Kalaxia game.
 
-It is used to develop, build and ship the game, but we recommend the [Docker Compose repository](https://github.com/Kalaxia/game-docker) for use purposes.
+It is used to develop, build and ship the game, and contains the Docker Compose configuration which runs the whole game.
 
 ## Introduction
 
 What is kalaxia ?
-Kalaxia is an old school multiplayer browser strategy game on real time with semi persistent session.
+Kalaxia is a multiplayer browser strategy game on real time.
 This is an open source game. You can find more information on the project on our website [kalaxia.org](https://kalaxia.org), or on our [discord](https://discordapp.com/invite/bSQ3WV).
-
 
 
 ## Requirements
 
 * Docker >= 18.03.0
 * docker-compose >= 1.21.2
-
-
 
 ## Installation
 
@@ -162,6 +159,14 @@ more information are provided in the 'Database migrations' section below.
 
 To setup the game you will need to setup the [portal](https://github.com/Kalaxia/portal).
 
+You need to copy the portal public RSA key to enable communications between the server and the portal.
+
+Copy the ``rsa_vault/portal.pub`` file from the portal to ``rsa_vault`` in the game repository.
+
+The server RSA key must be copied in the portal admin dashboard when registering a machine.
+
+A machine can host several game servers.
+
 ## Administration
 
 ### Logs
@@ -188,7 +193,8 @@ to display the logs of the container.
 Update your files locally (by instance using `git pull`).
 Then you type the command
 ```Bash
-docker-compose up -d --build api
+docker build -t kalaxia/api .
+docker-compose up -d api
 ```
 to rebuild the container and launch it. This will only rebuild the api so your database should be safe.   
 Note that the previous container will be still on your machine but will be stopped. The delete the old image please refer to the docker documentation.
@@ -202,9 +208,9 @@ TODO
 
 You can connect to the database using
 ```Bash
-docker exec -it kalaxia_postgresql psql -U kalaxia kalaxia_game
+docker-compose exec postgresql psql -U kalaxia -W kalaxia_game
 ```
-in this mode you can directly type SQL queries. To quit type `\q` then press enter.
+in this mode you can directly type SQL queries. To quit type `CTRL+D`.
 
 #### Database migrations
 
