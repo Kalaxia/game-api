@@ -1,0 +1,27 @@
+services:
+  - docker
+
+before_install:
+  - docker build -t kalaxia/api . 
+
+script:
+  - docker run -it -e POSTGRES_HOST="127.0.0.1" -e POSTGRES_USER="root" -e POSTGRES_PASSWORD="test" -e POSTGRES_DB="test_db" -e TRAVIS_JOB_ID="$TRAVIS_JOB_ID" -e TRAVIS_BRANCH="$TRAVIS_BRANCH" -e COVERALLS_REPO_TOKEN="$COVERALLS_REPO_TOKEN" kalaxia/api make coveralls-ci
+
+deploy:
+  - provider: script
+    script: bash deploy/prod.sh
+    on:
+      tags: true
+  - provider: script
+    script: bash deploy/preprod.sh
+    on:
+      branch: develop
+  
+after_success:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh success $WEBHOOK_URL
+after_failure:
+  - wget https://raw.githubusercontent.com/DiscordHooks/travis-ci-discord-webhook/master/send.sh
+  - chmod +x send.sh
+  - ./send.sh failure $WEBHOOK_URL
