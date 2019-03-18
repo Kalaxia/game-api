@@ -4,9 +4,10 @@ import(
   "fmt"
   "os"
   "github.com/go-pg/pg"
+  "github.com/go-pg/pg/orm"
 )
 
-var Connection *pg.DB
+var Connection orm.DB
 
 func init() {
   options := &pg.Options{
@@ -16,6 +17,7 @@ func init() {
     Password: os.Getenv("POSTGRES_PASSWORD"),
     Database: os.Getenv("POSTGRES_DB"),
   }
+  // Cast go-pg instance to PgConnection to allow mocks
   Connection = pg.Connect(options)
   fmt.Println("Database connection initialized")
 }
