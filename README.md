@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/Kalaxia/game-api.svg?branch=develop)](https://travis-ci.org/Kalaxia/game-api)
+[![Coverage Status](https://coveralls.io/repos/github/Kalaxia/game-api/badge.svg?branch=develop)](https://coveralls.io/github/Kalaxia/game-api?branch=develop)
 
 # Table of content
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
