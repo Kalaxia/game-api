@@ -77,8 +77,8 @@ func CalculatePlanetsProductions() {
     }
 }
 
-func getPlanets(offset int, limit int) []model.Planet {
-    var planets []model.Planet
+func getPlanets(offset int, limit int) []*model.Planet {
+    var planets []*model.Planet
     if err := database.
         Connection.
         Model(&planets).
@@ -105,7 +105,7 @@ func GetPlanetsById(ids []uint16) []*model.Planet {
     return planets
 }
 
-func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
+func calculatePlanetProduction(planet *model.Planet, wg *sync.WaitGroup) {
     defer wg.Done()
     defer utils.CatchException()
 
@@ -113,7 +113,7 @@ func calculatePlanetProduction(planet model.Planet, wg *sync.WaitGroup) {
     calculatePointsProduction(planet)
 }
 
-func calculatePlanetResourcesProduction(planet model.Planet) {
+func calculatePlanetResourcesProduction(planet *model.Planet) {
     if planet.Storage == nil {
         storage := &model.Storage{
             Capacity: 5000,
@@ -125,7 +125,7 @@ func calculatePlanetResourcesProduction(planet model.Planet) {
         }
         planet.Storage = storage
         planet.StorageId = storage.Id
-        if err := database.Connection.Update(&planet); err != nil {
+        if err := database.Connection.Update(planet); err != nil {
             panic(exception.NewException("Planet storage could not be updated", err))
         }
     } else {
@@ -136,7 +136,7 @@ func calculatePlanetResourcesProduction(planet model.Planet) {
     }
 }
 
-func calculatePointsProduction(planet model.Planet) {
+func calculatePointsProduction(planet *model.Planet) {
     buildingPoints := planet.Settings.BuildingPoints
     for _, building := range planet.Buildings {
         if buildingPoints <= 0 {
@@ -148,7 +148,7 @@ func calculatePointsProduction(planet model.Planet) {
     }
 }
 
-func addResourcesToStorage(planet model.Planet, storage *model.Storage) {
+func addResourcesToStorage(planet *model.Planet, storage *model.Storage) {
     for _, resource := range planet.Resources {
         var currentStock uint16
         var newStock uint16
