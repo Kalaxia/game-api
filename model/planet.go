@@ -1,6 +1,6 @@
 package model
 
-const PlanetTypeArtic = "arctic"
+const PlanetTypeArctic = "arctic"
 const PlanetTypeDesert = "desert"
 const PlanetTypeOceanic = "oceanic"
 const PlanetTypeTemperate = "temperate"
