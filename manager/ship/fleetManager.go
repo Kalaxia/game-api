@@ -52,16 +52,13 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	if err := database.Connection.Insert(&fleet); err != nil {
 		panic(exception.NewHttpException(500, "Fleet could not be created", err))
     }
-	
-	
-	
 	return &fleet
 }
 
 
 
-func GetAllFleets(player *model.Player) []model.Fleet{
-	var fleets []model.Fleet
+func GetAllFleets(player *model.Player) []model.Fleet {
+	fleets := make([]model.Fleet, 0)
     if err := database.
         Connection.
         Model(&fleets).
