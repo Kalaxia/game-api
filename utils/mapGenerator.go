@@ -139,7 +139,7 @@ func choosePlanetType(orbit *model.SystemOrbit) string {
         case coeff < 800:
             return model.PlanetTypeOceanic
         default:
-            return model.PlanetTypeArtic
+            return model.PlanetTypeArctic
     }
 }
 

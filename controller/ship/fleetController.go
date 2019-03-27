@@ -41,7 +41,7 @@ func GetAllFleets (w http.ResponseWriter, r *http.Request){
 	 */
 	player := context.Get(r, "player").(*model.Player)
 	
-	utils.SendJsonResponse(w, 200,shipManager.GetAllFleets(player))
+	utils.SendJsonResponse(w, 200, shipManager.GetAllFleets(player))
 }
 
 func GetFleet (w http.ResponseWriter, r *http.Request){

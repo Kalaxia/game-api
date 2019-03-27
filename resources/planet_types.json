@@ -5,7 +5,7 @@
     "resources" : {
       "liquid": 60,
       "ore": 50,
-      "food": 30,
+      "geode": 30,
       "red-ore": 70
     }
   },
@@ -15,7 +15,7 @@
     "resources" : {
       "ore": 35,
       "emerald": 75,
-      "food": 35,
+      "geode": 35,
       "cristal": 50
     }
   },
@@ -25,7 +25,7 @@
     "resources" : {
       "liquid": 50,
       "ore": 55,
-      "food": 25,
+      "geode": 25,
       "cristal": 80
     }
   },
@@ -63,7 +63,7 @@
     "image": "PL_Volc_200px.png",
     "resources" : {
       "liquid": 45,
-      "food": 50,
+      "geode": 50,
       "cristal": 45,
       "red-ore": 70
     }
