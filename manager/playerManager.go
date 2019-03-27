@@ -86,12 +86,12 @@ func RegisterPlayer(player *model.Player, pseudo string, gender string, avatar s
     }
 }
 
-func UpdatePlayerWallet(player *model.Player, amount  int32) {
+func UpdatePlayerWallet(player *model.Player, amount int32) bool {
     if newAmount := int32(player.Wallet) + amount; newAmount >= 0 {
       player.Wallet = uint32(newAmount)
-    } else {
-      player.Wallet = 0;
+      return true
     }
+    return false
 }
 
 func calculatePlayerWage(player model.Player, wg *sync.WaitGroup) {

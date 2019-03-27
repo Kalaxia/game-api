@@ -55,8 +55,6 @@ func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	return &fleet
 }
 
-
-
 func GetAllFleets(player *model.Player) []model.Fleet {
 	fleets := make([]model.Fleet, 0)
     if err := database.
@@ -69,7 +67,6 @@ func GetAllFleets(player *model.Player) []model.Fleet {
     }
     return fleets
 }
-
 
 func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet {
 	var fleets []model.Fleet

@@ -58,7 +58,7 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     if !isset {
         panic(exception.NewHttpException(400, "unknown building plan", nil))
     }
-    constructionState := createConstructionState(buildingPlan)
+    constructionState := createConstructionState(planet.Player, buildingPlan)
     building := model.Building{
         Name: name,
         Type: buildingPlan.Type,
@@ -96,11 +96,16 @@ func CancelBuilding(planet *model.Planet, id uint32) {
     }
 }
 
-func createConstructionState(buildingPlan model.BuildingPlan) *model.ConstructionState {
+func createConstructionState(player *model.Player, buildingPlan model.BuildingPlan) *model.ConstructionState {
     points := uint8(0)
     for _, price := range buildingPlan.Price {
-        if price.Type == "points" {
+        if price.Type == model.PRICE_TYPE_POINTS {
             points = uint8(price.Amount)
+        } else if price.Type == model.PRICE_TYPE_MONEY {
+            if !UpdatePlayerWallet(player, -int32(price.Amount)) {
+                panic(exception.NewHttpException(400, "The player has not enough money", nil))
+            }
+            UpdatePlayer(player)
         }
     }
     constructionState := &model.ConstructionState {
