@@ -119,7 +119,7 @@ func getStorageMock() *model.Storage {
 		Capacity: 5000,
 		Resources: map[string]uint16{
 			"cristal": 2500,
-			"food": 1450,
+			"geode": 1450,
 		},
 	}
 }
