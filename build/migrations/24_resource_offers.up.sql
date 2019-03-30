@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS trade__resource_offers(
     lot_quantity INT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
     resource VARCHAR(25) NOT NULL,
-    location_id INT NOT NULL REFERENCES map__planets(id),
+    location_id INT NOT NULL REFERENCES map__planets(id) ON DELETE CASCADE,
     destination_id INT REFERENCES map__planets(id),
     created_at TIMESTAMPTZ NOT NULL,
     accepted_at TIMESTAMPTZ
