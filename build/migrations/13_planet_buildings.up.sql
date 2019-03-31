@@ -5,5 +5,5 @@ CREATE TABLE IF NOT EXISTS map__planet_buildings(
   status VARCHAR(20) NOT NULL,
   created_at timestamptz NOT NULL,
   updated_at timestamptz NOT NULL,
-  planet_id int references map__planets(id)
+  planet_id int references map__planets(id) ON DELETE CASCADE
 );

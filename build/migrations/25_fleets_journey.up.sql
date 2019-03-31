@@ -4,7 +4,7 @@ ALTER TABLE fleet__fleets ADD map_pos_y FLOAT DEFAULT 0;
 
 CREATE TABLE IF NOT EXISTS fleet__journeys_steps(
     id SERIAL PRIMARY KEY,
-    journey_id int references fleet__journeys(id),
+    journey_id int references fleet__journeys(id) ON DELETE CASCADE,
     ---------------
     planet_start_id int references map__planets(id),
     map_pos_x_start FLOAT DEFAULT 0,

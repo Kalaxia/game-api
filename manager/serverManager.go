@@ -25,3 +25,14 @@ func CreateServer(name string, serverType string, signature string) *model.Serve
     }
     return server
 }
+
+func RemoveServer(id uint16, signature string) {
+    server := GetServerBySignature(signature)
+    if server == nil || server.Id != id {
+        panic(exception.NewHttpException(404, "Server not found", nil))
+    }
+    // All data dependencies are removed by cascade operation and triggers
+    if err := database.Connection.Delete(server); err != nil {
+        panic(exception.NewHttpException(500, "Server could not be deleted", err))
+    }
+}

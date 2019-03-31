@@ -37,6 +37,8 @@ type(
         Id uint `json:"id"`
         Name string `json:"name"`
         Type string `json:"type"`
+        PlayerId uint16 `json:"-"`
+        Player *Player `json:"player"`
         FrameSlug string `json:"frame"`
         Frame *ShipFrame `json:"-" sql:"-"`
         Slots []ShipSlot `json:"slots" sql:"-"`
