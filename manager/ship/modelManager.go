@@ -17,6 +17,8 @@ func CreateShipModel(player *model.Player, data map[string]interface{}) *model.S
     shipModel := &model.ShipModel{
         Name: data["name"].(string),
         Type: shipType,
+        PlayerId: player.Id,
+        Player: player,
         FrameSlug: frame.Slug,
         Frame: &frame,
         Slots: slots,
@@ -51,7 +53,7 @@ func createShipModelSlots(shipModel *model.ShipModel) {
 
 func GetShipPlayerModels(playerId uint16) []*model.ShipModel {
     var shipPlayerModels []model.ShipPlayerModel
-    if err := database.Connection.Model(&shipPlayerModels).Column("Model").Where("player_id = ?", playerId).Select(); err != nil {
+    if err := database.Connection.Model(&shipPlayerModels).Column("Model").Where("Model.player_id = ?", playerId).Select(); err != nil {
         panic(exception.NewHttpException(500, "Could not retrieve player ship models", err))
     }
     models := make([]*model.ShipModel, len(shipPlayerModels))
@@ -61,7 +63,7 @@ func GetShipPlayerModels(playerId uint16) []*model.ShipModel {
 
 func GetShipModel(playerId uint16, modelId uint32) *model.ShipModel {
     var shipPlayerModel model.ShipPlayerModel
-    if err := database.Connection.Model(&shipPlayerModel).Column("Model").Where("player_id = ?", playerId).Where("Model.id = ?", modelId).Select(); err != nil {
+    if err := database.Connection.Model(&shipPlayerModel).Column("Model").Where("Model.player_id = ?", playerId).Where("Model.id = ?", modelId).Select(); err != nil {
         panic(exception.NewHttpException(404, "Player ship model not found", err))
     }
     slots := make([]model.ShipSlot, 0)

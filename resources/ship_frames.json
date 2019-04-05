@@ -6,16 +6,16 @@
         "slots": [
             {
                 "position": 1,
-                "top": 10,
-                "left": 47.5,
+                "top": 50,
+                "left": 95,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 2,
-                "bottom": 10,
-                "left": 47.5,
-                "shape": "square",
+                "bottom": 60,
+                "left": 95,
+                "shape": "triangle",
                 "size": "medium"
             }
         ],
@@ -40,23 +40,23 @@
         "slots": [
             {
                 "position": 1,
-                "top": 10,
-                "left": 45,
+                "top": 40,
+                "left": 40,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 2,
-                "top": 10,
-                "right": 45,
+                "top": 40,
+                "right": 40,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 3,
-                "bottom": 10,
-                "left": 47.5,
-                "shape": "square",
+                "bottom": 60,
+                "left": 85,
+                "shape": "triangle",
                 "size": "medium"
             }
         ],

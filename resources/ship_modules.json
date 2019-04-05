@@ -5,7 +5,7 @@
         "picture_flip_y": false,
         "slug": "laser-gun",
         "type": "weapon",
-        "shape": "square",
+        "shape": "triangle",
         "size": "small",
         "scores": {
             "fighter": 50,
@@ -38,14 +38,14 @@
         "picture_flip_y": false,
         "slug": "ion-reactor",
         "type": "engine",
-        "shape": "square",
+        "shape": "triangle",
         "size": "medium",
         "scores": {
             "fighter": 25,
             "bomber": 20,
             "freighter": 30
         },
-        "ship_stats": {
+        "stats": {
             "speed": 225
         },
         "price": [
@@ -75,14 +75,14 @@
         "picture_flip_y": false,
         "slug": "mark-i-reactor",
         "type": "engine",
-        "shape": "square",
+        "shape": "triangle",
         "size": "small",
         "scores": {
             "fighter": 40,
             "bomber": 35,
             "freighter": 20
         },
-        "ship_stats": {
+        "stats": {
             "speed": 115
         },
         "price": [
@@ -146,7 +146,7 @@
         "picture_flip_y": false,
         "slug": "light-shield-generator",
         "type": "shield",
-        "shape": "rectangle",
+        "shape": "square",
         "size": "medium",
         "scores": {
             "fighter": 10,
@@ -155,7 +155,7 @@
             "corvette": 35,
             "frigate": 25
         },
-        "ship_stats": {
+        "stats": {
             "power": 75
         },
         "price": [
@@ -190,12 +190,12 @@
         "picture_flip_y": false,
         "slug": "light-container",
         "type": "cargo",
-        "shape": "rectangle",
+        "shape": "square",
         "size": "medium",
         "scores": {
             "freighter": 60
         },
-        "ship_stats": {
+        "stats": {
             "size": 500
         },
         "price": [
