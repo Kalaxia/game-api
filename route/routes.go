@@ -304,6 +304,13 @@ var routes = Routes{
 		tradeController.SearchOffers,
 		true,
 	},
+	Route{
+		"Accept offer",
+		"POST",
+		"/api/offers/{id}/accept",
+		tradeController.AcceptOffer,
+		true,
+	},
 	/************** PLAYER *********/
 	Route{
 		"Register Player",

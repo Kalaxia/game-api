@@ -150,17 +150,25 @@ func calculatePointsProduction(planet *model.Planet) {
 
 func addResourcesToStorage(planet *model.Planet, storage *model.Storage) {
     for _, resource := range planet.Resources {
-        var currentStock uint16
-        var newStock uint16
-        var isset bool
-        if currentStock, isset = storage.Resources[resource.Name]; !isset {
-            currentStock = 0
-        }
-        if newStock = currentStock + uint16(resource.Density) * 10; newStock > storage.Capacity {
-            newStock = storage.Capacity
-        }
-        storage.Resources[resource.Name] = newStock
+        UpdateStorageResource(storage, resource.Name, int16(resource.Density) * 10)
     }
+}
+
+func UpdateStorageResource(storage *model.Storage, resource string, quantity int16) bool {
+    var currentStock uint16
+    var newStock int16
+    var isset bool
+    if currentStock, isset = storage.Resources[resource]; !isset {
+        currentStock = 0
+    }
+    if newStock = int16(currentStock) + quantity; newStock > int16(storage.Capacity) {
+        newStock = int16(storage.Capacity)
+    }
+    if newStock < 0 {
+        return false
+    }
+    storage.Resources[resource] = uint16(newStock)
+    return true
 }
 
 func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) {

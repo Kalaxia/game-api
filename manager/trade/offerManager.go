@@ -4,7 +4,9 @@ import(
     "kalaxia-game-api/database"
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
+    "kalaxia-game-api/manager"
     "kalaxia-game-api/manager/ship"
+    "math"
     "time"
 )
 
@@ -100,6 +102,10 @@ func createResourceOffer(location *model.Planet, data map[string]interface{}) *m
     if offer.Quantity < offer.LotQuantity {
         panic(exception.NewHttpException(400, "Lot quantity cannot be lesser than total quantity", nil))
     }
+    if !manager.UpdateStorageResource(location.Storage, offer.Resource, -int16(offer.Quantity)) {
+        panic(exception.NewHttpException(400, "Not enough resources in storage", nil))
+    }
+    manager.UpdatePlanetStorage(location)
     if err := database.Connection.Insert(offer); err != nil {
         panic(exception.NewHttpException(500, "Resource offer could not be created", err))
     }
@@ -144,13 +150,42 @@ func createModelOffer(location *model.Planet, data map[string]interface{}) *mode
     return offer
 }
 
-// func AcceptOffer(offerId uint32, player *model.Player) {
-//     offer := GetOffer(offerId)
-//
-//     if offer.Price > player.Wallet {
-//         panic(exception.NewHttpException(400, "Not enough money", nil))
-//     }
-//     if err := database.Connection.Update(offer); err != nil {
-//         panic(exception.NewHttpException(500, "Offer could not be accepted", err))
-//     }
-// }
+func AcceptOffer(offerId uint32, planet *model.Planet, nbLots uint16) {
+    offer := GetOffer(offerId)
+    if offer == nil {
+        panic(exception.NewHttpException(404, "Offer not found", nil))
+    }
+    if offer.Location.Player.Id == planet.Player.Id {
+        panic(exception.NewHttpException(400, "You can't accept your own offers", nil))
+    }
+
+    quantity := nbLots * offer.LotQuantity
+    price := int32(math.Ceil(float64(offer.Price) * float64(quantity)))
+
+    if quantity % offer.LotQuantity > 0 {
+        panic(exception.NewHttpException(400, "There can be no extra resource out of lots", nil))
+    }
+    if quantity > offer.Quantity {
+        panic(exception.NewHttpException(400, "You can't demand more lots than available", nil))
+    }
+    if !manager.UpdatePlayerWallet(planet.Player, -price) {
+        panic(exception.NewHttpException(400, "Not enough money", nil))
+    }
+    manager.UpdatePlayerWallet(offer.Location.Player, price)
+    manager.UpdatePlayer(planet.Player)
+    manager.UpdatePlayer(offer.Location.Player)
+
+    manager.UpdateStorageResource(planet.Storage, offer.Resource, int16(quantity))
+    manager.UpdatePlanetStorage(planet)
+
+    offer.Quantity -= quantity
+    if offer.Quantity == 0 {
+        if err := database.Connection.Delete(offer); err != nil {
+            panic(exception.NewHttpException(500, "Offer could not be deleted", err))
+        }
+        return
+    } 
+    if err := database.Connection.Update(offer); err != nil {
+        panic(exception.NewHttpException(500, "Offer could not be accepted", err))
+    }
+}

@@ -43,3 +43,17 @@ func GetOffer(w http.ResponseWriter, r *http.Request) {
     offerId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     utils.SendJsonResponse(w, 200, tradeManager.GetOffer(uint32(offerId)))
 }
+
+func AcceptOffer(w http.ResponseWriter, r *http.Request) {
+    data := utils.DecodeJsonRequest(r)
+    offerId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    nbLots := uint16(data["nb_lots"].(float64))
+    planetId := data["planet_id"].(float64)
+    player := context.Get(r, "player").(*model.Player)
+    planet := manager.GetPlanet(uint16(planetId), player.Id)
+
+    tradeManager.AcceptOffer(uint32(offerId), planet, nbLots)
+
+    w.WriteHeader(204)
+    w.Write([]byte(""))
+}
