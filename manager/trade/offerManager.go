@@ -98,6 +98,7 @@ func createResourceOffer(location *model.Planet, data map[string]interface{}) *m
         LotQuantity: uint16(data["lot_quantity"].(float64)),
         Price: float32(data["price"].(float64)),
     }
+    offer.Type = "resources"
     offer.Operation = data["operation"].(string)
     offer.LocationId = location.Id
     offer.Location = location
