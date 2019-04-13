@@ -12,7 +12,7 @@ import(
 
 func GetOffer(id uint32) *model.ResourceOffer {
     offer := &model.ResourceOffer{}
-    if err := database.Connection.Model(offer).Column("Location.Player.Faction", "Location.System").Where("resource_offer.id = ?", id).Select(); err != nil {
+    if err := database.Connection.Model(offer).Column("Location.Player.Faction", "Location.System", "Location.Storage").Where("resource_offer.id = ?", id).Select(); err != nil {
         panic(exception.NewHttpException(404, "Offer not found", err))
     }
     offer.Type = "resources"
@@ -39,6 +39,9 @@ func CancelOffer(offer *model.ResourceOffer, player *model.Player) {
     if offer.Location.Player.Id != player.Id {
         panic(exception.NewHttpException(403, "You do not own this offer", nil))
     }
+    manager.UpdateStorageResource(offer.Location.Storage, offer.Resource, int16(offer.Quantity))
+    manager.UpdatePlanetStorage(offer.Location)
+
     if err := database.Connection.Delete(offer); err != nil {
         panic(exception.NewHttpException(500, "Could not delete offer", err))
     }
