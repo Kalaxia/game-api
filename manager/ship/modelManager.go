@@ -57,7 +57,14 @@ func GetShipPlayerModels(playerId uint16) []*model.ShipModel {
         panic(exception.NewHttpException(500, "Could not retrieve player ship models", err))
     }
     models := make([]*model.ShipModel, len(shipPlayerModels))
-    for i, spm := range shipPlayerModels { models[i] = spm.Model }
+    for i, spm := range shipPlayerModels {
+        slots := make([]model.ShipSlot, 0)
+        if err := database.Connection.Model(&slots).Where("model_id = ?", spm.Model.Id).Select(); err != nil {
+            panic(exception.NewHttpException(500, "Could not retrieve ship slots", err))
+        }
+        spm.Model.Slots = slots
+        models[i] = spm.Model
+    }
     return models
 }
 
