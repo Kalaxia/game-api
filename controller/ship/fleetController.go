@@ -117,7 +117,7 @@ func GetFleetShip (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
 	}
     
-    utils.SendJsonResponse(w, 200, shipManager.GetFleetShip(*fleet))
+    utils.SendJsonResponse(w, 200, shipManager.GetFleetShip(fleet))
 }
 
 func GetFleetShipGroups (w http.ResponseWriter, r *http.Request) {
@@ -141,14 +141,9 @@ func DeleteFleet (w http.ResponseWriter, r *http.Request){
 	if fleet.Player.Id != player.Id {
         panic(exception.NewHttpException(http.StatusForbidden, "", nil))
 	}
-    if (fleet.Journey != nil){
-        panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil))
-    }
-    
-    ships := shipManager.GetFleetShip(*fleet)
-    if (len(ships) != 0){
-        panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil))
-    }
-    shipManager.DeleteFleet(fleet)
-	utils.SendJsonResponse(w, 204,"Deleted")
+
+	shipManager.DeleteFleet(fleet)
+	
+	w.WriteHeader(204)
+	w.Write([]byte(""))
 }

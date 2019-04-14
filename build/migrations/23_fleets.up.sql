@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION remove_fleet_journey()
   RETURNS trigger AS
 $BODY$
 BEGIN
- DELETE FROM fleet_journeys WHERE id = OLD.journey_id;
+ DELETE FROM fleet__journeys WHERE id = OLD.journey_id;
  
  RETURN OLD;
 END;

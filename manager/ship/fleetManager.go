@@ -110,7 +110,7 @@ func RemoveShipsFromFleet (fleet *model.Fleet, modelId int, quantity int) int {
     return -len(ships)
 }
 
-func GetFleetShip (fleet model.Fleet) []model.Ship {
+func GetFleetShip (fleet *model.Fleet) []model.Ship {
     var ships []model.Ship
     
     if err := database.
@@ -161,8 +161,13 @@ func GetFleetShipGroups(fleet model.Fleet) []model.ShipGroup {
     return ships
 }
 
-func DeleteFleet(fleet *model.Fleet){
-    
+func DeleteFleet(fleet *model.Fleet) {
+    if (fleet.Journey != nil){
+        panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil))
+    }
+    if (len(GetFleetShip(fleet)) != 0){
+        panic(exception.NewHttpException(400, "Cannot delete fleet with remaining ships", nil))
+    }
     if err := database.Connection.Delete(fleet); err != nil {
         panic(exception.NewHttpException(500, "Fleet could not be deleted", err))
     }
