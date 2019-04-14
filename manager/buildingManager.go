@@ -91,9 +91,6 @@ func CancelBuilding(planet *model.Planet, id uint32) {
     if err := database.Connection.Delete(&building); err != nil {
         panic(exception.NewException("Building could not be removed", err))
     }
-    if err := database.Connection.Delete(building.ConstructionState); err != nil {
-        panic(exception.NewException("Construction State could not be removed", err))
-    }
 }
 
 func createConstructionState(player *model.Player, buildingPlan model.BuildingPlan) *model.ConstructionState {
