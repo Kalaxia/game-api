@@ -85,6 +85,7 @@ func getPlanets(offset int, limit int) []*model.Planet {
         Column("planet.*", "Player", "Buildings", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
         Limit(limit).
         Offset(offset).
+        Order("planet.id ASC").
         Select(); err != nil {
             panic(exception.NewException("Planets could not be retrieved", err))
     }
