@@ -5,6 +5,8 @@ import(
     "kalaxia-game-api/exception"
     "kalaxia-game-api/model"
     "kalaxia-game-api/utils"
+    "time"
+    "sort"
     "sync"
     "math"
 )
@@ -139,13 +141,27 @@ func calculatePlanetResourcesProduction(planet *model.Planet) {
 
 func calculatePointsProduction(planet *model.Planet) {
     buildingPoints := planet.Settings.BuildingPoints
+    if buildingPoints <= 0 {
+        return
+    }
+    // Sort the buildings by construction date
+    constructingBuildings := make(map[string]*model.Building, 0)
+    var buildingDates []string
     for _, building := range planet.Buildings {
+        if building.Status == model.BuildingStatusConstructing {
+            date := building.ConstructionState.BuiltAt.Format(time.RFC3339)
+            // we use the date as a key for the constructing buildings map
+            constructingBuildings[date] = &building
+            buildingDates = append(buildingDates, date)
+        }
+    }
+    // Here we sort the dates
+    sort.Strings(buildingDates)
+    for _, date := range buildingDates {
         if buildingPoints <= 0 {
             break
         }
-        if building.Status == model.BuildingStatusConstructing {
-            buildingPoints = spendBuildingPoints(building, buildingPoints)
-        }
+        buildingPoints = spendBuildingPoints(constructingBuildings[date], buildingPoints)
     }
 }
 

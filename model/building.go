@@ -29,7 +29,6 @@ type(
     ParentName string `json:"parent"`
     Type string `json:"type"`
     Picture string `json:"picture"`
-    Duration uint `json:"duration"`
     Price []Price `json:"price"`
   }
   BuildingPlansData map[string]BuildingPlan

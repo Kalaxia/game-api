@@ -21,7 +21,6 @@ func init() {
     if err := json.Unmarshal(buildingsDataJSON, &buildingPlansData); err != nil {
         panic(exception.NewException("Can't read buildings configuration file", err))
     }
-    scheduleConstructions()
 }
 
 func GetPlanetBuildings(planetId uint16) ([]model.Building, []model.BuildingPlan) {
@@ -73,9 +72,6 @@ func CreateBuilding(planet *model.Planet, name string) model.Building {
     if err := database.Connection.Insert(&building); err != nil {
       panic(exception.NewHttpException(500, "Building could not be created", err))
     }
-    utils.Scheduler.AddTask(buildingPlan.Duration, func() {
-        checkConstructionState(building.Id)
-    })
     planet.AvailableBuildings = getAvailableBuildings(append(planet.Buildings, building))
     return building
 }
@@ -108,7 +104,7 @@ func createConstructionState(player *model.Player, buildingPlan model.BuildingPl
     constructionState := &model.ConstructionState {
         Points: points,
         CurrentPoints: 0,
-        BuiltAt: time.Now().Add(time.Second * time.Duration(buildingPlan.Duration)),
+        BuiltAt: time.Now(),
     }
     if err := database.Connection.Insert(constructionState); err != nil {
       panic(exception.NewHttpException(500, "Construction State could not be created", err))
@@ -116,7 +112,7 @@ func createConstructionState(player *model.Player, buildingPlan model.BuildingPl
     return constructionState
 }
 
-func spendBuildingPoints(building model.Building, buildingPoints uint8) uint8 {
+func spendBuildingPoints(building *model.Building, buildingPoints uint8) uint8 {
     missingPoints := building.ConstructionState.Points - building.ConstructionState.CurrentPoints
     if missingPoints == 0 {
         return buildingPoints
@@ -142,8 +138,7 @@ func checkConstructionState(id uint32) {
     if err := database.Connection.Model(building).Column("building.*", "ConstructionState").Where("building.id = ?", id).Select(); err != nil {
         panic(exception.NewException("Building not found", err))
     }
-    if time.Now().After(building.ConstructionState.BuiltAt) &&
-       building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
+    if building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
         finishConstruction(building)
     }
 }
@@ -157,33 +152,4 @@ func finishConstruction(building *model.Building) {
     if err := database.Connection.Delete(building.ConstructionState); err != nil {
         panic(exception.NewException("Construction State could not be removed", err))
     }
-}
-
-func scheduleConstructions() {
-    constructingBuildings := getConstructingBuildings()
-    now := time.Now()
-
-    for _, building := range constructingBuildings {
-        go func(building model.Building) {
-            plan := buildingPlansData[building.Name]
-            endedAt := building.CreatedAt.Add(time.Second * time.Duration(plan.Duration))
-            if endedAt.After(now) {
-                utils.Scheduler.AddTask(uint(time.Until(endedAt).Seconds()), func() {
-                    checkConstructionState(building.Id)
-                })
-            } else {
-                checkConstructionState(building.Id)
-            }
-        }(building)
-    }
-}
-
-func getConstructingBuildings() []model.Building {
-    buildings := make([]model.Building, 0)
-    _ = database.
-        Connection.
-        Model(&buildings).
-        Where("building.status = ?", model.BuildingStatusConstructing).
-        Select("building.*", "building.ConstructionState")
-    return buildings
 }

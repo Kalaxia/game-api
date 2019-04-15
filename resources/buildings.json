@@ -4,7 +4,6 @@
     "category": "resource",
     "type": "resource",
     "parent": null,
-    "duration": 1800,
     "price": [
       {
         "type": "points",
@@ -17,7 +16,6 @@
     "category": "resource",
     "type": "resource",
     "parent": null,
-    "duration": 1800,
     "price": [
       {
         "type": "points",
@@ -30,7 +28,6 @@
     "link": "/buildings/shipyard",
     "type": "shipyard",
     "parent": null,
-    "duration": 1800,
     "price": [
       {
         "type": "credits",
@@ -46,7 +43,6 @@
     "picture": "building.png",
     "type": "shipyard",
     "parent": "shipyard",
-    "duration": 1800,
     "price": [
       {
         "type": "credits",
@@ -63,7 +59,6 @@
     "link": "/buildings/trade",
     "type": "trade",
     "parent": null,
-    "duration": 1800,
     "price": [
       {
         "type": "points",
@@ -75,7 +70,6 @@
     "picture": "building.png",
     "type": "techno",
     "parent": null,
-    "duration": 1800,
     "price": [
       {
         "type": "points",
