@@ -334,6 +334,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Sector Systems",
+		"GET",
+		"/api/systems",
+		controller.GetSectorSystems,
+		true,
+	},
+	Route{
 		"Get System",
 		"GET",
 		"/api/systems/{id}",

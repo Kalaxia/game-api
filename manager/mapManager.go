@@ -26,5 +26,6 @@ func GetMapByServerId(serverId uint16) *model.Map {
         return nil
     }
     gameMap.Systems = GetMapSystems(gameMap.Id)
+    gameMap.SectorSize = 10
     return gameMap
 }
