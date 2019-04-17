@@ -9,5 +9,6 @@ type(
     Server *Server `json:"-"`
     Systems []System `json:"systems" sql:"-"`
     Size uint16 `json:"size"`
+    SectorSize uint16 `json:"sector_size" sql:"-"`
   }
 )
