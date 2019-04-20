@@ -15,9 +15,9 @@ import (
 	"crypto/x509"
 )
 
-func InitializeRsaVault() bool {
+func init() {
 	if _, err := os.Stat("/go/src/kalaxia-game-api/rsa_vault/private.key"); !os.IsNotExist(err) {
-  		return false
+  		return
 	}
 	// generate private key
 	privatekey, err := rsa.GenerateKey(rand.Reader, 4096)
@@ -39,7 +39,6 @@ func InitializeRsaVault() bool {
  	}
 	pem.Encode(pemfile, pemkey)
 	pemfile.Close()
-	return true
 }
 
 func Encrypt(data []byte) ([]byte, string, string) {

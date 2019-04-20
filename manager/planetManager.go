@@ -110,7 +110,7 @@ func GetPlanetsById(ids []uint16) []*model.Planet {
 
 func calculatePlanetProduction(planet *model.Planet, wg *sync.WaitGroup) {
     defer wg.Done()
-    defer utils.CatchException()
+    // defer utils.CatchException()
 
     calculatePlanetResourcesProduction(planet)
     calculatePointsProduction(planet)
@@ -141,17 +141,17 @@ func calculatePlanetResourcesProduction(planet *model.Planet) {
 
 func calculatePointsProduction(planet *model.Planet) {
     buildingPoints := planet.Settings.BuildingPoints
-    if buildingPoints <= 0 {
+    if buildingPoints <= 0 || len(planet.Buildings) == 0 {
         return
     }
     // Sort the buildings by construction date
-    constructingBuildings := make(map[string]*model.Building, 0)
+    constructingBuildings := make(map[string]model.Building, 0)
     var buildingDates []string
     for _, building := range planet.Buildings {
         if building.Status == model.BuildingStatusConstructing {
             date := building.ConstructionState.BuiltAt.Format(time.RFC3339)
             // we use the date as a key for the constructing buildings map
-            constructingBuildings[date] = &building
+            constructingBuildings[date] = building
             buildingDates = append(buildingDates, date)
         }
     }

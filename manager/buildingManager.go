@@ -112,9 +112,10 @@ func createConstructionState(player *model.Player, buildingPlan model.BuildingPl
     return constructionState
 }
 
-func spendBuildingPoints(building *model.Building, buildingPoints uint8) uint8 {
+func spendBuildingPoints(building model.Building, buildingPoints uint8) uint8 {
     missingPoints := building.ConstructionState.Points - building.ConstructionState.CurrentPoints
     if missingPoints == 0 {
+        checkConstructionState(building.Id)
         return buildingPoints
     }
     if missingPoints > buildingPoints {
