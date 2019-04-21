@@ -67,18 +67,21 @@ func CreateShip(player *model.Player, planet *model.Planet, data map[string]inte
     return &ship
 }
 
-func GetConstructingShips(planet *model.Planet) []model.Ship {
-    ships := make([]model.Ship, 0)
-    if err := database.
+func GetConstructingShips(planet *model.Planet) []model.ShipConstructionGroup {
+    scg := make([]model.ShipConstructionGroup, 0)
+    if _, err := database.
         Connection.
-        Model(&ships).
-        Column("ConstructionState", "Model").
-        Where("construction_state_id IS NOT NULL").
-        Where("hangar_id = ?", planet.Id).
-        Select(); err != nil {
-        panic(exception.NewHttpException(404, "Planet not found", err))
+        Query(&scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
+        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        FROM ship__ships s
+        INNER JOIN ship__models m ON s.model_id = m.id
+        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        WHERE s.hangar_id = ?
+        GROUP BY cs.id, m.id
+        ORDER BY cs.id ASC`, planet.Id); err != nil {
+            panic(exception.NewHttpException(404, "No constructing ship found", err))
     }
-    return ships
+    return scg
 }
 
 func GetCurrentlyConstructingShips(planet *model.Planet) model.ShipConstructionGroup {
@@ -92,7 +95,7 @@ func GetCurrentlyConstructingShips(planet *model.Planet) model.ShipConstructionG
         INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
         WHERE s.hangar_id = ?
         GROUP BY cs.id, m.id
-        ORDER BY cs.id DESC
+        ORDER BY cs.id ASC
         LIMIT 1`, planet.Id); err != nil {
             panic(exception.NewHttpException(404, "No constructing ship found", err))
     }
@@ -180,7 +183,7 @@ func checkShipsBuildingState() {
         Connection.
         Model(&ships).
         Column("ship.*", "ConstructionState", "Hangar", "Hangar.Settings").
-        Order("ship.hangar_id ASC").
+        Order("ship.construction_state_id ASC").
         Where("ship.construction_state_id IS NOT NULL").
         Select(); err != nil {
         panic(exception.NewException("Constructing ships could not be retrieved", err))
