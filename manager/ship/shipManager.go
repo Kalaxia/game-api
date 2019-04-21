@@ -217,9 +217,6 @@ func finishShipConstruction(ship *model.Ship) {
     if err := database.Connection.Update(ship); err != nil {
         panic(exception.NewException("Ship could not be updated", err))
     }
-    if err := database.Connection.Delete(ship.ConstructionState); err != nil {
-        panic(exception.NewException("Ship Construction State could not be removed", err))
-    }
 }
 
 func GetShip(id uint16) *model.Ship{
