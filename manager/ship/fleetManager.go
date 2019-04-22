@@ -17,7 +17,7 @@ func GetFleet(id uint16) *model.Fleet{
     if err := database.
         Connection.
         Model(&fleet).
-        Column("Player", "Journey.CurrentStep","Location.System").
+        Column("Player", "Journey.CurrentStep", "Location.System").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Fleet not found", err))

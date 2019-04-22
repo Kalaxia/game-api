@@ -1,0 +1,1 @@
+ALTER TABLE fleet__journeys_steps ADD mission_order VARCHAR(15);
