@@ -98,7 +98,7 @@ func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *mo
     journey.CurrentStepId = steps[0].Id
     UpdateJourney(journey)
     fleet.Location = nil
-    fleet.LocationId =0
+    fleet.LocationId = 0
     fleet.Journey = journey
     fleet.JourneyId = journey.Id
     UpdateFleet(fleet)

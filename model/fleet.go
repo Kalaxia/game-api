@@ -6,6 +6,9 @@ import(
     "fmt"
 )
 
+const FleetOrderPass = "pass"
+const FleetOrderConquest = "conquest"
+
 type(
     Fleet struct {
         TableName struct{} `json:"-" sql:"fleet__fleets"`
@@ -56,6 +59,7 @@ type(
         TimeArrival time.Time `json:"time_arrival"`
         //
         StepNumber uint32 `json:"step_number"`
+        Order string `json:"order" sql:"mission_order"`
     }
     
     TimeDistanceLaw struct {

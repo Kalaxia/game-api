@@ -1,0 +1,1 @@
+ALTER TABLE fleet__journeys_steps DROP mission_order;

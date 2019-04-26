@@ -101,7 +101,7 @@ func GetPlanetsById(ids []uint16) []*model.Planet {
         Connection.
         Model(&planets).
         Column("System", "Player", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
-        WhereIn("planet.id IN ?",ids).
+        WhereIn("planet.id IN (?)", ids).
         Select(); err != nil {
             panic(exception.NewException("Planets could not be retrieved", err))
     }
