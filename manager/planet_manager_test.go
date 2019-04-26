@@ -11,7 +11,7 @@ import(
 
 func TestCalculatePlanetResourcesProduction(t *testing.T) {
 	reflect.ValueOf(database.Connection).Elem().FieldByName("NextId").SetUint(1)
-	planet := getPlanetMock()
+	planet := GetPlayerPlanetMock()
 	planet.Storage = getStorageMock()
 
 	calculatePlanetResourcesProduction(planet)
@@ -29,7 +29,7 @@ func TestCalculatePlanetResourcesProduction(t *testing.T) {
 
 func TestCalculatePlanetResourcesProductionWithoutStorage(t *testing.T) {
 	reflect.ValueOf(database.Connection).Elem().FieldByName("NextId").SetUint(1)
-	planet := getPlanetMock()
+	planet := GetPlayerPlanetMock()
 
 	calculatePlanetResourcesProduction(planet)
 
@@ -45,7 +45,7 @@ func TestCalculatePlanetResourcesProductionWithoutStorage(t *testing.T) {
 }
 
 func TestUpdatePlanetSettings(t *testing.T) {
-	planet := getPlanetMock()
+	planet := GetPlayerPlanetMock()
 	UpdatePlanetSettings(planet, getSettingsMock())
 
 	if planet.Settings.ServicesPoints != 3 {
@@ -79,14 +79,14 @@ func TestUpdatePlanetSettingsWithTooMuchPoints(t *testing.T) {
 			t.Errorf("The error should be a HTTP Exception")
 		}
 	}()
-	planet := getPlanetMock()
+	planet := GetPlayerPlanetMock()
 	settings := getSettingsMock()
 	settings.MilitaryPoints = 15
 
 	UpdatePlanetSettings(planet, settings)
 }
 
-func getPlanetMock() *model.Planet {
+func GetPlayerPlanetMock() *model.Planet {
 	return &model.Planet{
 		Id: 1,
 		Name: "Régalion V",

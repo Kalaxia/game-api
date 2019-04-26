@@ -16,7 +16,7 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*model.Player)
 
     id, _ := strconv.ParseUint(vars["id"], 10, 16)
-    planet := manager.GetPlanet(uint16(id), player.Id)
+    planet := manager.GetPlayerPlanet(uint16(id), player.Id)
 
     if uint16(id) != planet.Id {
         panic(exception.NewHttpException(403, "Forbidden", nil))
@@ -31,7 +31,7 @@ func CancelBuilding(w http.ResponseWriter, r *http.Request) {
 
     planetId, _ := strconv.ParseUint(vars["planet-id"], 10, 16)
     buildingId, _ := strconv.ParseUint(vars["building-id"], 10, 16)
-    planet := manager.GetPlanet(uint16(planetId), player.Id)
+    planet := manager.GetPlayerPlanet(uint16(planetId), player.Id)
 
     if uint16(planetId) != planet.Id {
         panic(exception.NewHttpException(403, "Forbidden", nil))

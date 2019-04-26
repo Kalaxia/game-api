@@ -24,7 +24,7 @@ func CreateFleet(w http.ResponseWriter, r *http.Request){
 	
 	//idPlanet, _ := strconv.ParseUint(data["planet_id"].(string), 10, 16);
 	idPlanet := data["planet_id"].(float64)
-	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
+	planet := manager.GetPlayerPlanet(uint16(idPlanet), player.Id)
 	
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
@@ -68,7 +68,7 @@ func GetFleetsOnPlanet (w http.ResponseWriter, r *http.Request){
 	player := context.Get(r, "player").(*model.Player)
 	
 	idPlanet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-	planet := manager.GetPlanet(uint16(idPlanet), player.Id)
+	planet := manager.GetPlayerPlanet(uint16(idPlanet), player.Id)
 	
 	if (player.Id != planet.Player.Id) { // the player does not own the planet
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))

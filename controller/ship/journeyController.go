@@ -58,24 +58,8 @@ func SendFleetOnJourney (w http.ResponseWriter, r *http.Request){
 	}
     
     data := utils.DecodeJsonRequest(r)["steps"].([]interface{})
-        
-    planetIds, xPos, yPos := shipManager.DecodeStepData(data)
     
-    steps := shipManager.SendFleetOnJourney(planetIds,xPos,yPos,fleet)
-    
-    journeyCopy := *(steps[0].Journey)
-    journeyCopy.CurrentStep =nil
-    
-    var stepsToSend []model.FleetJourneyStep
-    for _,step := range steps{
-        stepCopy := *step
-        stepsToSend = append(stepsToSend,stepCopy)
-        stepsToSend[len(stepsToSend)-1].Journey = &journeyCopy
-        stepsToSend[len(stepsToSend)-1].NextStep = nil
-    }
-    
-    utils.SendJsonResponse(w, 201, stepsToSend) // TODO review what we send
-    //NOTE error stack overflow of go routines beause of cyclique ref
+    utils.SendJsonResponse(w, 201, shipManager.SendFleetOnJourney(fleet, data))
 }
 
 func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
@@ -91,13 +75,11 @@ func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(400, "Fleet is not on journey", nil))
 	}
     
-    data := utils.DecodeJsonRequest(r)["steps"].([]interface{}) //TODO remove ["steps"] or json data decoded cannot be read as an array ?
+    data := utils.DecodeJsonRequest(r)["steps"].([]interface{})
     
-    planetIds, xPos, yPos := shipManager.DecodeStepData(data)
-    steps := shipManager.AddStepsToJourney(fleet.Journey,planetIds,xPos,yPos)
+    steps := shipManager.AddStepsToJourney(fleet, data)
     
     utils.SendJsonResponse(w, 202, steps)
-    
 }
 
 func GetRange(w http.ResponseWriter, r *http.Request){

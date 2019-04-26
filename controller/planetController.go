@@ -15,14 +15,14 @@ func GetPlanet(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*model.Player)
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 
-    utils.SendJsonResponse(w, 200, manager.GetPlanet(uint16(id), player.Id))
+    utils.SendJsonResponse(w, 200, manager.GetPlayerPlanet(uint16(id), player.Id))
 }
 
 func UpdatePlanetSettings(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*model.Player)
 
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := manager.GetPlanet(uint16(id), player.Id)
+    planet := manager.GetPlayerPlanet(uint16(id), player.Id)
 
     if player.Id != planet.Player.Id {
         panic(exception.NewHttpException(http.StatusForbidden, "", nil))

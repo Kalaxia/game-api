@@ -3,11 +3,10 @@ package model
 import( 
     "time"
     "math"
-    "fmt"
 )
 
 const FleetOrderPass = "pass"
-const FleetOrderConquest = "conquest"
+const FleetOrderConquer = "conquer"
 
 type(
     Fleet struct {
@@ -24,8 +23,6 @@ type(
         MapPosY float64 `json:"map_pos_y" sql:"map_pos_y"`
     }
     
-    
-    
     FleetJourney struct {
         TableName struct{} `json:"-" sql:"fleet__journeys"`
 
@@ -39,9 +36,9 @@ type(
         TableName struct{} `json:"-" sql:"fleet__journeys_steps"`
         
         Id uint16 `json:"id"`
-        Journey *FleetJourney `json:"journey"`
+        Journey *FleetJourney `json:"-"`
         JourneyId uint16 `json:"-"`
-        NextStep *FleetJourneyStep `json:"next_step"`
+        NextStep *FleetJourneyStep `json:"-"`
         NextStepId uint16 `json:"-"`
         //
         PlanetStart *Planet `json:"planet_start"`
@@ -193,8 +190,6 @@ func (rangeC RangeContainer) IsOnRange(journeyStep *FleetJourneyStep) bool {
             }
         } else {
             distance := journeyStep.GetDistance()
-            fmt.Println(distance)
-            fmt.Println(rangeC.PlanetToPosition)
             return rangeC.PlanetToPosition >= distance
         }
     } else{
