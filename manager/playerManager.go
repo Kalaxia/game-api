@@ -63,7 +63,7 @@ func RegisterPlayer(player *model.Player, pseudo string, gender string, avatar s
     if faction == nil {
         panic(exception.NewHttpException(404, "faction not found", nil))
     }
-    planet := GetPlanet(planetId, uint16(player.Id))
+    planet := GetPlayerPlanet(planetId, uint16(player.Id))
     if planet == nil {
         panic(exception.NewHttpException(404, "planet not found", nil))
     }

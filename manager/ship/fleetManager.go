@@ -26,6 +26,19 @@ func GetFleet(id uint16) *model.Fleet{
     return &fleet
 }
 
+func GetFleetByJourney(journey *model.FleetJourney) *model.Fleet {
+    fleet := &model.Fleet{}
+    if err := database.
+        Connection.
+        Model(fleet).
+        Column("Player").
+        Where("fleet.journey_id = ?", journey.Id).
+        Select(); err != nil {
+            panic(exception.NewException("Fleet not found", err))
+    }
+    return fleet
+}
+
 
 func CreateFleet (player *model.Player, planet *model.Planet) *model.Fleet{
 	

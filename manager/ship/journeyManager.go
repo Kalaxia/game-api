@@ -9,7 +9,6 @@ import(
     "encoding/json"
     "io/ioutil"
     "time"
-    "math"
 )
 
 /********************************************/
@@ -83,38 +82,94 @@ func GetTimeLaws() model.TimeLawsContainer{
     return journeyTimeData
 }
 
-func SendFleetOnJourney (planetIds []uint16, x []float64, y []float64, fleet *model.Fleet) []*model.FleetJourneyStep{
-    var steps []*model.FleetJourneyStep
-    journey := &model.FleetJourney{ // a new Journey is created
+func SendFleetOnJourney (fleet *model.Fleet, data []interface{}) []*model.FleetJourneyStep {
+    fleet.Journey = &model.FleetJourney {
         CreatedAt : time.Now(),
     }
-    steps = createStepStruct (fleet.Location, fleet.MapPosX, fleet.MapPosY, time.Now(),planetIds, x, y,0) //< we create the structurs
-    journey.EndedAt =  steps[len(steps)-1].TimeArrival
-    if err := database.Connection.Insert(journey); err != nil {
+    steps := createSteps(fleet, data, 0)
+    fleet.Journey.EndedAt = steps[len(steps)-1].TimeArrival
+    if err := database.Connection.Insert(fleet.Journey); err != nil {
 		panic(exception.NewHttpException(500, "Journey could not be created", err))
     }
-    insertStepsWithLink(steps,journey)
-    journey.CurrentStep = steps[0]
-    journey.CurrentStepId = steps[0].Id
-    UpdateJourney(journey)
+    fleet.JourneyId = fleet.Journey.Id
+    insertSteps(steps)
+    fleet.Journey.CurrentStep = steps[0]
+    fleet.Journey.CurrentStepId = steps[0].Id
+    UpdateJourney(fleet.Journey)
     fleet.Location = nil
     fleet.LocationId = 0
-    fleet.Journey = journey
-    fleet.JourneyId = journey.Id
     UpdateFleet(fleet)
     
     now := time.Now()
-    if now.Before(journey.CurrentStep.TimeArrival){
-        utils.Scheduler.AddTask(uint(now.Sub(journey.CurrentStep.TimeArrival).Seconds()), func () {
-            finishStep(journey.CurrentStep)
+    if now.Before(fleet.Journey.CurrentStep.TimeArrival){
+        utils.Scheduler.AddTask(uint(now.Sub(fleet.Journey.CurrentStep.TimeArrival).Seconds()), func () {
+            finishStep(fleet.Journey.CurrentStep)
         })
     } else {
-        defer finishStep(journey.CurrentStep) // if the time is already passed we directly execute it
+        defer finishStep(fleet.Journey.CurrentStep) // if the time is already passed we directly execute it
     }
     return steps
 }
 
-func AddStepsToJourney (journey *model.FleetJourney, planetIds []uint16, x []float64, y []float64 ) []*model.FleetJourneyStep {
+func createSteps(fleet *model.Fleet, data []interface{}, firstNumber uint8) []*model.FleetJourneyStep {
+    steps := make([]*model.FleetJourneyStep, len(data))
+
+    previousPlanet := fleet.Location
+    previousX := float64(fleet.Location.System.X)
+    previousY := float64(fleet.Location.System.Y)
+    previousTime := time.Now()
+
+    for i, s := range data {
+        stepData := s.(map[string]interface{})
+        step := &model.FleetJourneyStep {
+            Journey: fleet.Journey,
+
+            PlanetStart: previousPlanet,
+            MapPosXStart: previousX,
+            MapPosYStart: previousY,
+
+            StepNumber: uint32(firstNumber + 1 + uint8(i)),
+        }
+        if previousPlanet != nil {
+            step.PlanetStartId = previousPlanet.Id
+        }
+    
+        planetId := uint16(stepData["planetId"].(float64))
+
+        if planetId != 0 {
+            planet := manager.GetPlanet(planetId)
+
+            step.PlanetFinal = planet
+            step.PlanetFinalId = planet.Id
+            step.MapPosXFinal = float64(planet.System.X)
+            step.MapPosYFinal = float64(planet.System.Y)
+
+            previousPlanet = planet
+        } else {
+            previousPlanet = nil
+
+            step.MapPosXFinal = stepData["x"].(float64)
+            step.MapPosYFinal = stepData["y"].(float64)
+        }
+        previousX = step.MapPosXFinal
+        previousY = step.MapPosYFinal
+        //TODO implement cooldown ?
+        step.TimeStart = previousTime
+        step.Order = stepData["order"].(string)
+        step.TimeJump = step.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.GetTimeForStep(step)) * time.Second )
+        step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second)
+
+        if !journeyRangeData.IsOnRange(step) {
+            panic(exception.NewHttpException(400, "Step not in range", nil))
+        }
+        steps[i] = step
+        previousTime = step.TimeArrival
+    }
+    return steps;
+}
+
+func AddStepsToJourney (fleet *model.Fleet, data []interface{}) []*model.FleetJourneyStep {
+    journey := fleet.Journey
     if journey == nil || journey.CurrentStep == nil {
         panic(exception.NewHttpException(400, "Journey is already finished or does not exist", nil))
     }
@@ -130,11 +185,11 @@ func AddStepsToJourney (journey *model.FleetJourney, planetIds []uint16, x []flo
     if oldLastStep.NextStep != nil {
         panic(exception.NewHttpException(400, "The step with the higher step number is not the last step. Potential loop : abording", nil))
     }
-    var steps []*model.FleetJourneyStep = createStepStruct (oldLastStep.PlanetFinal, oldLastStep.MapPosXFinal, oldLastStep.MapPosYFinal, oldLastStep.TimeArrival,planetIds, x, y,oldLastStep.StepNumber)
+    steps := createSteps(fleet, data, uint8(oldLastStep.StepNumber))
     
     journey.EndedAt =  steps[len(steps)-1].TimeArrival
     UpdateJourney(journey)
-    insertStepsWithLink(steps,journey)
+    insertSteps(steps)
     
     oldLastStep.NextStep = steps[0]
     oldLastStep.NextStepId = steps[0].Id
@@ -180,6 +235,7 @@ func finishStep(step *model.FleetJourneyStep) {
     var journey *model.FleetJourney
     if step.Journey.CurrentStep != nil {
         if step.Journey.CurrentStep.Id == step.Id {
+            processStepOrder(step)
             if step.NextStep != nil {
                 if step.NextStep.StepNumber > step.StepNumber {
                     beginNextStep(step)
@@ -212,6 +268,17 @@ func finishStep(step *model.FleetJourneyStep) {
         }
     }
     
+}
+
+func processStepOrder(step *model.FleetJourneyStep) {
+    switch (step.Order) {
+        case model.FleetOrderPass:
+            return
+        case model.FleetOrderConquer:
+            fleet := GetFleetByJourney(step.Journey)
+            ConquerPlanet(fleet, step.PlanetFinal)
+            return
+    }
 }
 
 func beginNextStep(step *model.FleetJourneyStep){
@@ -277,123 +344,16 @@ func finishJourney(journey *model.FleetJourney){
     UpdateFleet(fleet)
 }
 
-func createStepStruct (firstPlanet *model.Planet, firstPosX float64, firstPosY float64, timeStart time.Time,planetIds []uint16, x []float64, y []float64, stepNumberOffset uint32) []*model.FleetJourneyStep {
-    // Create the step structurs without the linking
-    // The step is return in the correct order of execution
-    // if the first location is not a planet, input firstPlanet as nil
-    // The stepNumberOffset is the should be the StepNumber of pervious steps if there is otherwise input 0 ( infact you can input any number but prefer using 0)
-    // if the stepNumberOffset is too low you may have error in the future
-    if len(planetIds) != len(x) || len(x) != len(y)  {// the len(planetIds) != len(y) is unessesary
-        panic(exception.NewHttpException(400, "Invalid input : planetIds, x and y should be of the same length", nil))
-    }
-    
-    planetIdSearch := planetIds
-    
-    if firstPlanet != nil {
-        planetIdSearch = append(planetIdSearch,firstPlanet.Id)
-    }
-    
-    planets := manager.GetPlanetsById(planetIdSearch)
-    
-    var steps []*model.FleetJourneyStep
-    var planetPrevId uint16 
-    if firstPlanet != nil {
-        planetPrevId = firstPlanet.Id
-    } else {
-        planetPrevId = 0
-    }
-    
-    var PosPrevX float64 = firstPosX
-    var PosPrevY float64 = firstPosY
-    time_Last := timeStart
-    
-    for i,_ := range planetIds {
-        var step *model.FleetJourneyStep
-        if planetIds[i] != 0 {
-            if planetPrevId !=0 {
-                step = &model.FleetJourneyStep{
-                    PlanetStartId : planetPrevId,
-                    PlanetFinalId : planetIds[i],
-                    StepNumber : uint32(i+1)+stepNumberOffset,
-                }
-            } else{
-                step = &model.FleetJourneyStep{
-                    MapPosXStart : PosPrevX,
-                    MapPosYStart : PosPrevY,
-                    PlanetFinalId : planetIds[i],
-                    StepNumber : uint32(i+1)+stepNumberOffset,
-                }
-            }
-        } else {
-            if planetPrevId !=0 {
-                step = &model.FleetJourneyStep{
-                    PlanetStartId : planetPrevId,
-                    MapPosXFinal : x[i],
-                    MapPosYFinal : y[i],
-                    StepNumber : uint32(i+1)+stepNumberOffset,
-                }
-            } else{
-                step = &model.FleetJourneyStep{
-                    MapPosXStart : PosPrevX,
-                    MapPosYStart : PosPrevY,
-                    MapPosXFinal : x[i],
-                    MapPosYFinal : y[i],
-                    StepNumber : uint32(i+1)+stepNumberOffset,
-                }
-            }
+func insertSteps (steps []*model.FleetJourneyStep) {
+    // We must insert the last steps first, to reference them later in NextStep fields
+    for i := len(steps)-1; i >= 0; i-- {
+        step := steps[i]
+        step.JourneyId = step.Journey.Id
+        if i < len(steps) -1 {
+            step.NextStep = steps[i+1]
+            step.NextStepId = steps[i+1].Id
         }
-        
-        if step.PlanetStartId != 0 {
-            for _,planet := range planets {
-                if planet.Id == step.PlanetStartId {
-                    step.PlanetStart = planet
-                }
-            }
-        }
-        
-        if step.PlanetFinalId != 0 {
-            for _,planet := range planets {
-                if planet.Id == step.PlanetFinalId {
-                    step.PlanetFinal = planet
-                }
-            }
-        }
-        
-        //TODO implement cooldown ?
-        step.TimeStart = time_Last
-    
-        step.TimeJump = step.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.GetTimeForStep(step)) * time.Second )
-        
-        step.TimeArrival = step.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.GetTimeForStep(step)) * time.Second)
-        if !journeyRangeData.IsOnRange(step) {
-            panic(exception.NewHttpException(400, "Step not in range", nil))
-        }
-        steps = append(steps,step)
-        planetPrevId = planetIds[i]
-        PosPrevX = x[i]
-        PosPrevY = y[i]
-        time_Last = step.TimeArrival
-    }
-    
-    return steps
-}
-
-
-func insertStepsWithLink (steps []*model.FleetJourneyStep,journey *model.FleetJourney) {
-    //inset Following Step In DB With Link Creation
-    for i := len(steps)-1; i >= 0; i-- { //< we read the table in reverse
-        stepC := steps[i]
-        stepC.Journey = journey
-        stepC.JourneyId = journey.Id
-        if i < len(steps) -1{ //< normaly this steps is already in the DB
-            stepC.NextStep =  steps[i+1]
-            stepC.NextStepId =  steps[i+1].Id
-        } else {
-            stepC.NextStep = nil
-            stepC.NextStepId = 0
-        }
-        
-        if err := database.Connection.Insert(stepC); err != nil {
+        if err := database.Connection.Insert(step); err != nil {
     		panic(exception.NewHttpException(500, "Step could not be created", err))
         }
     }
@@ -413,26 +373,6 @@ func deleteStepsRecursive(step *model.FleetJourneyStep) {
     if nextStepId != 0 {
         deleteStepsRecursive(GetStep(nextStepId) )
     }
-}
-
-func DecodeStepData (data []interface{}) ([]uint16, []float64, []float64){
-    var planetIds []uint16
-    var xPos []float64
-    var yPos []float64
-    
-    for _, dataElement := range data {
-        dataElementCast := dataElement.(map[string]interface{})
-        planetId := dataElementCast["planetId"].(float64)
-        
-        if planetId == 0 && (dataElementCast["x"].(float64) == math.NaN() || dataElementCast["y"].(float64) == math.NaN() ){
-            panic(exception.NewHttpException(400, "step not well defined", nil))
-        }
-        planetIds = append(planetIds, uint16(planetId))
-        xPos = append(xPos,dataElementCast["x"].(float64))
-        yPos = append(yPos,dataElementCast["y"].(float64))
-    }
-    
-    return planetIds, xPos, yPos
 }
 
 /********************************************/

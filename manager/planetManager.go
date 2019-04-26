@@ -15,6 +15,19 @@ func init() {
     utils.Scheduler.AddHourlyTask(func () { CalculatePlanetsProductions() })
 }
 
+func GetPlanet(id uint16) *model.Planet {
+    planet := &model.Planet{}
+    if err := database.
+        Connection.
+        Model(planet).
+        Column("planet.*", "Player", "Player.Faction", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
+        Where("planet.id = ?", id).
+        Select(); err != nil {
+            return nil
+    }
+    return planet
+}
+
 func GetSystemPlanets(id uint16) []model.Planet {
     var planets []model.Planet
     if err := database.
@@ -41,7 +54,7 @@ func GetPlayerPlanets(id uint16) []model.Planet {
     return planets
 }
 
-func GetPlanet(id uint16, playerId uint16) *model.Planet {
+func GetPlayerPlanet(id uint16, playerId uint16) *model.Planet {
     var planet model.Planet
     if err := database.
         Connection.
@@ -208,6 +221,15 @@ func UpdatePlanetSettings(planet *model.Planet, settings *model.PlanetSettings) 
 func UpdatePlanetStorage(planet *model.Planet) {
     if err := database.Connection.Update(planet.Storage); err != nil {
         panic(exception.NewException("Planet storage could not be updated", err))
+    }
+}
+
+func UpdatePlanetOwner(planet *model.Planet, player *model.Player) {
+	planet.Player = player
+    planet.PlayerId = player.Id
+
+    if err := database.Connection.Update(planet); err != nil {
+        panic(exception.NewException("Planet owner could not be updated", err))
     }
 }
 
