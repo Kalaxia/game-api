@@ -81,8 +81,22 @@ func GetAllFleets(player *model.Player) []model.Fleet {
     return fleets
 }
 
+func GetOrbitingFleets(planet *model.Planet) []model.Fleet {
+    fleets := make([]model.Fleet, 0)
+    if err := database.
+        Connection.
+        Model(&fleets).
+        Column("Player", "Player.Faction", "Journey").
+        Where("fleet.location_id = ?", planet.Id).
+        Where("fleet.journey_id IS NULL").
+        Select(); err != nil {
+            return fleets
+    }
+    return fleets
+}
+
 func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet {
-	var fleets []model.Fleet
+	fleets := make([]model.Fleet, 0)
     if err := database.
         Connection.
         Model(&fleets).
@@ -90,9 +104,8 @@ func GetFleetsOnPlanet(player *model.Player, planet *model.Planet) []model.Fleet
         Where("fleet.player_id = ?", player.Id).
 		Where("fleet.location_id = ?", planet.Id).
         Select(); err != nil {
-            panic(exception.NewHttpException(404, "Fleets not found", err))
+            return fleets
     }
-	
     return fleets
 }
 
@@ -123,7 +136,7 @@ func RemoveShipsFromFleet (fleet *model.Fleet, modelId int, quantity int) int {
     return -len(ships)
 }
 
-func GetFleetShip (fleet *model.Fleet) []model.Ship {
+func GetFleetShips (fleet *model.Fleet) []model.Ship {
     var ships []model.Ship
     
     if err := database.
@@ -178,7 +191,7 @@ func DeleteFleet(fleet *model.Fleet) {
     if (fleet.Journey != nil){
         panic(exception.NewHttpException(400, "Cannot delete moving fleet", nil))
     }
-    if (len(GetFleetShip(fleet)) != 0){
+    if (len(GetFleetShips(fleet)) != 0){
         panic(exception.NewHttpException(400, "Cannot delete fleet with remaining ships", nil))
     }
     if err := database.Connection.Delete(fleet); err != nil {
