@@ -9,6 +9,28 @@ const FleetOrderPass = "pass"
 const FleetOrderConquer = "conquer"
 
 type(
+    FleetCombat struct {
+        TableName struct{} `json:"-" sql:"fleet__combats"`
+
+        Id uint16 `json:"id"`
+        Attacker *Fleet `json:"attacker"`
+        AttackerId uint16 `json:"-"`
+        Defender *Fleet `json:"defender"`
+        DefenderId uint16 `json:"-"`
+        IsVictory bool `json:"is_victory"`
+
+        AttackerShips map[string]uint16 `json:"attacker_ships"`
+        DefenderShips map[string]uint16 `json:"defender_ships"`
+
+        AttackerLosses map[string]uint16 `json:"attacker_losses"`
+        DefenderLosses map[string]uint16 `json:"defender_losses"`
+
+        BeginAt time.Time `json:"begin_at"`
+        EndAt time.Time `json:"end_at"`
+
+        ShipModels map[uint][]*ShipSlot `json:"-" sql:"-"`
+    }
+
     Fleet struct {
         TableName struct{} `json:"-" sql:"fleet__fleets"`
 
@@ -27,7 +49,7 @@ type(
         TableName struct{} `json:"-" sql:"fleet__journeys"`
 
         Id uint16 `json:"id"`
-        CreatedAt time.Time `json:"created_at" sql:"created_at"`
+        CreatedAt time.Time `json:"created_at"`
         EndedAt time.Time `json:"ended_at"`
         CurrentStep *FleetJourneyStep `json:"current_step"`
         CurrentStepId uint16 `json:"-"`

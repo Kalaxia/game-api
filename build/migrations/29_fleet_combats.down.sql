@@ -1,0 +1,1 @@
+DROP TABLE fleet__combats;

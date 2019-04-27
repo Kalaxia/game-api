@@ -1,7 +1,7 @@
 package model
 
 import (
-        "time"
+    "time"
 )
 
 const ShipTypeFighter = "fighter"
@@ -88,6 +88,8 @@ type(
         CreatedAt time.Time `json:"created_at"`
         ConstructionStateId uint32 `json:"-"`
         ConstructionState *ShipConstructionState `json:"construction_state"`
+        // Combat fields
+        Damage uint8 `json:"-" sql:"-"`
     }
     ShipConstructionGroup struct {
         TableName struct{} `json:"-" pg:",discard_unknown_columns"`
