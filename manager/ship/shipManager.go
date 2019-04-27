@@ -250,7 +250,7 @@ func GetShipsByIds(ids []uint16) []*model.Ship{
     if err := database.
         Connection.
         Model(&ships).
-        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        Column("ship.*", "Hangar", "Fleet", "Model", "Hangar.Player", "Fleet.Location", "Fleet.Location.Player", "Fleet.Player").
         Where("construction_state_id IS NULL").
         WhereIn("ship.id IN ?", ids).
         Select(); err != nil {
@@ -262,5 +262,12 @@ func GetShipsByIds(ids []uint16) []*model.Ship{
 func UpdateShip(ship *model.Ship) {
     if err := database.Connection.Update(ship); err != nil {
         panic(exception.NewException("ship could not be updated", err))
+    }
+}
+
+func RemoveShipsByIds(shipIds []uint32) {
+    var ships []model.Ship
+    if _, err := database.Connection.Model(&ships).WhereIn("ship.id IN (?)", shipIds).Delete(); err != nil {
+        panic(exception.NewException("Ships could not be removed", err))
     }
 }
