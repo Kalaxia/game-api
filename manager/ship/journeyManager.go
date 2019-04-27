@@ -177,7 +177,7 @@ func AddStepsToJourney (fleet *model.Fleet, data []interface{}) []*model.FleetJo
     previousSteps := GetStepsByJourneyId(journey.Id)
     var oldLastStep *model.FleetJourneyStep = previousSteps[0]
     
-    for _,step := range previousSteps {
+    for _, step := range previousSteps {
         if step.StepNumber > oldLastStep.StepNumber { // we search for the higher step number this should be the last step
             oldLastStep = step
         }
@@ -276,7 +276,7 @@ func processStepOrder(step *model.FleetJourneyStep) {
             return
         case model.FleetOrderConquer:
             fleet := GetFleetByJourney(step.Journey)
-            ConquerPlanet(fleet, step.PlanetFinal)
+            ConquerPlanet(fleet, manager.GetPlanet(step.PlanetFinalId))
             return
     }
 }

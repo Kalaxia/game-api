@@ -129,7 +129,7 @@ var routes = Routes{
 		"Get Fleet Ships",
 		"GET",
 		"/api/fleets/{id}/ships",
-		shipController.GetFleetShip,
+		shipController.GetFleetShips,
 		true,
 	},
 	Route{

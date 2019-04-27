@@ -104,7 +104,7 @@ func TransferShips (w http.ResponseWriter, r *http.Request){
 	}) 
 }
 
-func GetFleetShip (w http.ResponseWriter, r *http.Request){
+func GetFleetShips (w http.ResponseWriter, r *http.Request){
     /*
      * return all the ships in a fleet if the player controll the fleet
      */
@@ -117,7 +117,7 @@ func GetFleetShip (w http.ResponseWriter, r *http.Request){
 		panic(exception.NewHttpException(http.StatusForbidden, "", nil))
 	}
     
-    utils.SendJsonResponse(w, 200, shipManager.GetFleetShip(fleet))
+    utils.SendJsonResponse(w, 200, shipManager.GetFleetShips(fleet))
 }
 
 func GetFleetShipGroups (w http.ResponseWriter, r *http.Request) {
