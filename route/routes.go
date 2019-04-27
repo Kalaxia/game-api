@@ -124,6 +124,22 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
+	// Combats
+	Route{
+		"Get Combat Report",
+		"GET",
+		"/api/combats/{id}",
+		shipController.GetCombatReport,
+		true,
+	},
+	Route{
+		"Get Combat Reports",
+		"GET",
+		"/api/combats",
+		shipController.GetCombatReports,
+		true,
+	},
+	/*******************************/
 	// Fleets
 	Route{
 		"Get Fleet Ships",

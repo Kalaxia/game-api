@@ -9,6 +9,35 @@ import(
 	"time"
 )
 
+func GetCombatReport(id uint16) *model.FleetCombat {
+	report := &model.FleetCombat{}
+
+	if err := database.
+		Connection.
+		Model(report).
+		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
+		Where("fleet_combat.id = ?", id).
+		Select(); err != nil {
+		panic(exception.NewHttpException(404, "Report not found", err))
+	}
+	return report
+}
+
+func GetCombatReports(player *model.Player) []model.FleetCombat {
+	reports := make([]model.FleetCombat, 0)
+
+	if err := database.
+		Connection.
+		Model(&reports).
+		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
+		Where("attacker__player.id = ?", player.Id).
+		WhereOr("defender__player.id = ?", player.Id).
+		Select(); err != nil {
+		panic(exception.NewHttpException(500, "Could not retrieve combat reports", err))
+	}
+	return reports
+}
+
 func Engage(attacker *model.Fleet, defender *model.Fleet) *model.FleetCombat {
 	attackerShips := GetFleetShips(attacker)
 	defenderShips := GetFleetShips(defender)
