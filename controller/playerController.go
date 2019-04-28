@@ -17,14 +17,25 @@ func GetCurrentPlayer(w http.ResponseWriter, r *http.Request) {
 
 func GetPlayer(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    currentPlayer := context.Get(r, "player").(*model.Player)
 
-    utils.SendJsonResponse(w, 200, manager.GetPlayer(uint16(id)))
+    utils.SendJsonResponse(w, 200, manager.GetPlayer(uint16(id), currentPlayer.Id == uint16(id)))
 }
 
 func GetPlayerPlanets(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 
     utils.SendJsonResponse(w, 200, manager.GetPlayerPlanets(uint16(id)))
+}
+
+func UpdateCurrentPlanet(w http.ResponseWriter, r *http.Request) {
+    data := utils.DecodeJsonRequest(r)
+    player := context.Get(r, "player").(*model.Player)
+
+    manager.UpdateCurrentPlanet(player, uint16(data["planet_id"].(float64)))
+    
+    w.WriteHeader(204)
+    w.Write([]byte(""))
 }
 
 func RegisterPlayer(w http.ResponseWriter, r *http.Request) {

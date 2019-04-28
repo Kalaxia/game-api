@@ -22,7 +22,7 @@ func AuthorizationHandler(next http.HandlerFunc) http.HandlerFunc {
         if createdAt.Add(time.Hour * time.Duration(2)).Before(time.Now()) {
             panic(exception.NewHttpException(http.StatusUnauthorized, "Expired JWT", nil))
         }
-        player := manager.GetPlayer(uint16(data["id"].(float64)))
+        player := manager.GetPlayer(uint16(data["id"].(float64)), true)
         if player == nil {
             panic(exception.NewHttpException(http.StatusInternalServerError, "Unavailable player account", nil))
         }

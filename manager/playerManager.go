@@ -14,10 +14,13 @@ func init() {
     utils.Scheduler.AddHourlyTask(func () { CalculatePlayersWage() })
 }
 
-func GetPlayer(id uint16) *model.Player {
+func GetPlayer(id uint16, isSelf bool) *model.Player {
     var player model.Player
-    if err := database.Connection.Model(&player).Column("player.*", "Faction").Where("player.id = ?", id).Select(); err != nil {
+    if err := database.Connection.Model(&player).Column("player.*", "Faction", "CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
         return nil
+    }
+    if !isSelf {
+        player.CurrentPlanet = nil
     }
     return &player
 }
@@ -75,6 +78,8 @@ func RegisterPlayer(player *model.Player, pseudo string, gender string, avatar s
     player.Avatar = avatar
     player.Gender = gender
     player.IsActive = true
+    player.CurrentPlanet = planet
+    player.CurrentPlanetId = planet.Id
     player.Wallet = 0
     UpdatePlayerWallet(player, 40000)
     IncreasePlayerRelation(planet, player, 150)
@@ -92,6 +97,18 @@ func UpdatePlayerWallet(player *model.Player, amount int32) bool {
       return true
     }
     return false
+}
+
+func UpdateCurrentPlanet(player *model.Player, planetId uint16) {
+    planet := GetPlanet(planetId)
+
+    if planet.Player.Id != player.Id {
+        panic(exception.NewHttpException(403, "You do not own this planet", nil))
+    }
+    player.CurrentPlanet = planet
+    player.CurrentPlanetId = planet.Id
+
+    UpdatePlayer(player)
 }
 
 func calculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
