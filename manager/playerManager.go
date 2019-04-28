@@ -75,6 +75,8 @@ func RegisterPlayer(player *model.Player, pseudo string, gender string, avatar s
     player.Avatar = avatar
     player.Gender = gender
     player.IsActive = true
+    player.CurrentPlanet = planet
+    player.CurrentPlanetId = planet.Id
     player.Wallet = 0
     UpdatePlayerWallet(player, 40000)
     IncreasePlayerRelation(planet, player, 150)
