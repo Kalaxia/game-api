@@ -14,10 +14,13 @@ func init() {
     utils.Scheduler.AddHourlyTask(func () { CalculatePlayersWage() })
 }
 
-func GetPlayer(id uint16) *model.Player {
+func GetPlayer(id uint16, isSelf bool) *model.Player {
     var player model.Player
-    if err := database.Connection.Model(&player).Column("player.*", "Faction").Where("player.id = ?", id).Select(); err != nil {
+    if err := database.Connection.Model(&player).Column("player.*", "Faction", "CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
         return nil
+    }
+    if !isSelf {
+        player.CurrentPlanet = nil
     }
     return &player
 }
