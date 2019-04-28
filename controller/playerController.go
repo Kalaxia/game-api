@@ -27,6 +27,16 @@ func GetPlayerPlanets(w http.ResponseWriter, r *http.Request) {
     utils.SendJsonResponse(w, 200, manager.GetPlayerPlanets(uint16(id)))
 }
 
+func UpdateCurrentPlanet(w http.ResponseWriter, r *http.Request) {
+    data := utils.DecodeJsonRequest(r)
+    player := context.Get(r, "player").(*model.Player)
+
+    manager.UpdateCurrentPlanet(player, uint16(data["planet_id"].(float64)))
+    
+    w.WriteHeader(204)
+    w.Write([]byte(""))
+}
+
 func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
     data := utils.DecodeJsonRequest(r)
     player := context.Get(r, "player").(*model.Player)

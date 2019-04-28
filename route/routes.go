@@ -75,6 +75,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Update Current Planet",
+		"PATCH",
+		"/api/me/current-planet",
+		controller.UpdateCurrentPlanet,
+		true,
+	},
+	Route{
 		"Get Current Player Ship Models",
 		"GET",
 		"/api/me/ship-models",

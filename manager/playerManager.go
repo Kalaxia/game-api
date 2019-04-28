@@ -94,6 +94,18 @@ func UpdatePlayerWallet(player *model.Player, amount int32) bool {
     return false
 }
 
+func UpdateCurrentPlanet(player *model.Player, planetId uint16) {
+    planet := GetPlanet(planetId)
+
+    if planet.Player.Id != player.Id {
+        panic(exception.NewHttpException(403, "You do not own this planet", nil))
+    }
+    player.CurrentPlanet = planet
+    player.CurrentPlanetId = planet.Id
+
+    UpdatePlayer(player)
+}
+
 func calculatePlayerWage(player model.Player, wg *sync.WaitGroup) {
   defer wg.Done()
   defer utils.CatchException()
