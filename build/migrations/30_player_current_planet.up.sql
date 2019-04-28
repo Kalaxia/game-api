@@ -1,0 +1,1 @@
+ALTER TABLE players ADD current_planet_id int REFERENCES map__planets(id) ON DELETE SET NULL;

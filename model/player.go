@@ -17,6 +17,8 @@ type(
     Faction *Faction `json:"faction"`
     IsActive bool `json:"is_active"`
     Wallet uint32 `json:"wallet"`
+    CurrentPlanet *Planet `json:"current_planet"`
+    CurrentPlanetId uint16 `json:"-"`
     CreatedAt time.Time `json:"created_at"`
     UpdatedAt time.Time `json:"updated_at"`
   }

@@ -1,0 +1,1 @@
+ALTER TABLE players DROP current_planet_id
