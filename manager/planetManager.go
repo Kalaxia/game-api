@@ -46,7 +46,7 @@ func GetPlayerPlanets(id uint16) []model.Planet {
     if err := database.
         Connection.
         Model(&planets).
-        Column("planet.*", "System", "Resources", "Settings").
+        Column("planet.*", "Player", "Player.Faction", "System", "Resources", "Settings").
         Where("planet.player_id = ?", id).
         Select(); err != nil {
             panic(exception.NewHttpException(404, "Player not found", err))
