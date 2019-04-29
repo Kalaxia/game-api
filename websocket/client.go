@@ -143,7 +143,7 @@ func (c *Client) processMessage(message []byte) {
 			if c.player == nil {
 				panic(exception.NewHttpException(http.StatusInternalServerError, "Unavailable player account", nil))
 			}
-			fmt.Println("Authenticated player by WS : ", c.player.Pseudo)
+			c.hub.players[c.player.Pseudo] = c
 			break
 		default:
 			fmt.Println("Unknown action ", data["type"])
