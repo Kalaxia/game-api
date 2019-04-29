@@ -1,12 +1,10 @@
 package handler
 
 import(
-  "fmt"
-  "os"
   "net/http"
   "strings"
   "kalaxia-game-api/exception"
-  "github.com/dgrijalva/jwt-go"
+  "kalaxia-game-api/security"
   "github.com/gorilla/context"
 )
 
@@ -24,20 +22,8 @@ func JwtHandler(next http.HandlerFunc, isProtected bool) http.HandlerFunc {
         if len(bearerToken) != 2 {
           panic(exception.NewHttpException(http.StatusBadRequest, "The Authorization header format is invalid", nil))
         }
-        token, err := jwt.Parse(bearerToken[1], func(token *jwt.Token) (interface{}, error) {
-            if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-                return nil, fmt.Errorf("there was an error")
-            }
-            return []byte(os.Getenv("JWT_SECRET")), nil
-        })
-        if err != nil {
-            panic(exception.NewHttpException(500, "JWT could not be created", nil))
-        }
-        if token.Valid {
-            context.Set(req, "jwt", token.Claims)
-            next(w, req)
-        } else {
-            panic(exception.NewHttpException(http.StatusInternalServerError, "Invalid authorization token", nil))
-        }
+        token := security.AuthenticateJwt(bearerToken[1])
+        context.Set(req, "jwt", token.Claims)
+        next(w, req)
     })
 }
