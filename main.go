@@ -3,18 +3,35 @@ package main
 import (
 	"net/http"
 	"log"
-	_ "kalaxia-game-api/security"
-	"kalaxia-game-api/route"
-	"kalaxia-game-api/websocket"
+	"kalaxia-game-api/api"
 )
 
 func main() {
-	hub := websocket.NewHub()
+	initConfigurations()
+	initScheduledTasks()
+
+	hub := api.NewWsHub()
 	go hub.Run()
 
-	router := route.NewRouter()
+	router := NewRouter()
 	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		websocket.Serve(hub, w, r)
+		api.ServeWs(hub, w, r)
 	})
   	log.Fatal(http.ListenAndServe(":80", router))
+}
+
+func initConfigurations() {
+	api.InitDatabase()
+	api.InitRsaVault()
+	api.InitShipConfiguration()
+}
+
+func initScheduledTasks() {
+	api.InitScheduler()
+
+    api.Scheduler.AddHourlyTask(func () { api.CalculatePlayersWage() })
+    api.Scheduler.AddHourlyTask(func () { api.CalculatePlanetsProductions() })
+	api.Scheduler.AddHourlyTask(func () { api.CheckShipsBuildingState() })
+	
+	api.InitFleetJourneys()
 }
