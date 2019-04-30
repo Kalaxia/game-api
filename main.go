@@ -9,14 +9,10 @@ import (
 func main() {
 	initConfigurations()
 	initScheduledTasks()
-
-	hub := api.NewWsHub()
-	go hub.Run()
+	initWebsocketHub()
 
 	router := NewRouter()
-	router.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		api.ServeWs(hub, w, r)
-	})
+	router.HandleFunc("/ws", api.ServeWs)
   	log.Fatal(http.ListenAndServe(":80", router))
 }
 
@@ -24,6 +20,7 @@ func initConfigurations() {
 	api.InitDatabase()
 	api.InitRsaVault()
 	api.InitShipConfiguration()
+	api.InitPlanetConstructions()
 }
 
 func initScheduledTasks() {
@@ -34,4 +31,9 @@ func initScheduledTasks() {
 	api.Scheduler.AddHourlyTask(func () { api.CheckShipsBuildingState() })
 	
 	api.InitFleetJourneys()
+}
+
+func initWebsocketHub() {
+	api.WsHub = api.NewWsHub()
+	go api.WsHub.Run()
 }

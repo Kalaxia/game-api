@@ -2,9 +2,10 @@
 package api
 
 import(
-	"bytes"
+	"encoding/json"
 )
 
+var WsHub *Hub
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
 type Hub struct {
@@ -58,8 +59,12 @@ func (h *Hub) Run() {
 	}
 }
 
-func (h *Hub) SendTo(player *Player, message []byte) {
+func (h *Hub) sendTo(player *Player, message *WsMessage) {
 	if client, ok := h.players[player.Pseudo]; ok {
-		client.send <- bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
+		jsonData, err := json.Marshal(message)
+		if err != nil {
+			panic(NewException("websocket.encoding_error", err))
+		}
+		client.send <- jsonData
 	}
 }

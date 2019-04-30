@@ -7,7 +7,7 @@ import(
 
 func ErrorHandler(next http.HandlerFunc) http.HandlerFunc {
     return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-        //defer CatchHttpException(w)
+        defer CatchHttpException(w)
         next(w, req)
     })
 }
