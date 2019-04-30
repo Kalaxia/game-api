@@ -84,8 +84,6 @@ type(
 )
 
 func InitFleetJourneys() {
-    defer CatchException() // defer is a "stack" (first in last out) so we call CatchException() after the other defer of this function
-    
     journeyTimeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_times.json")
     if err != nil {
         panic(NewException("Can't open journey time configuration file", err))
@@ -377,6 +375,7 @@ func (j *FleetJourney) removeStep(step *FleetJourneyStep) {
 // internal logic
 
 func (step *FleetJourneyStep) end() {
+    defer CatchException()
     var hasToDeleteJourney bool = false
     var journey *FleetJourney
     if step.Journey.CurrentStep != nil {
@@ -487,7 +486,7 @@ func (j *FleetJourney) end() {
     fleet.update()
 }
 
-func insertSteps (steps []*FleetJourneyStep) {
+func insertSteps(steps []*FleetJourneyStep) {
     // We must insert the last steps first, to reference them later in NextStep fields
     for i := len(steps)-1; i >= 0; i-- {
         step := steps[i]
@@ -529,10 +528,10 @@ func getJourney(id uint16) *FleetJourney {
 }
 
 func (j *FleetJourney) getFleet() *Fleet{
-    var fleet *Fleet
+    fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player", "Journey").
+        Column("Player.Faction", "Journey").
         Where("journey_id = ?", j.Id).
         Select(); err != nil {
             panic(NewException("Fleet not found on GetFleetOnJourney", err))
@@ -542,7 +541,7 @@ func (j *FleetJourney) getFleet() *Fleet{
 }
 
 func getAllJourneySteps() []*FleetJourneyStep {
-    var steps []*FleetJourneyStep
+    steps := make([]*FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
         Column("Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
@@ -567,7 +566,7 @@ func getStep(stepId uint16) *FleetJourneyStep {
 }
 
 func getStepsById(ids []uint16) []*FleetJourneyStep {
-    var steps []*FleetJourneyStep
+    steps := make([]*FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
         Column("Journey.CurrentStep", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "PlanetFinal.System", "PlanetStart.System").
@@ -579,7 +578,7 @@ func getStepsById(ids []uint16) []*FleetJourneyStep {
 }
 
 func (j *FleetJourney) getSteps() []*FleetJourneyStep {
-    var steps []*FleetJourneyStep
+    steps := make([]*FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
         Column("Journey.CurrentStep", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","PlanetFinal.System", "PlanetStart.System").
@@ -605,15 +604,18 @@ func (s *FleetJourneyStep) update() {
 func (f *Fleet) isOnPlanet () bool{
     return f.Location == nil
 }
+
 func (f *Fleet) isOnJourney () bool{
     return f.Journey != nil
 }
+
 func (f *Fleet) isOnMap () bool{
     booleanX := !math.IsNaN(f.MapPosX) && f.MapPosX >= 0
 	booleanY := !math.IsNaN(f.MapPosY) && f.MapPosY >= 0
 	
     return booleanX && booleanY
 }
+
 func (f *Fleet) GetPositionOnMap () ([2]float64 , bool) {
     if f.isOnMap() {
         return [2]float64{f.MapPosX, f.MapPosY}, true

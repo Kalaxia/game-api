@@ -92,7 +92,7 @@ func TransferShips(w http.ResponseWriter, r *http.Request){
 	}) 
 }
 
-func GetFleetShips (w http.ResponseWriter, r *http.Request) {
+func GetFleetShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     fleet := getFleet(uint16(fleetId))
@@ -104,7 +104,7 @@ func GetFleetShips (w http.ResponseWriter, r *http.Request) {
     SendJsonResponse(w, 200, fleet.getShips())
 }
 
-func GetFleetShipGroups (w http.ResponseWriter, r *http.Request) {
+func GetFleetShipGroups(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
     fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     fleet := getFleet(uint16(fleetId))
@@ -115,7 +115,7 @@ func GetFleetShipGroups (w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, 200, fleet.getShipGroups())
 }
 
-func DeleteFleet (w http.ResponseWriter, r *http.Request){
+func DeleteFleet(w http.ResponseWriter, r *http.Request){
 	player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 	fleet := getFleet(uint16(fleetId))
@@ -133,7 +133,7 @@ func getFleet(id uint16) *Fleet {
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player", "Journey.CurrentStep", "Location.System").
+        Column("Player.Faction", "Journey.CurrentStep", "Location.System").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleet not found", err))
@@ -159,7 +159,7 @@ func (p *Player) getFleets() []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player","Location","Journey").
+        Column("Player", "Location", "Journey.CurrentStep").
         Where("fleet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
@@ -171,7 +171,7 @@ func  (p *Planet) getOrbitingFleets() []Fleet {
     fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player", "Player.Faction", "Journey").
+        Column("Player.Faction", "Journey").
         Where("fleet.location_id = ?", p.Id).
         Where("fleet.journey_id IS NULL").
         Select(); err != nil {
@@ -184,7 +184,7 @@ func (p *Planet) getFleets(player *Player) []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column( "Player", "Location", "Journey").
+        Column( "Player.Faction", "Location", "Journey").
         Where("fleet.player_id = ?", player.Id).
 		Where("fleet.location_id = ?", p.Id).
         Select(); err != nil {
@@ -220,7 +220,7 @@ func (f *Fleet) removeShips(modelId int, quantity int) int {
     return -len(ships)
 }
 
-func (f *Fleet) getShips () []Ship {
+func (f *Fleet) getShips() []Ship {
     ships := make([]Ship, 0)
     
     if err := Database.

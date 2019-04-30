@@ -18,13 +18,13 @@ type FleetCombat struct {
 	AttackerId uint16 `json:"-"`
 	Defender *Fleet `json:"defender"`
 	DefenderId uint16 `json:"-"`
-	IsVictory bool `json:"is_victory"`
+	IsVictory bool `json:"is_victory" sql:",notnull"`
 
-	AttackerShips map[string]uint16 `json:"attacker_ships"`
-	DefenderShips map[string]uint16 `json:"defender_ships"`
+	AttackerShips map[string]uint16 `json:"attacker_ships" sql:",notnull"`
+	DefenderShips map[string]uint16 `json:"defender_ships" sql:",notnull"`
 
-	AttackerLosses map[string]uint16 `json:"attacker_losses"`
-	DefenderLosses map[string]uint16 `json:"defender_losses"`
+	AttackerLosses map[string]uint16 `json:"attacker_losses" sql:",notnull"`
+	DefenderLosses map[string]uint16 `json:"defender_losses" sql:",notnull"`
 
 	BeginAt time.Time `json:"begin_at"`
 	EndAt time.Time `json:"end_at"`
@@ -52,7 +52,6 @@ func GetCombatReports(w http.ResponseWriter, r *http.Request) {
 
 func getCombatReport(id uint16) *FleetCombat {
 	report := &FleetCombat{}
-
 	if err := Database.
 		Model(report).
 		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
@@ -108,7 +107,6 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 		nbAttackerShips = len(attackerShips)
 		nbDefenderShips = len(defenderShips)
 	}
-
 	combat.IsVictory = nbAttackerShips > 0
 
 	if err := Database.Insert(combat); err != nil {
@@ -116,7 +114,30 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 	}
 	removeShipsByIds(destroyedShips)
 
+	if combat.IsVictory {
+		attacker.notifyCombatEnding(combat, defender, "victory")
+		defender.notifyCombatEnding(combat, attacker, "defeat")
+	} else {
+		defender.notifyCombatEnding(combat, attacker, "victory")
+		attacker.notifyCombatEnding(combat, defender, "defeat")
+	}
 	return combat
+}
+
+func (f *Fleet) notifyCombatEnding(report *FleetCombat, opponent *Fleet, state string) {
+	f.Player.notify(
+		NotificationTypeMilitary,
+		"notifications.military.fleet_" + state,
+		map[string]interface{}{
+			"fleet_id": f.Id,
+			"report_id": report.Id,
+			"opponent_id": opponent.Id,
+			"opponent_player_id": opponent.Player.Id,
+			"opponent_player_pseudo": opponent.Player.Pseudo,
+			"opponent_faction_id": opponent.Player.Faction.Id,
+			"opponent_faction_name": opponent.Player.Faction.Name,
+		},
+	)
 }
 
 func (c *FleetCombat) fightRound(attackerShips []Ship, defenderShips []Ship, destroyedShips []uint32) ([]Ship, []Ship, []uint32) {

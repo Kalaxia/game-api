@@ -13,6 +13,8 @@ type(
     OfferInterface interface {
         getTotalPrice() float32
         cancel()
+        update()
+        delete()
     }
     Offer struct {
         Id uint32 `json:"id"`
@@ -282,16 +284,50 @@ func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
         offer.delete()
         return
 	} 
-	offer.update()
+    offer.update()
+    
+    offer.Location.Player.notify(
+        NotificationTypeTrade,
+        "notifications.trade.accepted_offer",
+        map[string]interface{}{
+            "player": p.Player,
+            "quantity": quantity,
+            "price": price,
+        },
+    )
 }
 
-func (o *Offer) update() {
+func (o *ResourceOffer) update() {
     if err := Database.Update(o); err != nil {
         panic(NewHttpException(500, "Offer could not be accepted", err))
     }
 }
 
-func (o *Offer) delete() {
+func (o *ShipOffer) update() {
+    if err := Database.Update(o); err != nil {
+        panic(NewHttpException(500, "Offer could not be accepted", err))
+    }
+}
+
+func (o *ModelOffer) update() {
+    if err := Database.Update(o); err != nil {
+        panic(NewHttpException(500, "Offer could not be accepted", err))
+    }
+}
+
+func (o *ResourceOffer) delete() {
+	if err := Database.Delete(o); err != nil {
+		panic(NewHttpException(500, "Offer could not be deleted", err))
+	}
+}
+
+func (o *ShipOffer) delete() {
+	if err := Database.Delete(o); err != nil {
+		panic(NewHttpException(500, "Offer could not be deleted", err))
+	}
+}
+
+func (o *ModelOffer) delete() {
 	if err := Database.Delete(o); err != nil {
 		panic(NewHttpException(500, "Offer could not be deleted", err))
 	}
