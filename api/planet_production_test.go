@@ -3,10 +3,10 @@ package api
 import(
 	"reflect"
 	"testing"
-	_ "kalaxia-game-api/api/mock"
 )
 
 func TestCalculatePlanetResourcesProduction(t *testing.T) {
+	InitDatabaseMock()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
 	planet := getPlayerPlanetMock()
 	planet.Storage = getStorageMock()
@@ -25,6 +25,7 @@ func TestCalculatePlanetResourcesProduction(t *testing.T) {
 }
 
 func TestCalculatePlanetResourcesProductionWithoutStorage(t *testing.T) {
+	InitDatabaseMock()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
 	planet := getPlayerPlanetMock()
 

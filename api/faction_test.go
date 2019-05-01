@@ -3,14 +3,12 @@ package api
 import(
 	"reflect"
 	"testing"
-	_ "kalaxia-game-api/database/mock"
-	"kalaxia-game-api/database"
-	"kalaxia-game-api/model"
 )
 
 func TestCreateServerFactions(t *testing.T) {
+	InitDatabaseMock()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
-	factions := CreateServerFactions(getServerMock(), getFactionsMock())
+	factions := getServerMock().createFactions(getFactionsMock())
 
 	if len(factions) != 3 {
 		t.Errorf("Factions array should have three items")

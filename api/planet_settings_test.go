@@ -1,12 +1,11 @@
 package api
 
 import(
-	"reflect"
 	"testing"
-	_ "kalaxia-game-api/api/mock"
 )
 
 func TestAffectPopulationPoints(t *testing.T) {
+	InitDatabaseMock()
 	planet := getPlayerPlanetMock()
 	planet.affectPopulationPoints(getSettingsMock())
 
@@ -25,12 +24,13 @@ func TestAffectPopulationPoints(t *testing.T) {
 }
 
 func TestAffectPopulationPointsWithTooMuchPoints(t *testing.T) {
+	InitDatabaseMock()
 	defer func() {
 		r := recover()
 		if r == nil {
 			t.Errorf("An error should have been thrown")
 		}
-		if exception, ok := r.(*exception.HttpException); ok {
+		if exception, ok := r.(*HttpException); ok {
 			if exception.Code != 400 {
 				t.Errorf("The error code should be 400")
 			}

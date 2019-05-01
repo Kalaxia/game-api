@@ -1,11 +1,5 @@
 package api
 
-import(
-	"reflect"
-	"testing"
-	_ "kalaxia-game-api/api/mock"
-)
-
 func getPlayerPlanetMock() *Planet {
 	return &Planet{
 		Id: 1,

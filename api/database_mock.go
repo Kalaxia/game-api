@@ -1,9 +1,8 @@
-package mock
+package api
 
 import(
 	"reflect"
 	"github.com/go-pg/pg"
-	"kalaxia-game-api/api"
 )
 
 type TestDatabase struct {
@@ -24,6 +23,6 @@ func (TestDatabase) Update(model interface{}) error {
 	return nil
 }
 
-func init() {
-	api.Database = &TestDatabase{}
+func InitDatabaseMock() {
+	Database = &TestDatabase{}
 }
