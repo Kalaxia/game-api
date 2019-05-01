@@ -290,6 +290,7 @@ func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
         NotificationTypeTrade,
         "notifications.trade.accepted_offer",
         map[string]interface{}{
+            "offer": offer,
             "player": p.Player,
             "quantity": quantity,
             "price": price,

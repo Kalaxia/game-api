@@ -129,13 +129,9 @@ func (f *Fleet) notifyCombatEnding(report *FleetCombat, opponent *Fleet, state s
 		NotificationTypeMilitary,
 		"notifications.military.fleet_" + state,
 		map[string]interface{}{
-			"fleet_id": f.Id,
-			"report_id": report.Id,
-			"opponent_id": opponent.Id,
-			"opponent_player_id": opponent.Player.Id,
-			"opponent_player_pseudo": opponent.Player.Pseudo,
-			"opponent_faction_id": opponent.Player.Faction.Id,
-			"opponent_faction_name": opponent.Player.Faction.Name,
+			"fleet": f,
+			"report": report,
+			"opponent": opponent,
 		},
 	)
 }

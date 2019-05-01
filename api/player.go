@@ -78,11 +78,12 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
 
 func getPlayer(id uint16, isSelf bool) *Player {
     player := &Player{}
-    if err := Database.Model(player).Column("player.*", "Faction", "CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
+    if err := Database.Model(player).Column("player.*", "Faction", "Notifications", "CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
         panic(NewException("players.not_found", err))
     }
     if !isSelf {
         player.CurrentPlanet = nil
+        player.Notifications = make(Notifications, 0)
     }
     return player
 }
