@@ -1,6 +1,7 @@
 package api
 
 import(
+    "fmt"
     "encoding/json"
     "net/http"
     "io/ioutil"
@@ -100,31 +101,26 @@ func InitFleetJourneys() {
         panic(NewException("Can't read journey time configuration file", err))
     }
     
-    journeySteps := getAllJourneySteps()
+    journeys := getAllJourneys()
     now := time.Now()
-    for _,step := range journeySteps { //< hic sunt dracones
-        if step.Journey.CurrentStep.Id == step.Id { //< This if is the reason we defer and then go (see later comment)
-            // we only treat the step if it is the current step
-            // Indeed in finishStep we sheldur ( or do if the time has passed) finishStep for step.NextStep so we don't reshedur it
-            // (It also resolve some proble with step deletion and concurency problem )
-            if now.Before(step.TimeArrival){
-                Scheduler.AddTask(uint(now.Sub(step.TimeArrival).Seconds()), func () { // TODO review this uint
-                    step.end()
-                }) //< Do I need to defer that to be safe ? (see comment below)
-            } else {// if the time is already passed we directly execute it
-                defer func () { go step.end() }() //< finishStep delete step in DB
-                // defer for concurency reason
-                //
-                // * In the case of go replacing defer
-                // * imagine that a journey has tow steps S0 and S1 which are both finished
-                // * S0 is the current step
-                // * finishStep(S0) is threated and call defer finishStep(S1) (see dunction finishStep and beginNextStep)
-                // * but the treatment of  finishStep(S0) can be faster than for the loop to arrive to S1
-                // * So that step.Journey.CurrentStep.Id == step.Id is true and go finishStep(S1) can be called
-                // * So S1 could be finished two times
-                //---------------------------------------------
-                // But we do go after because all steps are in diffrent journey and can be finished simultaniously
-            }
+    for _, journey := range journeys { //< hic sunt dracones
+        if journey.CurrentStep.TimeArrival.After(now) {
+            Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () { // TODO review this uint
+                journey.CurrentStep.end()
+            }) //< Do I need to defer that to be safe ? (see comment below)
+        } else {// if the time is already passed we directly execute it
+            defer func () { go journey.CurrentStep.end() }() //< finishStep delete step in DB
+            // defer for concurency reason
+            //
+            // * In the case of go replacing defer
+            // * imagine that a journey has tow steps S0 and S1 which are both finished
+            // * S0 is the current step
+            // * finishStep(S0) is threated and call defer finishStep(S1) (see dunction finishStep and beginNextStep)
+            // * but the treatment of  finishStep(S0) can be faster than for the loop to arrive to S1
+            // * So that step.Journey.CurrentStep.Id == step.Id is true and go finishStep(S1) can be called
+            // * So S1 could be finished two times
+            //---------------------------------------------
+            // But we do go after because all steps are in diffrent journey and can be finished simultaniously
         }
     }
 }
@@ -232,7 +228,9 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
     }
 	steps := createSteps(f, data, 0)
 	
-	f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
+    f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
+    
+    fmt.Println(f.Journey.EndedAt)
 	
     if err := Database.Insert(f.Journey); err != nil {
 		panic(NewHttpException(500, "Journey could not be created", err))
@@ -248,9 +246,9 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
     f.LocationId = 0
     f.update()
     
-    now := time.Now()
-    if now.Before(f.Journey.CurrentStep.TimeArrival){
-        Scheduler.AddTask(uint(now.Sub(f.Journey.CurrentStep.TimeArrival).Seconds()), func () {
+    if f.Journey.CurrentStep.TimeArrival.After(time.Now()) {
+        fmt.Println(uint(time.Until(f.Journey.CurrentStep.TimeArrival).Seconds()))
+        Scheduler.AddTask(uint(time.Until(f.Journey.CurrentStep.TimeArrival).Seconds()), func () {
             f.Journey.CurrentStep.end()
         })
     } else {
@@ -304,8 +302,8 @@ func createSteps(fleet *Fleet, data []interface{}, firstNumber uint8) []*FleetJo
         //TODO implement cooldown ?
         step.TimeStart = previousTime
         step.Order = stepData["order"].(string)
-        step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Second)
-        step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Second)
+        step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
+        step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
 
         if !journeyRangeData.isOnRange(step) {
             panic(NewHttpException(400, "Step not in range", nil))
@@ -376,41 +374,18 @@ func (j *FleetJourney) removeStep(step *FleetJourneyStep) {
 
 func (step *FleetJourneyStep) end() {
     defer CatchException()
-    var hasToDeleteJourney bool = false
-    var journey *FleetJourney
-    if step.Journey.CurrentStep != nil {
-        if step.Journey.CurrentStep.Id == step.Id {
-            step.processOrder()
-            if step.NextStep != nil {
-                if step.NextStep.StepNumber > step.StepNumber {
-                    step.beginNextStep()
-                } else {
-                    panic(NewException("Potential loop in Steps, abording",nil))
-                }
-            } else {
-                step.Journey.end()
-                hasToDeleteJourney = true
-            }
-        } else {
-            // we do nothing this is an old step already finished
-            // we could delete
-        }
-        
-    } else {
+
+    if step.Id != step.Journey.CurrentStepId {
+        return
+    }
+    if step.NextStep == nil {
         step.Journey.end()
-        hasToDeleteJourney = true
     }
-    
-    // delete old step
-    journey = step.Journey
-    if err := Database.Delete(step); err != nil {
-        panic(NewException("Journey step could not be deleted", err))
-    }
-    
-    if hasToDeleteJourney {
-        if err := Database.Delete(journey); err != nil {
-            panic(NewException("Journey could not be deleted", err))
-        }
+    step.processOrder()
+    if step.NextStep.StepNumber > step.StepNumber {
+        step.beginNextStep()
+    } else {
+        panic(NewException("Potential loop in Steps, abording",nil))
     }
 }
 
@@ -429,6 +404,7 @@ func (step *FleetJourneyStep) beginNextStep(){
     step.Journey.CurrentStep = step.NextStep
     step.Journey.CurrentStepId = step.NextStepId
     step.Journey.update()
+    step.delete()
     
     var needToUpdateNextStep = false
     var defaultTime time.Time // This varaible is not set so it give the default time for unset varaible
@@ -451,9 +427,8 @@ func (step *FleetJourneyStep) beginNextStep(){
     }
     
     nextStep := getStep(step.NextStep.Id) //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.*
-    now := time.Now()
-    if now.Before(nextStep.TimeArrival){
-        Scheduler.AddTask(uint(now.Sub(nextStep.TimeArrival).Seconds()), func () {
+    if nextStep.TimeArrival.After(time.Now()) {
+        Scheduler.AddTask(uint(time.Until(nextStep.TimeArrival).Seconds()), func () {
             nextStep.end()
         })
     } else {
@@ -477,13 +452,11 @@ func (j *FleetJourney) end() {
         fleet.MapPosX = j.CurrentStep.MapPosXFinal
         fleet.MapPosY = j.CurrentStep.MapPosYFinal
         fleet.Location = nil
-        fleet.LocationId =0
+        fleet.LocationId = 0
     }
-    j.CurrentStep = nil
-    j.CurrentStepId = 0
-    j.update() //< I need to update it to breack the link to the current step so that I can remove the current step
-    // And the I will be able to delete the journey (the step points to the journey)
     fleet.update()
+
+    j.delete()
 }
 
 func insertSteps(steps []*FleetJourneyStep) {
@@ -502,6 +475,7 @@ func insertSteps(steps []*FleetJourneyStep) {
 }
 
 func (s *FleetJourneyStep) deleteStepsRecursive() {
+    fmt.Println("nok");
     if err := Database.Delete(s); err != nil {
         panic(NewException("Journey step could not be deleted", err))
     }
@@ -540,15 +514,15 @@ func (j *FleetJourney) getFleet() *Fleet{
     return fleet
 }
 
-func getAllJourneySteps() []*FleetJourneyStep {
-    steps := make([]*FleetJourneyStep, 0)
+func getAllJourneys() []*FleetJourney {
+    journeys := make([]*FleetJourney, 0)
     if err := Database.
-        Model(&steps).
-        Column("Journey.CurrentStep", "NextStep.PlanetStart", "NextStep.PlanetFinal").
+        Model(&journeys).
+        Column("CurrentStep.PlanetStart", "CurrentStep.PlanetFinal", "CurrentStep.NextStep.PlanetStart", "CurrentStep.NextStep.PlanetFinal").
         Select(); err != nil {
-            panic(NewException("steps not found on GetAllJourneySteps", err))
+            panic(NewException("Journeys could not be retrieved", err))
     }
-    return steps
+    return journeys
 }
 
 func getStep(stepId uint16) *FleetJourneyStep {
@@ -595,9 +569,22 @@ func (j *FleetJourney) update() {
     }
 }
 
+func (j *FleetJourney) delete() {
+    if err := Database.Delete(j); err != nil {
+        panic(NewException("journey could not be deleted", err))
+    }
+}
+
 func (s *FleetJourneyStep) update() {
     if err := Database.Update(s); err != nil {
         panic(NewException("step could not be updated on UpdateJourneyStep", err))
+    }
+}
+
+func (s *FleetJourneyStep) delete() {
+    fmt.Println("delete journey step", s.Id)
+    if err := Database.Delete(s); err != nil {
+        panic(NewException("Journey step could not be deleted", err))
     }
 }
 
