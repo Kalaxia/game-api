@@ -273,6 +273,20 @@ var routes = Routes{
 		api.GetConstructingShips,
 		true,
 	},
+	Route{
+		"Get Coming Fleets",
+		"GET",
+		"/api/planets/{id}/fleets/coming",
+		api.GetComingFleets,
+		true,
+	},
+	Route{
+		"Get Leaving Fleets",
+		"GET",
+		"/api/planets/{id}/fleets/leaving",
+		api.GetLeavingFleets,
+		true,
+	},
 	/************** TRADE **********/
 	Route{
 		"Create offer",
