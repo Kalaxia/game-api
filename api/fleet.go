@@ -43,15 +43,44 @@ func GetAllFleets(w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, 200, player.getFleets())
 }
 
+func GetTravellingFleets(w http.ResponseWriter, r *http.Request) {
+    SendJsonResponse(w, 200, getTravellingFleets())
+}
+
 func GetFleet(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-	fleet := getFleet(uint16(fleetId))
+    fleet := getFleet(uint16(fleetId))
 	
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
 	}
+    if fleet.Journey != nil {
+        fleet.Journey.Steps = fleet.Journey.getSteps()
+    }
 	SendJsonResponse(w, 200, fleet)
+}
+
+func GetComingFleets(w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*Player)
+	planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    
+	if (player.Id != planet.Player.Id) {
+		panic(NewHttpException(http.StatusForbidden, "", nil))
+	}
+	SendJsonResponse(w, 200, planet.getComingFleets())
+}
+
+func GetLeavingFleets(w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*Player)
+	planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    
+	if (player.Id != planet.Player.Id) {
+		panic(NewHttpException(http.StatusForbidden, "", nil))
+	}
+	SendJsonResponse(w, 200, planet.getLeavingFleets())
 }
 
 func GetPlanetFleets(w http.ResponseWriter, r *http.Request) {
@@ -133,12 +162,24 @@ func getFleet(id uint16) *Fleet {
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player.Faction", "Journey.CurrentStep", "Location.System").
+        Column("Player.Faction", "Journey.CurrentStep", "Location.System", "Location.Player.Faction").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleet not found", err))
     }
     return fleet
+}
+
+func getTravellingFleets() []Fleet {
+    fleets := make([]Fleet, 0)
+    if err := Database.
+        Model(&fleets).
+        Column("Player.Faction", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
+        Where("fleet.journey_id IS NOT NULL").
+        Select(); err != nil {
+            panic(NewHttpException(404, "Could not retrieve travelling fleets", err))
+    }
+    return fleets
 }
 
 func (p *Player) createFleet(planet *Planet) *Fleet {
@@ -159,7 +200,7 @@ func (p *Player) getFleets() []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player", "Location", "Journey.CurrentStep").
+        Column("Player", "Location", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
         Where("fleet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
@@ -167,7 +208,65 @@ func (p *Player) getFleets() []Fleet {
     return fleets
 }
 
-func  (p *Planet) getOrbitingFleets() []Fleet {
+func (p *Planet) getComingFleets() []Fleet {
+    fleets := make([]Fleet, 0)
+    steps := make([]FleetJourneyStep, 0)
+    if err := Database.
+        Model(&steps).
+        Column("Journey", "PlanetFinal").
+        Where("planet_final.id = ?", p.Id).
+        Select(); err != nil {
+            panic(NewException("Coming journey steps could not be retrieved", err))
+    }
+    if len(steps) == 0 {
+        return fleets
+    }
+    journeyIds := make([]uint16, len(steps))
+    for i, step := range steps {
+        journeyIds[i] = step.JourneyId
+    }
+
+    if err := Database.
+        Model(&fleets).
+        Column("Player.Faction").
+        WhereIn("fleet.journey_id IN (?)", journeyIds).
+        Select(); err != nil {
+            panic(NewException("Could not retrieve coming fleets", err))
+    }
+    return fleets
+}
+
+func (p *Planet) getLeavingFleets() []Fleet {
+    fleets := make([]Fleet, 0)
+    steps := make([]FleetJourneyStep, 0)
+    if err := Database.
+        Model(&steps).
+        Column("Journey", "PlanetStart").
+        Where("planet_start.id = ?", p.Id).
+        Where("step_number = 1").
+        Select(); err != nil {
+            panic(NewException("Coming journey steps could not be retrieved", err))
+    }
+    if len(steps) == 0 {
+        return fleets
+    }
+    journeyIds := make([]uint16, len(steps))
+    for i, step := range steps {
+        journeyIds[i] = step.JourneyId
+    }
+
+    if err := Database.
+        Model(&fleets).
+        Column("Player.Faction").
+        WhereIn("fleet.journey_id IN (?)", journeyIds).
+        Where("fleet.player_id = ?", p.Player.Id).
+        Select(); err != nil {
+            panic(NewException("Could not retrieve leaving fleets", err))
+    }
+    return fleets
+}
+
+func (p *Planet) getOrbitingFleets() []Fleet {
     fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).

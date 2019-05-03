@@ -180,6 +180,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get travelling fleets",
+		"GET",
+		"/api/fleets/travelling",
+		api.GetTravellingFleets,
+		true,
+	},
+	Route{
 		"Get Current Player Fleets on Planet",
 		"GET",
 		"/api/planets/{id}/fleets",
@@ -264,6 +271,20 @@ var routes = Routes{
 		"GET",
 		"/api/planets/{id}/ships/constructing",
 		api.GetConstructingShips,
+		true,
+	},
+	Route{
+		"Get Coming Fleets",
+		"GET",
+		"/api/planets/{id}/fleets/coming",
+		api.GetComingFleets,
+		true,
+	},
+	Route{
+		"Get Leaving Fleets",
+		"GET",
+		"/api/planets/{id}/fleets/leaving",
+		api.GetLeavingFleets,
 		true,
 	},
 	/************** TRADE **********/

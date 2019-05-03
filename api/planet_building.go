@@ -154,7 +154,7 @@ func (p *Planet) cancelBuilding(id uint32) {
     if building.PlanetId != p.Id {
         panic(NewHttpException(400, "Building does not belong to the given planet", nil))
     }
-    if err := Database.Delete(&building); err != nil {
+    if err := Database.Delete(building); err != nil {
         panic(NewException("Building could not be removed", err))
     }
 }
