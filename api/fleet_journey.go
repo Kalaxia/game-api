@@ -27,6 +27,7 @@ type(
         EndedAt time.Time `json:"ended_at"`
         CurrentStep *FleetJourneyStep `json:"current_step"`
         CurrentStepId uint16 `json:"-"`
+        Steps []*FleetJourneyStep `json:"steps" sql:"-"`
     }
     FleetJourneyStep struct {
         TableName struct{} `json:"-" sql:"fleet__journeys_steps"`
@@ -40,7 +41,7 @@ type(
         PlanetStart *Planet `json:"planet_start"`
         PlanetStartId uint16 `json:"-"`
         MapPosXStart float64 `json:"map_pos_x_start"`
-        MapPosYStart float64 `json:"map_pos_y_Start"`
+        MapPosYStart float64 `json:"map_pos_y_start"`
         //
         PlanetFinal *Planet `json:"planet_final"`
         PlanetFinalId uint16 `json:"-"`
@@ -85,6 +86,7 @@ type(
 )
 
 func InitFleetJourneys() {
+    defer CatchException()
     journeyTimeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_times.json")
     if err != nil {
         panic(NewException("Can't open journey time configuration file", err))
@@ -104,11 +106,16 @@ func InitFleetJourneys() {
     journeys := getAllJourneys()
     now := time.Now()
     for _, journey := range journeys { //< hic sunt dracones
+        // We do not retrieve the current step journey data in the SQL query, to avoid more JOIN statements for data we already have
+        journey.CurrentStep.JourneyId = journey.Id
+        journey.CurrentStep.Journey = journey
         if journey.CurrentStep.TimeArrival.After(now) {
+            fmt.Println("journey step not ended", journey.Id)
             Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () { // TODO review this uint
                 journey.CurrentStep.end()
             }) //< Do I need to defer that to be safe ? (see comment below)
         } else {// if the time is already passed we directly execute it
+            fmt.Println("journey step already ended", journey.Id)
             defer func () { go journey.CurrentStep.end() }() //< finishStep delete step in DB
             // defer for concurency reason
             //
@@ -140,7 +147,7 @@ func GetJourney (w http.ResponseWriter, r *http.Request){
 	SendJsonResponse(w, 200, fleet.Journey)
 }
 
-func GetFleetSteps (w http.ResponseWriter, r *http.Request){
+func GetFleetSteps(w http.ResponseWriter, r *http.Request){
     player := context.Get(r, "player").(*Player)
     fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 	fleet := getFleet(uint16(fleetId))
@@ -155,7 +162,7 @@ func GetFleetSteps (w http.ResponseWriter, r *http.Request){
     SendJsonResponse(w, 200, fleet.Journey.getSteps())
 }
 
-func SendFleetOnJourney (w http.ResponseWriter, r *http.Request){
+func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
     player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     fleet := getFleet(uint16(fleetId))
@@ -173,7 +180,7 @@ func SendFleetOnJourney (w http.ResponseWriter, r *http.Request){
     SendJsonResponse(w, 201, fleet.travel(data["steps"].([]interface{})))
 }
 
-func AddStepsToJourney (w http.ResponseWriter, r *http.Request){
+func AddStepsToJourney(w http.ResponseWriter, r *http.Request){
     player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     fleet := getFleet(uint16(fleetId))
@@ -229,8 +236,6 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
 	steps := createSteps(f, data, 0)
 	
     f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
-    
-    fmt.Println(f.Journey.EndedAt)
 	
     if err := Database.Insert(f.Journey); err != nil {
 		panic(NewHttpException(500, "Journey could not be created", err))
@@ -247,7 +252,6 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
     f.update()
     
     if f.Journey.CurrentStep.TimeArrival.After(time.Now()) {
-        fmt.Println(uint(time.Until(f.Journey.CurrentStep.TimeArrival).Seconds()))
         Scheduler.AddTask(uint(time.Until(f.Journey.CurrentStep.TimeArrival).Seconds()), func () {
             f.Journey.CurrentStep.end()
         })
@@ -314,7 +318,7 @@ func createSteps(fleet *Fleet, data []interface{}, firstNumber uint8) []*FleetJo
     return steps;
 }
 
-func (f *Fleet) addJourneySteps (data []interface{}) []*FleetJourneyStep {
+func (f *Fleet) addJourneySteps(data []interface{}) []*FleetJourneyStep {
     journey := f.Journey
     if journey == nil || journey.CurrentStep == nil {
         panic(NewHttpException(400, "Journey is already finished or does not exist", nil))
@@ -380,6 +384,7 @@ func (step *FleetJourneyStep) end() {
     }
     if step.NextStep == nil {
         step.Journey.end()
+        return
     }
     step.processOrder()
     if step.NextStep.StepNumber > step.StepNumber {
@@ -475,7 +480,6 @@ func insertSteps(steps []*FleetJourneyStep) {
 }
 
 func (s *FleetJourneyStep) deleteStepsRecursive() {
-    fmt.Println("nok");
     if err := Database.Delete(s); err != nil {
         panic(NewException("Journey step could not be deleted", err))
     }
@@ -582,7 +586,6 @@ func (s *FleetJourneyStep) update() {
 }
 
 func (s *FleetJourneyStep) delete() {
-    fmt.Println("delete journey step", s.Id)
     if err := Database.Delete(s); err != nil {
         panic(NewException("Journey step could not be deleted", err))
     }

@@ -180,6 +180,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get travelling fleets",
+		"GET",
+		"/api/fleets/travelling",
+		api.GetTravellingFleets,
+		true,
+	},
+	Route{
 		"Get Current Player Fleets on Planet",
 		"GET",
 		"/api/planets/{id}/fleets",

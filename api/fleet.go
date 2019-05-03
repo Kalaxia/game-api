@@ -43,14 +43,21 @@ func GetAllFleets(w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, 200, player.getFleets())
 }
 
+func GetTravellingFleets(w http.ResponseWriter, r *http.Request) {
+    SendJsonResponse(w, 200, getTravellingFleets())
+}
+
 func GetFleet(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-	fleet := getFleet(uint16(fleetId))
+    fleet := getFleet(uint16(fleetId))
 	
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
 	}
+    if fleet.Journey != nil {
+        fleet.Journey.Steps = fleet.Journey.getSteps()
+    }
 	SendJsonResponse(w, 200, fleet)
 }
 
@@ -133,12 +140,24 @@ func getFleet(id uint16) *Fleet {
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player.Faction", "Journey.CurrentStep", "Location.System").
+        Column("Player.Faction", "Journey.CurrentStep", "Location.System", "Location.Player.Faction").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleet not found", err))
     }
     return fleet
+}
+
+func getTravellingFleets() []Fleet {
+    fleets := make([]Fleet, 0)
+    if err := Database.
+        Model(&fleets).
+        Column("Player.Faction", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
+        Where("fleet.journey_id IS NOT NULL").
+        Select(); err != nil {
+            panic(NewHttpException(404, "Could not retrieve travelling fleets", err))
+    }
+    return fleets
 }
 
 func (p *Player) createFleet(planet *Planet) *Fleet {
@@ -159,7 +178,7 @@ func (p *Player) getFleets() []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player", "Location", "Journey.CurrentStep").
+        Column("Player", "Location", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
         Where("fleet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
