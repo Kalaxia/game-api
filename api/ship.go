@@ -98,7 +98,7 @@ func GetHangarShipGroups(w http.ResponseWriter, r *http.Request) {
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
     planet := getPlayerPlanet(uint16(planetId), player.Id)
 
-    if planet.Player.Id != player.Id {
+    if planet.Player != nil && planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
     }
     SendJsonResponse(w, 200, planet.getHangarShipGroups())
