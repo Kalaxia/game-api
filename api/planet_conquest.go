@@ -3,7 +3,7 @@ package api
 func (fleet *Fleet) conquerPlanet(planet *Planet) {
 	var lastCombat *FleetCombat
 	for _, f := range planet.getOrbitingFleets() {
-		if planet.Player.Faction.Id == f.Player.Faction.Id {
+		if planet.Player.Faction.Id == f.Player.Faction.Id && f.Player.Faction.Id != fleet.Player.Faction.Id {
 			lastCombat = fleet.engage(&f)
 
 			if !lastCombat.IsVictory {
