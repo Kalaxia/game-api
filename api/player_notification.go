@@ -49,7 +49,7 @@ func (p *Player) notify(nType string, content string, data map[string]interface{
 func (p *Player) getNotifications() {
 	notifications := make(Notifications, 0)
 
-	if err := Database.Model(&notifications).Where("player_id = ?", p.Id).Select(); err != nil {
+	if err := Database.Model(&notifications).Where("player_id = ?", p.Id).Order("created_at DESC").Select(); err != nil {
 		panic(NewHttpException(404, "players.not_found", err))
 	}
 }
