@@ -382,11 +382,11 @@ func (step *FleetJourneyStep) end() {
     if step.Id != step.Journey.CurrentStepId {
         return
     }
+    step.processOrder()
     if step.NextStep == nil {
         step.Journey.end()
         return
     }
-    step.processOrder()
     if step.NextStep.StepNumber > step.StepNumber {
         step.beginNextStep()
     } else {

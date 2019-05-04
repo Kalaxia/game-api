@@ -6,7 +6,7 @@ import(
 
 func TestAffectPopulationPoints(t *testing.T) {
 	InitDatabaseMock()
-	planet := getPlayerPlanetMock()
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	planet.affectPopulationPoints(getSettingsMock())
 
 	if planet.Settings.ServicesPoints != 3 {
@@ -41,7 +41,7 @@ func TestAffectPopulationPointsWithTooMuchPoints(t *testing.T) {
 			t.Errorf("The error should be a HTTP Exception")
 		}
 	}()
-	planet := getPlayerPlanetMock()
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	settings := getSettingsMock()
 	settings.MilitaryPoints = 15
 

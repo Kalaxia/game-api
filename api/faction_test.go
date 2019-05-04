@@ -46,6 +46,16 @@ func getServerMock() *Server {
 	}
 }
 
+func getFactionMock() *Faction {
+	return &Faction {
+		Id: 1,
+		Name: "Les Kalankars",
+		Slug: "les-kalankars",
+		Banner: "kalankars.png",
+		Description: "L'empire du bon vieux temps",
+	}
+}
+
 func getFactionsMock() []interface{} {
 	factions := make([]interface{}, 3)
 	factions[0] = map[string]interface{}{

@@ -78,6 +78,11 @@ func (p *Planet) produceResources() {
 }
 
 func (p *Planet) producePoints() {
+    p.produceBuildingPoints()
+    p.produceMilitaryPoints()
+}
+
+func (p *Planet) produceBuildingPoints() {
     buildingPoints := p.Settings.BuildingPoints
     if buildingPoints <= 0 || len(p.Buildings) == 0 {
         return

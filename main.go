@@ -28,7 +28,6 @@ func initScheduledTasks() {
 
     api.Scheduler.AddHourlyTask(func () { api.CalculatePlayersWage() })
     api.Scheduler.AddHourlyTask(func () { api.CalculatePlanetsProductions() })
-	api.Scheduler.AddHourlyTask(func () { api.CheckShipsBuildingState() })
 	
 	api.InitFleetJourneys()
 }

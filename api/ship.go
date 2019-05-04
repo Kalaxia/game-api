@@ -239,38 +239,39 @@ func (p *Player) payShipCost(prices []Price, storage *Storage, quantity uint8) u
     return points
 }
 
-func CheckShipsBuildingState() {
-    defer CatchException()
+func (p *Planet) produceMilitaryPoints() {
+    constructionGroups := p.getConstructingShips()
 
-    ships := make([]Ship, 0)
-    if err := Database.
-        Model(&ships).
-        Column("ship.*", "ConstructionState", "Hangar", "Hangar.Settings").
-        Order("ship.construction_state_id ASC").
-        Where("ship.construction_state_id IS NOT NULL").
-        Select(); err != nil {
-        panic(NewException("Constructing ships could not be retrieved", err))
+    if (len(constructionGroups) == 0) {
+        return
     }
-    currentPlanetId := uint16(0)
-    remainingPoints := uint8(0)
-    for _, ship := range ships {
-        if currentPlanetId != ship.HangarId {
-            currentPlanetId = ship.HangarId
-            remainingPoints = ship.Hangar.Settings.MilitaryPoints
-        }
+    remainingPoints := p.Settings.MilitaryPoints
+    for _, group := range constructionGroups {
         if remainingPoints < 1 {
-            continue
+            break
         }
-        neededPoints := ship.ConstructionState.Points - ship.ConstructionState.CurrentPoints
+        neededPoints := group.ConstructionState.Points - group.ConstructionState.CurrentPoints
         if neededPoints <= remainingPoints {
             remainingPoints -= neededPoints
-            ship.finishConstruction()
+            group.finishConstruction()
         } else {
-            ship.ConstructionState.CurrentPoints += remainingPoints
-            ship.ConstructionState.update()
+            group.ConstructionState.CurrentPoints += remainingPoints
+            group.ConstructionState.update()
             remainingPoints = 0
         }
     }
+}
+
+func (cg *ShipConstructionGroup) finishConstruction() {
+    ships := make([]Ship, 0)
+
+    if err := Database.Model(&ships).Where("construction_state_id = ?", cg.ConstructionState.Id).Select(); err != nil {
+        panic(NewException("Construction group ships could not be retrieved", err))
+    }
+    for _, ship := range ships {
+        ship.finishConstruction()
+    }
+    cg.ConstructionState.delete()
 }
 
 func (s *Ship) finishConstruction() {
@@ -281,6 +282,12 @@ func (s *Ship) finishConstruction() {
 func (sc *ShipConstructionState) update() {
 	if err := Database.Update(sc); err != nil {
 		panic(NewException("Ship Construction State could not be udpated", err))
+	}
+}
+
+func (sc *ShipConstructionState) delete() {
+	if err := Database.Delete(sc); err != nil {
+		panic(NewException("Ship Construction State could not be deleted", err))
 	}
 }
 

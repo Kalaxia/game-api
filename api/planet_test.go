@@ -1,10 +1,12 @@
 package api
 
-func getPlayerPlanetMock() *Planet {
+func getPlayerPlanetMock(player *Player) *Planet {
 	return &Planet{
 		Id: 1,
 		Name: "Régalion V",
 		Type: PlanetTypeArctic,
+		Player: player,
+		PlayerId: player.Id,
 		Population: 2000000,
 		Settings: &PlanetSettings{
 			ServicesPoints: 5,

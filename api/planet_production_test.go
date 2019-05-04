@@ -8,7 +8,7 @@ import(
 func TestCalculatePlanetResourcesProduction(t *testing.T) {
 	InitDatabaseMock()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
-	planet := getPlayerPlanetMock()
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	planet.Storage = getStorageMock()
 
 	planet.produceResources()
@@ -27,7 +27,7 @@ func TestCalculatePlanetResourcesProduction(t *testing.T) {
 func TestCalculatePlanetResourcesProductionWithoutStorage(t *testing.T) {
 	InitDatabaseMock()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
-	planet := getPlayerPlanetMock()
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 
 	planet.produceResources()
 
