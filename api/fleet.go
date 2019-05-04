@@ -106,7 +106,13 @@ func TransferShips(w http.ResponseWriter, r *http.Request){
     
     if player.Id != fleet.Player.Id { // the player does not own the planet
 		panic(NewHttpException(http.StatusForbidden, "", nil))
-	}
+    }
+    if fleet.isOnJourney() {
+        panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_journey", nil))
+    }
+    if fleet.Location.Player.Id != player.Id {
+        panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_foreign_planet", nil))
+    }
 	
 	nbShips := 0
 	if quantity > 0 {
