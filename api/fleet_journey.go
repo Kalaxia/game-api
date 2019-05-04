@@ -1,7 +1,6 @@
 package api
 
 import(
-    "fmt"
     "encoding/json"
     "net/http"
     "io/ioutil"
@@ -110,12 +109,10 @@ func InitFleetJourneys() {
         journey.CurrentStep.JourneyId = journey.Id
         journey.CurrentStep.Journey = journey
         if journey.CurrentStep.TimeArrival.After(now) {
-            fmt.Println("journey step not ended", journey.Id)
             Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () { // TODO review this uint
                 journey.CurrentStep.end()
             }) //< Do I need to defer that to be safe ? (see comment below)
         } else {// if the time is already passed we directly execute it
-            fmt.Println("journey step already ended", journey.Id)
             defer func () { go journey.CurrentStep.end() }() //< finishStep delete step in DB
             // defer for concurency reason
             //

@@ -311,9 +311,6 @@ func (f *Fleet) assignShips(modelId int, quantity int) int {
 }
 
 func (f *Fleet) removeShips(modelId int, quantity int) int {
-    if (f.Location == nil) {
-        panic(NewHttpException(400, "Fleet not stationed", nil))
-    }
     ships := f.getShipsByModel(modelId, quantity)
     for _, ship := range ships {
         ship.Hangar = f.Location

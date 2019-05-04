@@ -11,7 +11,7 @@ func (fleet *Fleet) conquerPlanet(planet *Planet) {
 			}
 		}
 	}
-	if lastCombat != nil && lastCombat.IsVictory {
+	if lastCombat == nil || lastCombat.IsVictory {
 		fleet.Player.notify(
 			NotificationTypeMilitary,
 			"notifications.military.planet_conquest",
@@ -20,14 +20,16 @@ func (fleet *Fleet) conquerPlanet(planet *Planet) {
 				"opponent": planet.Player,
 			},
 		)
-		planet.Player.notify(
-			NotificationTypeMilitary,
-			"notifications.military.planet_conquerred",
-			map[string]interface{}{
-				"planet": planet,
-				"opponent": fleet.Player,
-			},
-		)
+		if planet.Player != nil {
+			planet.Player.notify(
+				NotificationTypeMilitary,
+				"notifications.military.planet_conquerred",
+				map[string]interface{}{
+					"planet": planet,
+					"opponent": fleet.Player,
+				},
+			)
+		}
 		planet.changeOwner(fleet.Player)
 		planet.update()
 	}
