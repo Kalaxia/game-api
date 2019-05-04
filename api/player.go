@@ -8,6 +8,11 @@ import(
     "time"
 )
 
+const(
+    GenderMale = "male"
+    GenderFemale = "female"
+)
+
 type(
     Player struct {
         Id uint16 `json:"id"`
