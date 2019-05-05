@@ -6,7 +6,7 @@ func (fleet *Fleet) conquerPlanet(planet *Planet) {
 		if planet.Player.Faction.Id == f.Player.Faction.Id && f.Player.Faction.Id != fleet.Player.Faction.Id {
 			lastCombat = fleet.engage(&f)
 
-			if !lastCombat.IsVictory {
+			if lastCombat != nil && !lastCombat.IsVictory {
 				break
 			}
 		}

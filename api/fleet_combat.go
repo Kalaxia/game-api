@@ -79,6 +79,10 @@ func (p *Player) getCombatReports() []FleetCombat {
 func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 	attackerShips := attacker.getShips()
 	defenderShips := defender.getShips()
+
+	if len(defenderShips) == 0 {
+		return nil
+	}
 	destroyedShips := make([]uint32, 0)
 
 	nbAttackerShips := len(attackerShips)
