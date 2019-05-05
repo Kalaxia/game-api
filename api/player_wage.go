@@ -15,7 +15,7 @@ func CalculatePlayersWage() {
         players := getPlayers(offset, limit)
 
         for _, player := range players {
-          if player.IsActive==true {
+          if player.IsActive == true {
             wg.Add(1)
             go player.calculateWage(&wg)
           }
@@ -43,6 +43,7 @@ func getPlayers(offset int, limit int) []Player {
         Model(&players).
         Limit(limit).
         Offset(offset).
+        Order("id ASC").
         Select(); err != nil {
             panic(NewException("Players could not be retrieved", err))
     }
