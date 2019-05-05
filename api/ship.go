@@ -325,7 +325,7 @@ func (s *Ship) update() {
 
 func removeShipsByIds(shipIds []uint32) {
     ships := make([]Ship, 0)
-    if _, err := Database.Model(&ships).WhereIn("ship.id IN (?)", shipIds).Delete(); err != nil {
+    if _, err := Database.Model(&ships).WhereIn("ship.id IN ?", shipIds).Delete(); err != nil {
         panic(NewException("Ships could not be removed", err))
     }
 }
