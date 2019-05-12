@@ -70,6 +70,7 @@ func (p *Player) getCombatReports() []FleetCombat {
 		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
 		Where("attacker__player.id = ?", p.Id).
 		WhereOr("defender__player.id = ?", p.Id).
+		Order("end_at DESC").
 		Select(); err != nil {
 		panic(NewHttpException(500, "Could not retrieve combat reports", err))
 	}
