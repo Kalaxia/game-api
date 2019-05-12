@@ -104,7 +104,7 @@ func GetHangarShipGroups(w http.ResponseWriter, r *http.Request) {
     SendJsonResponse(w, 200, planet.getHangarShipGroups())
 }
 
-func (p *Player) createShips(planet *Planet, data map[string]interface{}) []Ship {
+func (p *Player) createShips(planet *Planet, data map[string]interface{}) *ShipConstructionGroup {
     modelId := uint32(data["model"].(map[string]interface{})["id"].(float64))
     quantity := uint8(data["quantity"].(float64))
     shipModel := p.getShipModel(modelId)
@@ -136,7 +136,11 @@ func (p *Player) createShips(planet *Planet, data map[string]interface{}) []Ship
     }
     planet.Storage.update()
     p.update()
-    return ships
+    return &ShipConstructionGroup{
+        ConstructionState: constructionState,
+        Model: shipModel,
+        Quantity: uint(quantity),
+    }
 }
 
 func (p *Planet) getConstructingShips() []ShipConstructionGroup {
