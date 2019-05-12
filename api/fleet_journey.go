@@ -170,7 +170,11 @@ func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
     
     if fleet.isOnJourney() {
 		panic(NewHttpException(400, "Fleet already on journey", nil))
-	}
+    }
+    
+    if ships := fleet.getShips(); len(ships) == 0 {
+        panic(NewHttpException(400, "journey.errors.empty_fleet", nil))
+    }
     
     data := DecodeJsonRequest(r)
     
