@@ -11,7 +11,7 @@ func CalculatePlayersWage() {
 
     var wg sync.WaitGroup
 
-    for offset := 0; offset < nbPlayers; offset +=limit {
+    for offset := 0; offset < nbPlayers; offset += limit {
         players := getPlayers(offset, limit)
 
         for _, player := range players {
@@ -31,14 +31,14 @@ func (p *Player) calculateWage(wg *sync.WaitGroup) {
     serviceWageRatio := float64(0.5)
     wage := int32(0)
     for _, planet := range p.getPlanets() {
-      wage += baseWage +  int32( math.Round( float64(planet.Settings.ServicesPoints) * serviceWageRatio))
+      wage += baseWage +  int32( math.Ceil( float64(planet.Settings.ServicesPoints) * serviceWageRatio))
     }
     p.updateWallet(wage)
     p.update()
 }
 
-func getPlayers(offset int, limit int) []Player {
-    players := make([]Player, 0)
+func getPlayers(offset int, limit int) []*Player {
+    players := make([]*Player, 0)
     if err := Database.
         Model(&players).
         Limit(limit).
