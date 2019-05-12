@@ -29,6 +29,9 @@ func (fleet *Fleet) conquerPlanet(planet *Planet) {
 					"opponent": fleet.Player,
 				},
 			)
+			if planet.Player.CurrentPlanetId == planet.Id {
+				planet.Player.relocate()
+			}
 		}
 		planet.changeOwner(fleet.Player)
 		planet.update()

@@ -172,3 +172,20 @@ func (p *Player) changeCurrentPlanet(planetId uint16) {
     p.CurrentPlanetId = planet.Id
     p.update()
 }
+
+func (p *Player) relocate() {
+    if planets := p.getPlanets(); len(planets) > 0 {
+        p.changeCurrentPlanet(planets[0].Id)
+        return
+    }
+    planets := getFactionPlanetChoices(p.Faction.Id)
+    planets[0].changeOwner(p)
+    planets[0].update()
+    p.notify(
+        NotificationTypeDiplomacy,
+        "notifications.diplomacy.relocated",
+        map[string]interface{}{
+            "planet": planets[0],
+        },
+    )
+}
