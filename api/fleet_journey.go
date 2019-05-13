@@ -105,6 +105,10 @@ func InitFleetJourneys() {
     journeys := getAllJourneys()
     now := time.Now()
     for _, journey := range journeys { //< hic sunt dracones
+        if journey.CurrentStep == nil {
+            journey.end()
+            continue
+        }
         // We do not retrieve the current step journey data in the SQL query, to avoid more JOIN statements for data we already have
         journey.CurrentStep.JourneyId = journey.Id
         journey.CurrentStep.Journey = journey
