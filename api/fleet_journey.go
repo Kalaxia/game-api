@@ -406,10 +406,7 @@ func (s *FleetJourneyStep) processOrder() {
     }
 }
 
-func (step *FleetJourneyStep) beginNextStep(){
-    step.Journey.CurrentStep = step.NextStep
-    step.Journey.CurrentStepId = step.NextStepId
-    step.Journey.update()
+func (step *FleetJourneyStep) beginNextStep() {
     step.delete()
     
     var needToUpdateNextStep = false
@@ -434,6 +431,9 @@ func (step *FleetJourneyStep) beginNextStep(){
     
     nextStep := getStep(step.NextStep.Id) //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.*
     if nextStep.TimeArrival.After(time.Now()) {
+        step.Journey.CurrentStep = nextStep
+        step.Journey.CurrentStepId = nextStep.Id
+        step.Journey.update()
         Scheduler.AddTask(uint(time.Until(nextStep.TimeArrival).Seconds()), func () {
             nextStep.end()
         })
