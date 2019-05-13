@@ -168,7 +168,7 @@ func getFleet(id uint16) *Fleet {
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player.Faction", "Journey.CurrentStep", "Location.System", "Location.Player.Faction").
+        Column("Player.Faction", "Journey.CurrentStep.PlanetStart.System", "Journey.CurrentStep.PlanetFinal.System", "Location.System", "Location.Player.Faction").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleet not found", err))
