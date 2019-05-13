@@ -407,6 +407,9 @@ func (s *FleetJourneyStep) processOrder() {
 }
 
 func (step *FleetJourneyStep) beginNextStep() {
+    step.Journey.CurrentStep = nil
+    step.Journey.CurrentStepId = 0
+    step.Journey.update()
     step.delete()
     
     var needToUpdateNextStep = false
