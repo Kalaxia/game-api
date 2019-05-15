@@ -185,6 +185,7 @@ func (p *Planet) createOffer(data map[string]interface{}) OfferInterface {
         case "models":
             offer = p.createModelOffer(data);
     }
+    WsHub.sendBroadcast(&WsMessage{ Action: "addTradeOffer", Data: offer })
     return offer
 }
 
@@ -293,6 +294,7 @@ func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
             "price": price,
         },
     )
+    WsHub.sendBroadcast(&WsMessage{ Action: "updateTradeOffer", Data: offer })
     if offer.Quantity == 0 {
         offer.delete()
         return

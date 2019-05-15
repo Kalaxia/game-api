@@ -68,3 +68,11 @@ func (h *Hub) sendTo(player *Player, message *WsMessage) {
 		client.send <- jsonData
 	}
 }
+
+func (h *Hub) sendBroadcast(message *WsMessage) {
+	jsonData, err := json.Marshal(message)
+	if err != nil {
+		panic(NewException("websocket.encoding_error", err))
+	}
+	h.broadcast <- jsonData
+}
