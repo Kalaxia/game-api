@@ -35,6 +35,9 @@ func (p *Player) calculateWage(wg *sync.WaitGroup) {
     }
     p.updateWallet(wage)
     p.update()
+	  WsHub.sendTo(p, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
+      "wallet": p.Wallet,
+    }})
 }
 
 func getPlayers(offset int, limit int) []*Player {

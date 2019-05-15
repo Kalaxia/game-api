@@ -280,12 +280,9 @@ func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
     p.Storage.update()
 
     offer.Quantity -= quantity
-    if offer.Quantity == 0 {
-        offer.delete()
-        return
-	} 
-    offer.update()
-    
+    WsHub.sendTo(offer.Location.Player, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
+        "wallet": offer.Location.Player.Wallet,
+    }})
     offer.Location.Player.notify(
         NotificationTypeTrade,
         "notifications.trade.accepted_offer",
@@ -296,6 +293,11 @@ func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
             "price": price,
         },
     )
+    if offer.Quantity == 0 {
+        offer.delete()
+        return
+	} 
+    offer.update()
 }
 
 func (o *ResourceOffer) update() {
