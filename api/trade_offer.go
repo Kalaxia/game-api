@@ -134,14 +134,20 @@ func (o *ResourceOffer) cancel() {
     o.Location.Storage.storeResource(o.Resource, int16(o.Quantity))
     o.Location.Storage.update()
     o.delete()
+
+    WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
 }
 
 func (o *ShipOffer) cancel() {
     o.delete()
+
+    WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
 }
 
 func (o ModelOffer) cancel() {
     o.delete()
+    
+    WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
 }
 
 func searchOffers(data map[string]interface{}) []OfferInterface {
