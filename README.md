@@ -107,10 +107,13 @@ Please refer to the [official documentation](https://docs.docker.com/docker-for-
 
 ### Repository setup
 The first step is to clone the repository using
+
 ```Bash
 git clone git@github.com:Kalaxia/game-api.git
 ```
+
 Once the repository is cloned you will need to clone the front in 'volumes/app' using
+
 ```Bash
 git clone git@github.com:Kalaxia/game-front.git volumes/app
 ```
@@ -125,15 +128,31 @@ Optionally you can change the other values both of the new files.  But the autho
 **Note that the following step could lead to data lost inside container with the same name as defined in `docker-compose.yml`**
 
 #### Building the container
-To build the Docker image with your new code compiled, use the following command:
+
+To compile the code and build the Docker image, make sure you are into your game-api folder (i.e.: ~/kalaxia/game-api). Then, use the following command:
 
 ```Bash
 docker-compose build
 ```
 
-Compilation errors will be displayed during the build.
+Compilation errors may be displayed during the build.
 
-To use the created image with the Docker Compose repository, you must tag it:
+To use the created image with the Docker Compose repository, it must be tagged. Make sure you have one:
+
+```Bash
+docker images
+```
+It should look like:
+
+```Bash
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+game-api_nginx      latest              8b83c9189e58        15 minutes ago      127MB
+kalaxia/api         latest              8b60273d42f4        15 minutes ago      571MB
+golang              1.12-alpine         c7330979841b        4 days ago          350MB
+nginx               latest              53f3fd8007f7        7 days ago          109MB
+```
+
+If you have something like kalaxiagameapi_api instead of kalaxia/api, use the command below:
 
 ```Bash
 docker tag kalaxiagameapi_api kalaxia/api
@@ -149,22 +168,24 @@ where the `-d` flag means to detach the container and run it in background.
 
 ### Database setup
 
-Now that the container is running you will need to create all the table in the database. In order create the database structure use
+Now that the container is running you will need to create all the table in the database. In order to create the database structure, use:
 ```Bash
 docker exec -it kalaxia_api make migrate-latest
 ```
-more information are provided in the 'Database migrations' section below.
+More information are provided in the 'Database migrations' section below.
 
 ### Setup the game
 
 To setup the game you will need to setup the [portal](https://github.com/Kalaxia/portal).
 
-You need to copy the portal public RSA key to enable communications between the server and the portal.
+Then, you need to copy the portal public RSA key to enable communications between the server and the portal.
+Firt, copy the ``rsa_vault/portal.pub`` file from the portal to ``rsa_vault`` in the game repository :
 
-Copy the ``rsa_vault/portal.pub`` file from the portal to ``rsa_vault`` in the game repository.
+```Bash
+your@machine:~/path/to/kalaxia/game-api$ cp /path/to/kalaxia/portal/rsa_vault/portal.pub .
+```
 
-The server RSA key must be copied in the portal admin dashboard when registering a machine.
-
+Then, you have to copy the server RSA key in the portal admin dashboard to register a machine (copy/paste everything from the RSA key file).
 A machine can host several game servers.
 
 ## Administration
@@ -191,11 +212,13 @@ to display the logs of the container.
 ##### Method 1
 
 Update your files locally (by instance using `git pull`).
-Then you type the command
+Then, type the command :
+
 ```Bash
 docker build -t kalaxia/api .
 docker-compose up -d api
 ```
+
 to rebuild the container and launch it. This will only rebuild the api so your database should be safe.   
 Note that the previous container will be still on your machine but will be stopped. The delete the old image please refer to the docker documentation.
 
@@ -207,9 +230,11 @@ TODO
 ### Database
 
 You can connect to the database using
+
 ```Bash
 docker-compose exec postgresql psql -U kalaxia -W kalaxia_game
 ```
+
 in this mode you can directly type SQL queries. To quit type `CTRL+D`.
 
 #### Database migrations
@@ -288,6 +313,7 @@ Your database did not migrate correctly and it is in a dirty state the following
 Let `<v>` the version given by the error message.  And `<v+1>` the version number plus one.
 
 #### Step 0 (Optional)
+
 Debug your migration files.
 Once they are debug you still need to follow the next step to go back to a clean version.
 
@@ -301,7 +327,9 @@ Read the file in 'build/migrations' which is name `<v>_*.up.sql`  and copy the c
 ##### Error cause by a down migration
 
 Read the file in 'build/migrations' which is name `<v+1>_*.down.sql`  and copy the command somewhere easily accesible for the next setp.
+
 #### Step 2
+
 Run
 ```Bash
 docker exec -it kalaxia_postgresql psql -U kalaxia kalaxia_game
@@ -314,15 +342,18 @@ If you give up on solving all the problem in the SQL command go to step 5.
 
 #### Step 3
 
-Now update the table  `schema_migrations` in the postgresql environment using
+Now update the table  `schema_migrations` in the postgresql environment using:
+
 ```SQL
 UPDATE schema_migrations SET dirty=f WHERE dirty=t;
 ```
 
-Or you can run
+Or you can run :
+
 ```Bash
 docker exec -it kalaxia_api migrate -database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable -source file://build/migrations force <v>
 ```
+
 This will tell the program that it is in the version `<v>` but this not run the SQL command. This is use to remove the dirty version state and let you continue your migration.
 
 #### Step 4
@@ -334,7 +365,8 @@ If you the error persist continue on step 5. Otherwise you can stop here.
 
 This step is only to apply if the database is very corrupted.
 **The following step will erase all data in your database.**
-You will need to erase the database by running
+You will need to erase the database by running:
+
 ```Bash
 docker exec -it kalaxia_api migrate -database postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/${POSTGRES_DB}?sslmode=disable -source file://build/migrations drop
 ```
@@ -365,6 +397,7 @@ If your contribution include some data that need to be stored in the database re
 
 In order for the application to call some function associated to an http request you need to add a new route inside `./route/route.go`.   
 By instance the route to get the planets a player control
+
 ```Go
 Route{
     "Get Player Planets", // name of the route
@@ -374,6 +407,7 @@ Route{
     true, // if the user need to be authenticated
 }
 ```
+
 Note that in the URL pattern you can pass variable like in this case using `{id}`. This is only meant to pass few and simple argument. For more complex argument prefer using json in the request.
 
 The function called should be in the package 'controller' (or 'shipController') located under the folder `./controller/`
@@ -396,6 +430,7 @@ Moreover there may be some function called `init`. These function does not take 
 The package model is located under `./model/`. It regroup all the structure definition of the object used.
 
 As an example look at the following structure.
+
 ```Go
 SystemOrbit struct {
 	TableName struct{} `json:"-" sql:"map__system_orbits"`
@@ -406,6 +441,7 @@ SystemOrbit struct {
 	System *System `json:"system"`
 }
 ```
+
 Notice the json attribute and SQL attribute. If your object need to be stored in the database do not forget to add the name of the table in the object.
 
 #### Resources
