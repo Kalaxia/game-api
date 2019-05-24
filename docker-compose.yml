@@ -8,13 +8,14 @@ networks:
 services:
     front:
         container_name: kalaxia_front
+        extends:
+            file: common_services.yml
+            service: "app_${BUILD_ENV-prod}"
         image: kalaxia/front
         env_file:
             - kalaxia.env
         networks:
             - game
-        volumes:
-            - "./volumes/app:/srv/app"
 
     api:
         container_name: kalaxia_api
