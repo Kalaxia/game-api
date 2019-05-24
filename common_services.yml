@@ -1,6 +1,0 @@
-version: '3.5'
-services:
-  app_prod: {}
-  app_dev:
-    volumes:
-      - "./volumes/app:/srv/app"

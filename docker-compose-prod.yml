@@ -13,8 +13,6 @@ services:
             - kalaxia.env
         networks:
             - game
-        volumes:
-            - "./volumes/app:/srv/app"
 
     api:
         container_name: kalaxia_api
