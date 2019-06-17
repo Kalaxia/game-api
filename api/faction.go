@@ -20,6 +20,14 @@ type Faction struct {
 	ServerId uint16 `json:"-"`
 	Server *Server `json:"-"`
 	Relations []*FactionRelation `json:"relations"`
+	Settings []*FactionSettings `json:"settings"`
+	Wallet int32 `json:"wallet"`
+}
+
+func CalculateFactionsWages() {
+	for _, faction := range getAllFactions() {
+		go faction.calculateWage()
+	}
 }
 
 func GetFactions(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +64,14 @@ func getFaction(id uint16) *Faction {
 		panic(NewHttpException(404, "Faction not found", err))
 	}
 	return faction
+}
+
+func getAllFactions() []*Faction {
+	factions := make([]*Faction, 0)
+	if err := Database.Model(&factions).Column("Relations", "Settings").Select(); err != nil {
+		panic(NewException("Could not retrieve factions", err))
+	}
+	return factions
 }
   
 func getServerFactions(serverId uint16) []*Faction {
@@ -106,6 +122,7 @@ func (s *Server) createFactions(factions []interface{}) []*Faction {
 			Description: data["description"].(string),
 			Colors: colors,
 			Banner: data["banner"].(string),
+			Wallet: 10000,
 			ServerId: s.Id,
 			Server: s,
 		}
@@ -146,4 +163,32 @@ func getFactionMembers(factionId uint16) []*Player {
 	}
 	return members
 }
-  
+
+func (f *Faction) calculateWage() {
+	defer CatchException()
+
+	planetTaxes := int32(f.getSettings(FactionSettingsPlanetTaxes).Value)
+
+	for _, planet := range f.getControlledPlanets() {
+		if planet.Player.updateWallet(-planetTaxes) {
+			f.Wallet += planetTaxes
+			planet.Player.update()
+
+		}
+	}
+	f.update()
+}
+
+func (f *Faction) getControlledPlanets() []*Planet {
+	planets := make([]*Planet, 0)
+	if err := Database.Model(&planets).Column("Player.Faction").Where("player__faction.id = ?", f.Id).Select(); err != nil {
+		panic(NewException("Could not retrieve faction controlled planets", err))
+	}
+	return planets
+}
+
+func (f *Faction) update() {
+	if err := Database.Update(f); err != nil {
+		panic(NewException("could not update faction", err))
+	}
+}
