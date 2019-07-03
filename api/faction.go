@@ -38,8 +38,13 @@ func GetFactions(w http.ResponseWriter, r *http.Request) {
 
 func GetFaction(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	player := context.Get(r, "player").(*Player)
+	faction := getFaction(uint16(id))
 
-    SendJsonResponse(w, 200, getFaction(uint16(id)))
+	if player.Faction.Id == faction.Id {
+		faction.Settings = faction.getAllSettings()
+	}
+    SendJsonResponse(w, 200, faction)
 }
 
 func GetFactionPlanetChoices(w http.ResponseWriter, r *http.Request) {

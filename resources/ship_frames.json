@@ -73,5 +73,46 @@
                 "amount": 200
             }
         ]
+    },
+    "corvette": {
+        "slug": "corvette",
+        "picture": "Corvette.svg",
+        "picto": "Corvette.svg",
+        "slots": [
+            {
+                "position": 1,
+                "top": 40,
+                "left": 40,
+                "shape": "circle",
+                "size": "medium"
+            },
+            {
+                "position": 2,
+                "top": 40,
+                "right": 40,
+                "shape": "circle",
+                "size": "medium"
+            },
+            {
+                "position": 3,
+                "bottom": 60,
+                "left": 85,
+                "shape": "triangle",
+                "size": "medium"
+            }
+        ],
+        "stats": {
+            "armor": 120
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 10
+            },
+            {
+                "type": "credits",
+                "amount": 500
+            }
+        ]
     }
 }

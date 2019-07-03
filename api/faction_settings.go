@@ -21,6 +21,7 @@ const(
 	FactionRegimeDemocracy = "democracy"
 	FactionSettingsRegime = "regime"
 	FactionSettingsPlanetTaxes = "planet_taxes"
+	FactionSettingsMotionDuration = "motion_duration"
 )
 
 func (f *Faction) getSettings(name string) *FactionSettings {
@@ -29,9 +30,18 @@ func (f *Faction) getSettings(name string) *FactionSettings {
 			return s
 		}
 	}
-	var settings *FactionSettings
-	if err := Database.Model(&settings).Where("faction_id = ?", f.Id).Where("name = ?", name).Select(); err != nil {
+	settings := &FactionSettings{}
+	if err := Database.Model(settings).Where("faction_id = ?", f.Id).Where("name = ?", name).Select(); err != nil {
 		panic(NewException("Could not retrieve faction settings", err))
+	}
+	return settings
+}
+
+func (f *Faction) getAllSettings() []*FactionSettings {
+	settings := make([]*FactionSettings, 0)
+
+	if err := Database.Model(&settings).Where("faction_id = ?", f.Id).Select(); err != nil {
+		panic(NewException("Could not retrieve all faction settings", err))
 	}
 	return settings
 }

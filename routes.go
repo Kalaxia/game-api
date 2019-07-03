@@ -401,4 +401,25 @@ var routes = Routes{
 		api.GetFactionMembers,
 		true,
 	},
+	Route{
+		"Get Faction Motions",
+		"GET",
+		"/api/factions/{id}/motions",
+		api.GetFactionMotions,
+		true,
+	},
+	Route{
+		"Create Faction Motion",
+		"POST",
+		"/api/factions/{id}/motions",
+		api.CreateFactionMotion,
+		true,
+	},
+	Route{
+		"Vote Faction Motion",
+		"POST",
+		"/api/factions/{faction_id}/motions/{id}/votes",
+		api.VoteFactionMotion,
+		true,
+	},
 }

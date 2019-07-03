@@ -21,6 +21,7 @@ func initConfigurations() {
 	api.InitRsaVault()
 	api.InitShipConfiguration()
 	api.InitPlanetConstructions()
+	api.InitFactionMotions()
 }
 
 func initScheduledTasks() {
