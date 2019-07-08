@@ -19,7 +19,7 @@ var counter uint64
 func InitScheduler() {
     counter = 0
     Scheduler = Scheduling{
-        Queue: make(map[string]Task),
+        Queue: make(map[string]Task, 0),
     }
 }
 
@@ -28,6 +28,7 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
+            defer CatchException()
             callback()
             s.RemoveTask(id)
         }),

@@ -2,6 +2,7 @@ CREATE TABLE IF NOT EXISTS faction__motions(
     id SERIAL PRIMARY KEY,
     type VARCHAR(50) NOT NULL,
     is_approved BOOLEAN NOT NULL DEFAULT false,
+    is_processed BOOLEAN NOT NULL DEFAULT false,
     data JSON NOT NULL,
     faction_id INT NOT NULL REFERENCES faction__factions(id) ON DELETE CASCADE,
     author_id INT NOT NULL REFERENCES players(id) ON DELETE CASCADE,

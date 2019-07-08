@@ -161,6 +161,14 @@ func createFactionsRelations(factions []*Faction) {
 	}
 }
 
+func (f *Faction) countMembers() int {
+	count, err := Database.Model(&Player{}).Where("faction_id = ?", f.Id).Count()
+	if err != nil {
+		panic(NewException("Could not count faction members", err))
+	}
+	return count
+}
+
 func getFactionMembers(factionId uint16) []*Player {
 	members := make([]*Player, 0)
 	if err := Database.Model(&members).Where("faction_id = ?", factionId).Select(); err != nil {
@@ -195,5 +203,13 @@ func (f *Faction) getControlledPlanets() []*Planet {
 func (f *Faction) update() {
 	if err := Database.Update(f); err != nil {
 		panic(NewException("could not update faction", err))
+	}
+}
+
+func (f *Faction) updatePlanetTaxes(taxes int) {
+	settings := f.getSettings(FactionSettingsPlanetTaxes)
+	settings.Value = taxes
+	if err := Database.Update(settings); err != nil {
+		panic(NewException("Could not update planet taxes", err))
 	}
 }
