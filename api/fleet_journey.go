@@ -105,9 +105,10 @@ func InitFleetJourneys() {
     journeys := getAllJourneys()
     now := time.Now()
     for _, journey := range journeys { //< hic sunt dracones
+        journey.Steps = journey.getSteps()
         if journey.CurrentStep == nil {
-            journey.end()
-            continue
+            journey.CurrentStep = journey.Steps[0]
+            journey.CurrentStepId = journey.CurrentStep.Id
         }
         // We do not retrieve the current step journey data in the SQL query, to avoid more JOIN statements for data we already have
         journey.CurrentStep.JourneyId = journey.Id
@@ -395,7 +396,7 @@ func (step *FleetJourneyStep) end() {
     if step.NextStep.StepNumber > step.StepNumber {
         step.beginNextStep()
     } else {
-        panic(NewException("Potential loop in Steps, abording",nil))
+        panic(NewException("Potential loop in Steps, aborting",nil))
     }
 }
 
@@ -450,8 +451,6 @@ func (step *FleetJourneyStep) beginNextStep() {
 
 func (j *FleetJourney) end() {
     fleet := j.getFleet()
-    j = getJourney(j.Id) // we refresh the journey to get all the data
-    // NOTE ^ this is necessary
     
     fleet.Journey = nil
     fleet.JourneyId = 0
@@ -566,6 +565,7 @@ func (j *FleetJourney) getSteps() []*FleetJourneyStep {
         Model(&steps).
         Column("Journey.CurrentStep", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","PlanetFinal.System", "PlanetStart.System").
         Where("fleet_journey_step.journey_id = ?", j.Id).
+        Order("fleet_journey_step.step_number ASC").
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found on GetStepsById", err))
     }

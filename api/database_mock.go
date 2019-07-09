@@ -19,7 +19,11 @@ func (tc *TestDatabase) Insert(model ...interface{}) error {
 	return nil
 }
 
-func (TestDatabase) Update(model interface{}) error {
+func (tc *TestDatabase) Update(model interface{}) error {
+	return nil
+}
+
+func (tc *TestDatabase) Delete(model interface{}) error {
 	return nil
 }
 

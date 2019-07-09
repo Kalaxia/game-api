@@ -19,7 +19,7 @@ var counter uint64
 func InitScheduler() {
     counter = 0
     Scheduler = Scheduling{
-        Queue: make(map[string]Task),
+        Queue: make(map[string]Task, 0),
     }
 }
 
@@ -28,11 +28,22 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
+            defer CatchException()
             callback()
             s.RemoveTask(id)
         }),
     }
     s.Queue[id] = task
+}
+
+func (s *Scheduling) AddDailyTask(callback func()) {
+    now := time.Now()
+    nextDay := time.Date(now.Year(), now.Month(), now.Day() + 1, 0, 0, 0, 0, time.UTC)
+
+    s.AddTask(uint(time.Until(nextDay).Seconds() + 1), func() {
+        callback()
+        s.AddDailyTask(callback)
+    })
 }
 
 func (s *Scheduling) AddHourlyTask(callback func()) {
@@ -65,7 +76,7 @@ func (s *Scheduling) CancelTask(id string) {
 
 func getNewIdForTask () string {
     id := string(counter)+"-"+ time.Now().Format(time.UnixDate) // this sould be more robust than a random number
-    if counter == 18446744073709551615{ // maxvalue for uint64
+    if counter == 18446744073709551615 { // maxvalue for uint64
         counter = 0
     } else {
         counter++
