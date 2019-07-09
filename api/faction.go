@@ -21,7 +21,7 @@ type Faction struct {
 	Server *Server `json:"-"`
 	Relations []*FactionRelation `json:"relations"`
 	Settings []*FactionSettings `json:"settings"`
-	Wallet int32 `json:"wallet"`
+	Wallet int32 `json:"wallet" sql:",notnull"`
 }
 
 func CalculateFactionsWages() {
