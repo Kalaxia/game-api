@@ -41,9 +41,8 @@ func GetFaction(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	faction := getFaction(uint16(id))
 
-	if player.Faction.Id == faction.Id {
-		faction.Settings = faction.getAllSettings()
-	}
+	faction.Settings = faction.getAllSettings(player.Faction.Id != faction.Id)
+	
     SendJsonResponse(w, 200, faction)
 }
 

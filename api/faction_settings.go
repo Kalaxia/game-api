@@ -11,6 +11,7 @@ type(
 		Id uint16 `json:"-"`
 		Faction *Faction `json:"faction"`
 		FactionId uint16 `json:"-"`
+		IsPublic bool `json:"is_public" sql:",notnull"`
 		Name string `json:"name"`
 		Value int `json:"value"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -37,10 +38,15 @@ func (f *Faction) getSettings(name string) *FactionSettings {
 	return settings
 }
 
-func (f *Faction) getAllSettings() []*FactionSettings {
+func (f *Faction) getAllSettings(publicOnly bool) []*FactionSettings {
 	settings := make([]*FactionSettings, 0)
 
-	if err := Database.Model(&settings).Where("faction_id = ?", f.Id).Select(); err != nil {
+	query := Database.Model(&settings).Where("faction_id = ?", f.Id)
+
+	if publicOnly {
+		query.Where("is_public = ?", true)
+	}
+	if err := query.Select(); err != nil {
 		panic(NewException("Could not retrieve all faction settings", err))
 	}
 	return settings
