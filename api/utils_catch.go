@@ -52,6 +52,16 @@ func CatchException() {
     if r == nil {
         return
     }
+    if exception, ok := r.(*HttpException); ok {
+        message := ""
+        if exception.Exception.Error != nil {
+            message = "; [Error]: " + exception.Exception.Error.Error()
+        }
+        if exception.Exception.Message != "" || message != "" {
+            log.Println("[Exception]: " + exception.Exception.Message + message)
+        }
+        return
+    }
     if exception, ok := r.(*Exception); ok {
         message := ""
         if exception.Error != nil {
