@@ -207,6 +207,9 @@ func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer
     offer.LocationId = p.Id
     offer.Location = p
     offer.CreatedAt = time.Now()
+    if offer.Price < 1 {
+        panic(NewHttpException(400, "trade.offers.invalid_price", nil))
+    }
     if offer.Quantity < offer.LotQuantity {
         panic(NewHttpException(400, "Lot quantity cannot be lesser than total quantity", nil))
     }
