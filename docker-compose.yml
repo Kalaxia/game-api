@@ -20,12 +20,14 @@ services:
         container_name: kalaxia_api
         build: .
         image: kalaxia/api
+        depends_on:
+            - postgresql
         env_file:
             - kalaxia.env
         networks:
             - game
         volumes:
-            - "./rsa_vault:/go/src/kalaxia-game-api/rsa_vault"
+            - ".:/go/src/kalaxia-game-api"
 
     nginx:
         container_name: kalaxia_nginx
