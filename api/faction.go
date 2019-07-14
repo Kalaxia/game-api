@@ -54,8 +54,13 @@ func GetFactionPlanetChoices(w http.ResponseWriter, r *http.Request) {
 
 func GetFactionMembers(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	player := context.Get(r, "player").(*Player)
+	faction := getFaction(uint16(id))
 
-    SendJsonResponse(w, 200, getFactionMembers(uint16(id)))
+	if player.Faction.Id != faction.Id {
+		panic(NewHttpException(403, "forbidden", nil))
+	}
+    SendJsonResponse(w, 200, faction.getMembers())
 }
 
 func getFaction(id uint16) *Faction {
@@ -168,9 +173,9 @@ func (f *Faction) countMembers() int {
 	return count
 }
 
-func getFactionMembers(factionId uint16) []*Player {
+func (f *Faction) getMembers() []*Player {
 	members := make([]*Player, 0)
-	if err := Database.Model(&members).Where("faction_id = ?", factionId).Select(); err != nil {
+	if err := Database.Model(&members).Where("faction_id = ?", f.Id).Select(); err != nil {
 		return members
 	}
 	return members
@@ -202,6 +207,12 @@ func (f *Faction) getControlledPlanets() []*Planet {
 func (f *Faction) update() {
 	if err := Database.Update(f); err != nil {
 		panic(NewException("could not update faction", err))
+	}
+}
+
+func (f *Faction) notify(nType string, content string, data map[string]interface{}) {
+	for _, member := range f.getMembers() {
+		member.notify(nType, content, data)
 	}
 }
 

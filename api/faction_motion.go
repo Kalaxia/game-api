@@ -179,6 +179,9 @@ func (f *Faction) createMotion(author *Player, mType string, data map[string]int
 	Scheduler.AddTask(uint(time.Until(motion.EndedAt)), func() {
 		motion.processResults()
 	})
+	f.notify(NotificationTypeFaction, "faction.motions.new_motion", map[string]interface{}{
+		"motion": motion,
+	})
 	return motion
 }
 
@@ -275,6 +278,9 @@ func (m *FactionMotion) processResults() {
 	if err := Database.Update(m); err != nil {
 		panic(NewException("Could not save motion result", err))
 	}
+	m.Faction.notify(NotificationTypeFaction, "faction.motions.motion_results", map[string]interface{}{
+		"motion": m,
+	})
 }
 
 func (f *Faction) getMotion(id uint32) *FactionMotion {
