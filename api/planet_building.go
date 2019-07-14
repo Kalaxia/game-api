@@ -52,7 +52,7 @@ type(
 )
 
 func InitPlanetConstructions() {
-    defer CatchException()
+    defer CatchException(nil)
     buildingsDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/buildings.json")
     if err != nil {
         panic(NewException("Can't open buildings configuration file", err))

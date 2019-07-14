@@ -24,7 +24,7 @@ var framesData map[string]ShipFrame
 var modulesData map[string]ShipModule
 
 func InitShipConfiguration() {
-    defer CatchException()
+    defer CatchException(nil)
     framesDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/ship_frames.json")
     if err != nil {
         panic(NewException("Can't open ship frames configuration file", err))

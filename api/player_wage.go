@@ -26,7 +26,7 @@ func CalculatePlayersWage() {
 
 func (p *Player) calculateWage(wg *sync.WaitGroup) {
     defer wg.Done()
-    defer CatchException()
+    defer CatchException(nil)
     baseWage := int32(50)
     serviceWageRatio := float64(0.5)
     wage := int32(0)

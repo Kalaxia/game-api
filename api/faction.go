@@ -177,7 +177,7 @@ func getFactionMembers(factionId uint16) []*Player {
 }
 
 func (f *Faction) calculateWage() {
-	defer CatchException()
+	defer CatchException(nil)
 
 	planetTaxes := int32(f.getSettings(FactionSettingsPlanetTaxes).Value)
 

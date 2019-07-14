@@ -85,7 +85,7 @@ type(
 )
 
 func InitFleetJourneys() {
-    defer CatchException()
+    defer CatchException(nil)
     journeyTimeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_times.json")
     if err != nil {
         panic(NewException("Can't open journey time configuration file", err))
@@ -383,7 +383,7 @@ func (j *FleetJourney) removeStep(step *FleetJourneyStep) {
 // internal logic
 
 func (step *FleetJourneyStep) end() {
-    defer CatchException()
+    defer CatchException(nil)
 
     if step.Id != step.Journey.CurrentStepId {
         return

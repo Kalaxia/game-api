@@ -15,7 +15,7 @@ func ErrorHandler(next http.HandlerFunc) http.HandlerFunc {
 }
 
 func CatchHttpException(w http.ResponseWriter) {
-    if isError, code, message := CatchException(); isError {
+    if isError, code, message := CatchException(recover()); isError {
         SendJsonResponse(w, code, &HttpException{
             Exception: Exception{ Message: message },
             Code: code,
@@ -23,10 +23,12 @@ func CatchHttpException(w http.ResponseWriter) {
     }
 }
 
-func CatchException() (bool, int, string) {
-    r := recover()
+func CatchException(r interface{}) (bool, int, string) {
     if r == nil {
-        return false, 200, ""
+        r := recover()
+        if r == nil {
+            return false, 200, ""
+        }
     }
     finalMessage := "Internal server error"
     code := 500
@@ -53,7 +55,7 @@ func CatchException() (bool, int, string) {
         log.Println("[Error]: " + err.Error())
     }
     pc := make([]uintptr, 10)
-    if n := runtime.Callers(0, pc); n > 0 {
+    if n := runtime.Callers(0, pc); code >= 500 && n > 0 {
         logFrames(pc, n)
     }
     return true, code, finalMessage

@@ -52,7 +52,7 @@ func getPlanetsById(ids []uint16) []*Planet {
 
 func calculatePlanetProduction(planet *Planet, wg *sync.WaitGroup) {
     defer wg.Done()
-    defer CatchException()
+    defer CatchException(nil)
 
 	planet.produceResources()
 	planet.producePoints()

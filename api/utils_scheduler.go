@@ -28,7 +28,7 @@ func (s *Scheduling) AddTask(seconds uint, callback func()) {
     task := Task{
         Id: id,
         Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
-            defer CatchException()
+            defer CatchException(nil)
             callback()
             s.RemoveTask(id)
         }),
