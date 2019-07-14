@@ -205,6 +205,17 @@ func (f *Faction) update() {
 	}
 }
 
+func (f *Faction) validatePlanetTaxesMotion(taxes int) {
+	settings := f.getSettings(FactionSettingsPlanetTaxes)
+
+	if settings.Value == taxes {
+		panic(NewHttpException(400, "faction.motions.types.planet_taxes.same_value", nil))
+	}
+	if taxes < 0 {
+		panic(NewHttpException(400, "faction.motions.types.planet_taxes.invalid_value", nil))
+	}
+}
+
 func (f *Faction) updatePlanetTaxes(taxes int) {
 	settings := f.getSettings(FactionSettingsPlanetTaxes)
 	settings.Value = taxes

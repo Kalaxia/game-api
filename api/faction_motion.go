@@ -172,6 +172,7 @@ func (f *Faction) createMotion(author *Player, mType string, data map[string]int
 		CreatedAt: time.Now(),
 		EndedAt: time.Now().Add(time.Hour * time.Duration(f.getSettings(FactionSettingsMotionDuration).Value)),
 	}
+	motion.validate()
 	if err := Database.Insert(motion); err != nil {
 		panic(NewException("Could not create faction motion", err))
 	}
@@ -306,6 +307,16 @@ func scheduleInProgressMotions() {
 		Scheduler.AddTask(uint(time.Until(m.EndedAt)), func() {
 			m.processResults()
 		})
+	}
+}
+
+func (m *FactionMotion) validate() {
+	switch (m.Type) {
+		case MotionTypePlanetTaxes:
+			m.Faction.validatePlanetTaxesMotion(int(m.Data["taxes"].(float64)))
+			break
+		default:
+			panic(NewHttpException(400, "faction.motions.invalid_type", nil))
 	}
 }
 
