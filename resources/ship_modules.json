@@ -208,5 +208,152 @@
                 "amount": 60
             }
         ]
+    },
+    "torpedo-launcher-bazuri": {
+        "picture": "",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
+        "slug": "torpedo-launcher-bazuri",
+        "type": "weapon",
+        "shape": "circle",
+        "size": "medium",
+        "scores": {
+            "corvette": 40,
+            "frigate": 75,
+            "cruiser": 60
+        },
+        "stats": {
+            "nb_shots": 1,
+            "damage": 400,
+            "precision": 40
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 10
+            },
+            {
+                "type": "credits",
+                "amount": 500
+            },
+            {
+                "type": "resource",
+                "resource": "cristal",
+                "amount": 300
+            },
+            {
+                "type": "resource",
+                "resource": "red-ore",
+                "amount": 250
+            }
+        ]
+    },
+    "laser-canon-helzir": {
+        "picture": "",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
+        "slug": "laser-canon-helzir",
+        "type": "weapon",
+        "shape": "circle",
+        "size": "medium",
+        "scores": {
+            "corvette": 40,
+            "frigate": 50,
+            "cruiser": 60
+        },
+        "stats": {
+            "nb_shots": 2,
+            "damage": 80,
+            "precision": 50
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 8
+            },
+            {
+                "type": "credits",
+                "amount": 180
+            },
+            {
+                "type": "resource",
+                "resource": "cristal",
+                "amount": 100
+            },
+            {
+                "type": "resource",
+                "resource": "geode",
+                "amount": 150
+            }
+        ]
+    },
+    "laser-blaster-furyo": {
+        "picture": "",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
+        "slug": "laser-blaster-furyo",
+        "type": "weapon",
+        "shape": "circle",
+        "size": "large",
+        "scores": {
+            "cruiser": 120
+        },
+        "stats": {
+            "nb_shots": 1,
+            "damage": 500,
+            "precision": 30
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 18
+            },
+            {
+                "type": "credits",
+                "amount": 1200
+            },
+            {
+                "type": "resource",
+                "resource": "cristal",
+                "amount": 250
+            },
+            {
+                "type": "resource",
+                "resource": "emerald",
+                "amount": 140
+            }
+        ]
+    },
+    "laser-canon-barrage": {
+        "picture": "",
+        "picture_flip_x": true,
+        "picture_flip_y": false,
+        "slug": "laser-canon-barrage",
+        "type": "weapon",
+        "shape": "circle",
+        "size": "large",
+        "scores": {
+            "cruiser": 80
+        },
+        "stats": {
+            "nb_shots": 10,
+            "damage": 50,
+            "precision": 20
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 25
+            },
+            {
+                "type": "credits",
+                "amount": 60
+            },
+            {
+                "type": "resource",
+                "resource": "cristal",
+                "amount": 200
+            }
+        ]
     }
 }

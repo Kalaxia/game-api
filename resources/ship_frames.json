@@ -1,20 +1,19 @@
 {
-    "fighter": {
-        "slug": "fighter",
-        "picture": "chasseur.png",
-        "picto": "chasseur_64px.png",
+    "light-hunter": {
+        "slug": "light-hunter",
+        "picture": "light_hunter.svg",
         "slots": [
             {
                 "position": 1,
                 "top": 50,
-                "left": 95,
+                "left": 125,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 2,
                 "bottom": 60,
-                "left": 95,
+                "left": 125,
                 "shape": "triangle",
                 "size": "medium"
             }
@@ -33,29 +32,28 @@
             }
         ]
     },
-    "bomber": {
-        "slug": "bomber",
-        "picture": "bombardier.png",
-        "picto": "bombardier_64px.png",
+    "battle-runner": {
+        "slug": "battle-runner",
+        "picture": "battle_runner.svg",
         "slots": [
             {
                 "position": 1,
                 "top": 40,
-                "left": 40,
+                "left": 60,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 2,
                 "top": 40,
-                "right": 40,
+                "right": 60,
                 "shape": "circle",
                 "size": "small"
             },
             {
                 "position": 3,
                 "bottom": 60,
-                "left": 85,
+                "left": 110,
                 "shape": "triangle",
                 "size": "medium"
             }
@@ -74,35 +72,135 @@
             }
         ]
     },
-    "corvette": {
-        "slug": "corvette",
-        "picture": "Corvette.svg",
-        "picto": "Corvette.svg",
+    "fray-breaker": {
+        "slug": "fray-breaker",
+        "picture": "fray_breaker.svg",
         "slots": [
             {
                 "position": 1,
                 "top": 40,
-                "left": 40,
+                "left": 110,
+                "shape": "circle",
+                "size": "medium"
+            },
+            {
+                "position": 2,
+                "bottom": 185,
+                "left": 60,
+                "shape": "circle",
+                "size": "small"
+            },
+            {
+                "position": 3,
+                "top": 150,
+                "right": 60,
+                "shape": "square",
+                "size": "medium"
+            },
+            {
+                "position": 4,
+                "bottom": 100,
+                "left": 70,
+                "shape": "triangle",
+                "size": "medium"
+            },
+            {
+                "position": 5,
+                "bottom": 100,
+                "right": 60,
+                "shape": "triangle",
+                "size": "medium"
+            }
+        ],
+        "stats": {
+            "armor": 200
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 12
+            },
+            {
+                "type": "credits",
+                "amount": 900
+            }
+        ]
+    },
+    "zartanyas-eye": {
+        "slug": "zartanyas-eye",
+        "picture": "zartanyas_eye.svg",
+        "slots": [
+            {
+                "position": 1,
+                "top": 30,
+                "left": 135,
+                "shape": "circle",
+                "size": "medium"
+            },
+            {
+                "position": 2,
+                "bottom": 150,
+                "left": 135,
+                "shape": "triangle",
+                "size": "small"
+            }
+        ],
+        "stats": {
+            "armor": 80
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 8
+            },
+            {
+                "type": "credits",
+                "amount": 300
+            }
+        ]
+    },
+    "sullern-terror": {
+        "slug": "sullern-terror",
+        "picture": "sullern_terror.svg",
+        "slots": [
+            {
+                "position": 1,
+                "top": 40,
+                "left": 55,
                 "shape": "circle",
                 "size": "medium"
             },
             {
                 "position": 2,
                 "top": 40,
-                "right": 40,
+                "right": 55,
                 "shape": "circle",
                 "size": "medium"
             },
             {
                 "position": 3,
-                "bottom": 60,
-                "left": 85,
+                "top": 150,
+                "left": 65,
                 "shape": "triangle",
                 "size": "medium"
+            },
+            {
+                "position": 4,
+                "top": 150,
+                "right": 65,
+                "shape": "triangle",
+                "size": "medium"
+            },
+            {
+                "position": 5,
+                "bottom": 60,
+                "right": 150,
+                "shape": "triangle",
+                "size": "small"
             }
         ],
         "stats": {
-            "armor": 120
+            "armor": 250
         },
         "price": [
             {
@@ -111,7 +209,54 @@
             },
             {
                 "type": "credits",
-                "amount": 500
+                "amount": 1500
+            }
+        ]
+    },
+    "tenium-bane": {
+        "slug": "tenium-bane",
+        "picture": "tenium_bane.svg",
+        "slots": [
+            {
+                "position": 1,
+                "top": 40,
+                "left": 130,
+                "shape": "circle",
+                "size": "large"
+            },
+            {
+                "position": 2,
+                "top": 120,
+                "left": 130,
+                "shape": "square",
+                "size": "medium"
+            },
+            {
+                "position": 3,
+                "top": 200,
+                "left": 130,
+                "shape": "square",
+                "size": "medium"
+            },
+            {
+                "position": 4,
+                "bottom": 60,
+                "left": 130,
+                "shape": "triangle",
+                "size": "medium"
+            }
+        ],
+        "stats": {
+            "armor": 300
+        },
+        "price": [
+            {
+                "type": "points",
+                "amount": 20
+            },
+            {
+                "type": "credits",
+                "amount": 1200
             }
         ]
     }
