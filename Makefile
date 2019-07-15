@@ -16,3 +16,8 @@ coveralls-ci:
 		go get github.com/mattn/goveralls
 		go test -v -covermode=count -coverprofile=coverage.out ./...
 		goveralls -coverprofile=coverage.out -service=travis-ci -repotoken ${COVERALLS_REPO_TOKEN}
+
+recompile:
+
+		docker-compose exec api go install
+		docker-compose restart api
