@@ -1,39 +1,46 @@
 package api
 
-func (fleet *Fleet) conquerPlanet(planet *Planet) {
-	var lastCombat *FleetCombat
-	for _, f := range planet.getOrbitingFleets() {
-		if planet.Player.Faction.Id == f.Player.Faction.Id && f.Player.Faction.Id != fleet.Player.Faction.Id {
-			lastCombat = fleet.engage(&f)
-
-			if lastCombat != nil && !lastCombat.IsVictory {
-				break
-			}
-		}
+func (f *Fleet) conquerPlanet(p *Planet) {
+	if isVictorious := f.attack(p); !isVictorious {
+		return
 	}
-	if lastCombat == nil || lastCombat.IsVictory {
-		fleet.Player.notify(
+	p.notifyConquest(f)
+	p.changeOwner(f.Player)
+}
+
+func (p *Planet) notifyConquest(f *Fleet) {
+	f.Player.notify(
+		NotificationTypeMilitary,
+		"notifications.military.planet_conquest",
+		map[string]interface{}{
+			"planet": p,
+			"opponent": p.Player,
+		},
+	)
+	if p.Player != nil {
+		p.Player.notify(
 			NotificationTypeMilitary,
-			"notifications.military.planet_conquest",
+			"notifications.military.planet_conquerred",
 			map[string]interface{}{
-				"planet": planet,
-				"opponent": planet.Player,
+				"planet": p,
+				"opponent": f.Player,
 			},
 		)
-		if planet.Player != nil {
-			planet.Player.notify(
-				NotificationTypeMilitary,
-				"notifications.military.planet_conquerred",
-				map[string]interface{}{
-					"planet": planet,
-					"opponent": fleet.Player,
-				},
-			)
-			if planet.Player.CurrentPlanetId == planet.Id {
-				planet.Player.relocate()
-			}
-		}
-		planet.changeOwner(fleet.Player)
-		planet.update()
 	}
+}
+
+func (fleet *Fleet) attack(p *Planet) bool {
+	for _, f := range p.getOrbitingFleets() {
+		if !f.willEngage(fleet, p) {
+			continue
+		}
+		if combat := fleet.engage(&f); combat != nil && !combat.IsVictory {
+			return false
+		}
+	}
+	return true
+}
+
+func (f *Fleet) willEngage(fleet *Fleet, p *Planet) bool {
+	return p.Player.Faction.Id == f.Player.Faction.Id && f.Player.Faction.Id != fleet.Player.Faction.Id
 }

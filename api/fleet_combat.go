@@ -80,31 +80,14 @@ func (p *Player) getCombatReports() []FleetCombat {
 func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 	attackerShips := attacker.getShips()
 	defenderShips := defender.getShips()
-
-	if len(defenderShips) == 0 {
-		return nil
-	}
 	destroyedShips := make([]uint32, 0)
-
 	nbAttackerShips := len(attackerShips)
 	nbDefenderShips := len(defenderShips)
 
-	combat := &FleetCombat {
-		Attacker: attacker,
-		AttackerId: attacker.Id,
-		Defender: defender,
-		DefenderId: defender.Id,
-
-		AttackerShips: formatCombatShips(attackerShips),
-		DefenderShips: formatCombatShips(defenderShips),
-
-		AttackerLosses: make(map[string]uint16, 0),
-		DefenderLosses: make(map[string]uint16, 0),
-
-		ShipModels: make(map[uint][]*ShipSlot, 0),
-
-		BeginAt: time.Now(),
+	if nbDefenderShips == 0 {
+		return nil
 	}
+	combat := attacker.newCombat(defender, attackerShips, defenderShips)
 
 	for nbAttackerShips > 0 && nbDefenderShips > 0 {
 		attackerShips, defenderShips, destroyedShips = combat.fightRound(attackerShips, defenderShips, destroyedShips)
@@ -129,6 +112,25 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 	return combat
 }
 
+func (f *Fleet) newCombat(opponent *Fleet, partyShips []Ship, opponentShips []Ship) *FleetCombat {
+	return &FleetCombat {
+		Attacker: f,
+		AttackerId: f.Id,
+		Defender: opponent,
+		DefenderId: opponent.Id,
+
+		AttackerShips: formatCombatShips(partyShips),
+		DefenderShips: formatCombatShips(opponentShips),
+
+		AttackerLosses: make(map[string]uint16, 0),
+		DefenderLosses: make(map[string]uint16, 0),
+
+		ShipModels: make(map[uint][]*ShipSlot, 0),
+
+		BeginAt: time.Now(),
+	}
+}
+
 func (f *Fleet) notifyCombatEnding(report *FleetCombat, opponent *Fleet, state string) {
 	f.Player.notify(
 		NotificationTypeMilitary,
@@ -142,45 +144,31 @@ func (f *Fleet) notifyCombatEnding(report *FleetCombat, opponent *Fleet, state s
 }
 
 func (c *FleetCombat) fightRound(attackerShips []Ship, defenderShips []Ship, destroyedShips []uint32) ([]Ship, []Ship, []uint32) {
-	for _, ship := range defenderShips {
-		if _, ok := c.ShipModels[ship.Model.Id]; !ok {
-			c.ShipModels[ship.Model.Id] = ship.Model.gatherData()
-		}
-		shipData := c.ShipModels[ship.Model.Id]
-		index, target := pickRandomTarget(attackerShips)
-
-		openFire(shipData, target)
-
-		if float64(target.Damage) >= math.Ceil(float64(target.Model.Stats["armor"]) / 10) {
-			attackerShips = append(attackerShips[:index], attackerShips[index+1:]...)
-			destroyedShips = append(destroyedShips, target.Id)
-			c.addLoss("attacker", target)
-
-			if (len(attackerShips) == 0) {
-				break
-			}
-		}
-	}
-	for _, ship := range attackerShips {
-		if _, ok := c.ShipModels[ship.Model.Id]; !ok {
-			c.ShipModels[ship.Model.Id] = ship.Model.gatherData()
-		}
-		shipData := c.ShipModels[ship.Model.Id]
-		index, target := pickRandomTarget(defenderShips)
-
-		openFire(shipData, target)
-
-		if float64(target.Damage) >= math.Ceil(float64(target.Model.Stats["armor"]) / 10) {
-			defenderShips = append(defenderShips[:index], defenderShips[index+1:]...)
-			destroyedShips = append(destroyedShips, target.Id)
-			c.addLoss("defender", target)
-
-			if (len(defenderShips) == 0) {
-				break
-			}
-		}
-	}
+	attackerShips, destroyedShips = c.partyRound("attacker", defenderShips, attackerShips, destroyedShips)
+	defenderShips, destroyedShips = c.partyRound("defender", attackerShips, defenderShips, destroyedShips)
 	return attackerShips, defenderShips, destroyedShips
+}
+
+func (c *FleetCombat) partyRound(opponentParty string, partyShips []Ship, opponentShips []Ship, destroyedShips []uint32) ([]Ship, []uint32) {
+	for _, ship := range partyShips {
+		if _, ok := c.ShipModels[ship.Model.Id]; !ok {
+			c.ShipModels[ship.Model.Id] = ship.Model.gatherData()
+		}
+		shipData := c.ShipModels[ship.Model.Id]
+		index, target := pickRandomTarget(opponentShips)
+
+		damage := openFire(shipData, target)
+		target.receiveDamage(damage)
+
+		if target.isDestroyed() {
+			opponentShips, destroyedShips = c.destroyShip(opponentParty, index, opponentShips, destroyedShips)
+
+			if len(opponentShips) == 0 {
+				break
+			}
+		}
+	}
+	return opponentShips, destroyedShips
 }
 
 func pickRandomTarget(ships []Ship) (int, *Ship) {
@@ -188,23 +176,44 @@ func pickRandomTarget(ships []Ship) (int, *Ship) {
 	return index, &ships[index]
 }
 
-func openFire(attackerSlots []*ShipSlot, target *Ship) {
-	armor := int8(target.Model.Stats["armor"])
+func openFire(attackerSlots []*ShipSlot, target *Ship) uint8 {
+	damage := uint8(0)
 
 	for _, slot := range attackerSlots {
-		if slot.Module.Type != "weapon" {
-			continue
-		}
-		for i := 0; uint16(i) < slot.Module.Stats["nb_shots"]; i++ {
-			if uint16(rand.Intn(100)) > slot.Module.Stats["precision"] {
-				continue
-			}
-			armor -= int8(slot.Module.Stats["damage"])
-			if armor < 0 {
-				target.Damage = uint8(math.Abs(float64(armor)))
-			}
+		if slot.canShoot() {
+			damage += slot.shoot(target)
 		}
 	}
+	return damage
+}
+
+func (s *ShipSlot) shoot(target *Ship) uint8 {
+	damage := uint8(0)
+	for i := 0; uint16(i) < s.Module.Stats["nb_shots"]; i++ {
+		if s.doesHit(target) {
+			damage += uint8(s.Module.Stats["damage"])
+		}
+	}
+	return damage
+}
+
+func (s *ShipSlot) canShoot() bool {
+	return s.Module != nil && s.Module.Type == "weapon"
+}
+
+func (s *ShipSlot) doesHit(target *Ship) bool {
+	return uint16(rand.Intn(100)) <= s.Module.Stats["precision"]
+}
+
+func (s *Ship) receiveDamage(damage uint8) {
+	armor := uint8(s.Model.Stats["armor"])
+	if armor < damage {
+		s.Damage = uint8(math.Abs(float64(armor - damage)))
+	}
+}
+
+func (s *Ship) isDestroyed() bool {
+	return float64(s.Damage) >= math.Ceil(float64(s.Model.Stats["armor"]) / 10)
 }
 
 func (sm *ShipModel) gatherData() []*ShipSlot {
@@ -229,6 +238,13 @@ func formatCombatShips(ships []Ship) map[string]uint16 {
 		formatted[ship.Model.Type]++
 	}
 	return formatted
+}
+
+func (c *FleetCombat) destroyShip(party string, index int, ships []Ship, destroyedShips []uint32) ([]Ship, []uint32) {
+	c.addLoss(party, &ships[index])
+	destroyedShips = append(destroyedShips, ships[index].Id)
+	ships = append(ships[:index], ships[index+1:]...)
+	return ships, destroyedShips
 }
 
 func (c *FleetCombat) addLoss(side string, ship *Ship) {

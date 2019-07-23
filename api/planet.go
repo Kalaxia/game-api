@@ -65,8 +65,12 @@ func GetPlanet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Planet) changeOwner(player *Player) {
+	if p.Player != nil && p.Player.CurrentPlanetId == p.Id {
+        p.Player.relocate()
+	}
 	p.Player = player
     p.PlayerId = player.Id
+    p.update()
 }
 
 func (p *Planet) update() {

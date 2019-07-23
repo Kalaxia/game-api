@@ -343,7 +343,7 @@ func (f *Fleet) addJourneySteps(data []interface{}) []*FleetJourneyStep {
     }
     steps := createSteps(f, data, uint8(oldLastStep.StepNumber))
     
-    journey.EndedAt =  steps[len(steps)-1].TimeArrival
+    journey.EndedAt = steps[len(steps)-1].TimeArrival
     journey.update()
     insertSteps(steps)
     
