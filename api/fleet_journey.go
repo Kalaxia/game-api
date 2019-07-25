@@ -608,20 +608,20 @@ func (f *Fleet) isOnJourney() bool {
     return f.Journey != nil
 }
 
-func (journeyStep FleetJourneyStep) getDistance() float64{
+func (journeyStep *FleetJourneyStep) getDistance() float64{
     if journeyStep.PlanetStart != nil{
         if journeyStep.PlanetFinal != nil {
             if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
                 return 0.
             }
-			return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X),2.) + math.Pow( float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y),2.) , 0.5)
+			return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X), 2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y), 2.), 0.5)
         }
-		return math.Pow(math.Pow(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X),2.) + math.Pow(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y),2.) , 0.5)
+		return math.Pow(math.Pow(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X), 2.) + math.Pow(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y), 2.), 0.5)
 	}
 	if journeyStep.PlanetFinal != nil {
-		return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart,2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart,2.) , 0.5)
+		return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart, 2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart, 2.), 0.5)
 	}
-	return math.Pow(math.Pow(journeyStep.MapPosXFinal - journeyStep.MapPosXStart,2.) + math.Pow(journeyStep.MapPosYFinal - journeyStep.MapPosYStart,2.) , 0.5)
+	return math.Pow(math.Pow(journeyStep.MapPosXFinal - journeyStep.MapPosXStart, 2.) + math.Pow(journeyStep.MapPosYFinal - journeyStep.MapPosYStart, 2.), 0.5)
 }
 
 /*------------------------------------------*/

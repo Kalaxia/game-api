@@ -48,6 +48,86 @@ func TestIsOnPlanet(t *testing.T) {
 	}
 }
 
+func TestGetDistanceBetweenPlanets(t *testing.T) {
+	s := &FleetJourneyStep{
+		PlanetStart: &Planet{
+			SystemId: 1,
+			System: &System {
+				X: 91,
+				Y: 16,
+			},
+		},
+		PlanetFinal: &Planet{
+			SystemId: 2,
+			System: &System {
+				X: 75,
+				Y: 20,
+			},
+		},
+	}
+	if distance := s.getDistance(); distance != 16.49242250247064234259 {
+		t.Errorf("Journey step from planet to planet should be 16.49242250247064234259, not %.20f", distance)
+	}
+}
+
+func TestGetDistanceBetweenSystemPlanets(t *testing.T) {
+	s := &FleetJourneyStep{
+		PlanetStart: &Planet{
+			SystemId: 1,
+		},
+		PlanetFinal: &Planet{
+			SystemId: 1,
+		},
+	}
+	if distance := s.getDistance(); distance != 0. {
+		t.Errorf("Journey step in same system should be 0, not %.20f", distance)
+	}
+}
+
+func TestGetDistanceBetweenPlanetAndPoint(t *testing.T) {
+	s := &FleetJourneyStep{
+		PlanetStart: &Planet{
+			System: &System {
+				X: 4,
+				Y: 16,
+			},
+		},
+		MapPosXFinal: 8,
+		MapPosYFinal: 20,
+	}
+	if distance := s.getDistance(); distance != 5.65685424949238058190 {
+		t.Errorf("Distance should be 5.65685424949238058190, not %.20f", distance)
+	}
+}
+
+func TestGetDistanceBetweenPointAndPlanet(t *testing.T) {
+	s := &FleetJourneyStep{
+		MapPosXStart: 30,
+		MapPosYStart: 40,
+		PlanetFinal: &Planet{
+			System: &System{
+				X: 35,
+				Y: 45,
+			},
+		},
+	}
+	if distance := s.getDistance(); distance != 7.07106781186547550533 {
+		t.Errorf("Distance should be 7.07106781186547550533, not %.20f", distance)
+	}
+}
+
+func TestGetDistanceBetweenPoints(t *testing.T) {
+	s := &FleetJourneyStep{
+		MapPosXStart: 20,
+		MapPosYStart: 82,
+		MapPosXFinal: 25,
+		MapPosYFinal: 84,
+	}
+	if distance := s.getDistance(); distance != 5.38516480713450373941 {
+		t.Errorf("Distance should be 5.38516480713450373941, not %.20f", distance)
+	}
+}
+
 func getFleetMock(id uint16, player *Player) *Fleet {
 	return &Fleet{
 		Id: id,
