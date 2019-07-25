@@ -9,10 +9,8 @@ type Storage struct {
 }
 
 func (s *Storage) hasResource(resource string, quantity uint16) bool {
-    if rQuantity, ok := s.Resources[resource]; !ok || rQuantity < quantity {
-        return false
-    }
-    return true
+    q, ok := s.Resources[resource]
+    return ok && q >= quantity
 }
 
 func (s *Storage) storeResourceProduction(planet *Planet) {
