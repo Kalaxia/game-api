@@ -257,30 +257,26 @@ func (m *FactionMotion) getVotes() map[uint8]int {
 }
 
 func (m *FactionMotion) processResults() {
-	votes := make([]*FactionVote, 0)
-	positiveVotes := 0
-
-	if err := Database.Model(&votes).Where("motion_id = ?", m.Id).Select(); err != nil {
-		panic(NewException("Could not retrieve motion votes", err))
-	}
-
-	for _, v := range votes {
-		if v.Option == VoteOptionYes {
-			positiveVotes++
-		}
-	}
+	positiveVotes := m.countVotesByOption(VoteOptionYes)
 	nbMembers := m.Faction.countMembers()
 	m.IsApproved = positiveVotes >= (nbMembers / 2)
 	m.IsProcessed = true
 	if m.IsApproved {
 		m.apply()
 	}
-	if err := Database.Update(m); err != nil {
-		panic(NewException("Could not save motion result", err))
-	}
+	m.update()
 	m.Faction.notify(NotificationTypeFaction, "faction.motions.motion_results", map[string]interface{}{
 		"motion": m,
 	})
+}
+
+func (m *FactionMotion) countVotesByOption(option int) int {
+	votes := make([]*FactionVote, 0)
+	count, err := Database.Model(&votes).Where("motion_id = ?", m.Id).Where("option = ?", option).Count()
+	if err != nil {
+		panic(NewException("Could not retrieve motion votes", err))
+	}
+	return count
 }
 
 func (f *Faction) getMotion(id uint32) *FactionMotion {
@@ -333,5 +329,11 @@ func (m *FactionMotion) apply() {
 			break
 		default:
 			panic(NewException("Unknown motion type", nil))
+	}
+}
+
+func (m *FactionMotion) update() {
+	if err := Database.Update(m); err != nil {
+		panic(NewException("Could not save motion result", err))
 	}
 }

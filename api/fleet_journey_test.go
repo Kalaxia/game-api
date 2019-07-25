@@ -24,6 +24,30 @@ func TestEndStep(t *testing.T) {
 	// }
 }
 
+func TestIsOnJourney(t *testing.T) {
+	travellingFleet := &Fleet{ Journey: getJourneyMock(1) }
+	orbitingFleet := &Fleet{}
+
+	if !travellingFleet.isOnJourney() {
+		t.Errorf("Travelling fleet is on journey")
+	}
+	if orbitingFleet.isOnJourney() {
+		t.Errorf("Orbiting fleet is not on journey")
+	}
+}
+
+func TestIsOnPlanet(t *testing.T) {
+	travellingFleet := &Fleet{}
+	orbitingFleet := &Fleet{ Location: getPlayerPlanetMock(getPlayerMock(getFactionMock())) }
+
+	if travellingFleet.isOnPlanet() {
+		t.Errorf("Travelling fleet is not on planet")
+	}
+	if !orbitingFleet.isOnPlanet() {
+		t.Errorf("Orbiting fleet is on planet")
+	}
+}
+
 func getFleetMock(id uint16, player *Player) *Fleet {
 	return &Fleet{
 		Id: id,

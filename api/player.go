@@ -29,10 +29,18 @@ type(
         Notifications Notifications `json:"notifications"`
         CurrentPlanet *Planet `json:"current_planet"`
         CurrentPlanetId uint16 `json:"-"`
+        //Technologies []*PlayerTechnology `json:"technologies"`
         CreatedAt time.Time `json:"created_at"`
         UpdatedAt time.Time `json:"updated_at"`
     }
     Players []Player
+
+    PlayerTechnology struct {
+        TableName struct{} `json:"-" sql:"player__technologies"`
+
+        Technology *Technology `json:"technology"`
+        ResearchState *ResearchState `json:"research_state"`
+    }
 )
 
 func GetCurrentPlayer(w http.ResponseWriter, r *http.Request) {

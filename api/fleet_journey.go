@@ -365,7 +365,7 @@ func (j *FleetJourney) removeStep(step *FleetJourneyStep) {
         panic(NewHttpException(400, "cannot remove step with smaler step number that the current one ", nil))
     }
     
-    for _,stepR := range j.getSteps() {
+    for _, stepR := range j.getSteps() {
         if stepR.NextStepId == step.Id{
             stepR.NextStepId = 0
             stepR.NextStep = nil
@@ -388,7 +388,11 @@ func (step *FleetJourneyStep) end() {
     if step.Id != step.Journey.CurrentStepId {
         return
     }
-    step.processOrder()
+    if success := step.processOrder(); !success {
+        step.Journey.end()
+        return
+    }
+    // The code duplication is on purpose because mission fail could have other consequences in the future
     if step.NextStep == nil {
         step.Journey.end()
         return
@@ -400,14 +404,15 @@ func (step *FleetJourneyStep) end() {
     }
 }
 
-func (s *FleetJourneyStep) processOrder() {
+func (s *FleetJourneyStep) processOrder() bool {
     switch (s.Order) {
         case FleetOrderPass:
-            return
+            return true
         case FleetOrderConquer:
             fleet := s.Journey.getFleet()
-            fleet.conquerPlanet(getPlanet(s.PlanetFinalId))
-            return
+            return fleet.conquerPlanet(getPlanet(s.PlanetFinalId))
+        default:
+            return false
     }
 }
 
@@ -446,7 +451,6 @@ func (step *FleetJourneyStep) beginNextStep() {
         defer nextStep.end() // if the time is already passed we directly execute it
         // here I defer It (and not use go ) because I need that the current step is deleted before this one is
     }
-    
 }
 
 func (j *FleetJourney) end() {
@@ -596,32 +600,12 @@ func (s *FleetJourneyStep) delete() {
     }
 }
 
-func (f *Fleet) isOnPlanet () bool{
-    return f.Location == nil
+func (f *Fleet) isOnPlanet() bool {
+    return f.Location != nil
 }
 
-func (f *Fleet) isOnJourney () bool{
+func (f *Fleet) isOnJourney() bool {
     return f.Journey != nil
-}
-
-func (f *Fleet) isOnMap () bool{
-    booleanX := !math.IsNaN(f.MapPosX) && f.MapPosX >= 0
-	booleanY := !math.IsNaN(f.MapPosY) && f.MapPosY >= 0
-	
-    return booleanX && booleanY
-}
-
-func (f *Fleet) GetPositionOnMap () ([2]float64 , bool) {
-    if f.isOnMap() {
-        return [2]float64{f.MapPosX, f.MapPosY}, true
-    }
-	return [2]float64{math.NaN(),math.NaN()}, false
-}
-
-/*------------------------------------------*/
-// FleetJourneyStep
-func (journeyStep *FleetJourneyStep) getNextStep() *FleetJourneyStep{
-    return journeyStep.NextStep
 }
 
 func (journeyStep FleetJourneyStep) getDistance() float64{
@@ -643,7 +627,7 @@ func (journeyStep FleetJourneyStep) getDistance() float64{
 /*------------------------------------------*/
 // TimeDistanceLaw
 
-func (law *TimeDistanceLaw) getTime(distance float64) float64{
+func (law *TimeDistanceLaw) getTime(distance float64) float64 {
     return law.Constane + (law.Linear * distance) + (law.Quadratic * distance * distance)
 }
 

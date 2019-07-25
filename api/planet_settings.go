@@ -44,7 +44,7 @@ func (p *Planet) affectPopulationPoints(settings *PlanetSettings) {
     if settings.ServicesPoints +
     settings.BuildingPoints +
     settings.MilitaryPoints +
-    settings.ResearchPoints > calculatePopulationPoints(p) {
+    settings.ResearchPoints > p.calculatePopulationPoints() {
         panic(NewHttpException(400, "Not enough population points", nil))
     }
     p.Settings.ServicesPoints = settings.ServicesPoints
@@ -57,6 +57,6 @@ func (p *Planet) affectPopulationPoints(settings *PlanetSettings) {
     }
 }
 
-func calculatePopulationPoints(planet *Planet) uint8 {
-    return uint8(math.Ceil(float64(planet.Population / 100000)))
+func (p *Planet) calculatePopulationPoints() uint8 {
+    return uint8(math.Ceil(float64(p.Population / 100000)))
 }

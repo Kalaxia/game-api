@@ -1,11 +1,12 @@
 package api
 
-func (f *Fleet) conquerPlanet(p *Planet) {
+func (f *Fleet) conquerPlanet(p *Planet) bool {
 	if isVictorious := f.attack(p); !isVictorious {
-		return
+		return false
 	}
 	p.notifyConquest(f)
 	p.changeOwner(f.Player)
+	return true
 }
 
 func (p *Planet) notifyConquest(f *Fleet) {
