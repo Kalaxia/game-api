@@ -1,4 +1,5 @@
 {
+	"same_planet": 2.0,
 	"same_system" : 10.0,
 	"planet_to_planet" : 10.0,
 	"planet_to_position" : 10.0,

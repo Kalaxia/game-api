@@ -16,6 +16,12 @@ var journeyRangeData RangeContainer
 
 const FleetOrderPass = "pass"
 const FleetOrderConquer = "conquer"
+const JourneyStepTypePlanetToPlanet = "planet_to_planet"
+const JourneyStepTypeSameSystem = "same_system"
+const JourneyStepTypeSamePlanet = "same_planet"
+const JourneyStepTypePositionToPlanet = "position_to_planet"
+const JourneyStepTypePlanetToPosition = "planet_to_position"
+const JourneyStepTypePositionToPosition = "position_to_position"
 
 type(
     FleetJourney struct {
@@ -62,6 +68,7 @@ type(
     }
     
     TimeLawsConfig struct {
+        SamePlanet TimeDistanceLaw `json:"same_planet"`
         SameSystem TimeDistanceLaw `json:"same_system"`
         PlanetToPlanet TimeDistanceLaw `json:"planet_to_planet"`
         PlanetToPosition TimeDistanceLaw `json:"planet_to_position"`
@@ -76,6 +83,7 @@ type(
     }
     
     RangeContainer struct{
+        SamePlanet float64 `json:"same_planet"`
         SameSystem float64 `json:"same_system"`
         PlanetToPlanet float64 `json:"planet_to_planet"`
         PlanetToPosition float64 `json:"planet_to_position"`
@@ -86,21 +94,7 @@ type(
 
 func InitFleetJourneys() {
     defer CatchException(nil)
-    journeyTimeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_times.json")
-    if err != nil {
-        panic(NewException("Can't open journey time configuration file", err))
-    }
-    if err := json.Unmarshal(journeyTimeDataJSON, &journeyTimeData); err != nil {
-        panic(NewException("Can't read journey time configuration file", err))
-    }
-    
-    journeyRangeDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/journey_range.json")
-    if err != nil {
-        panic(NewException("Can't open journey time configuration file", err))
-    }
-    if err := json.Unmarshal(journeyRangeDataJSON, &journeyRangeData); err != nil {
-        panic(NewException("Can't read journey time configuration file", err))
-    }
+    initJourneyData()
     
     journeys := getAllJourneys()
     now := time.Now()
@@ -131,6 +125,24 @@ func InitFleetJourneys() {
             //---------------------------------------------
             // But we do go after because all steps are in diffrent journey and can be finished simultaniously
         }
+    }
+}
+
+func initJourneyData() {
+    journeyTimeDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/journey_times.json")
+    if err != nil {
+        panic(NewException("Can't open journey time configuration file", err))
+    }
+    if err := json.Unmarshal(journeyTimeDataJSON, &journeyTimeData); err != nil {
+        panic(NewException("Can't read journey time configuration file", err))
+    }
+    
+    journeyRangeDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/journey_range.json")
+    if err != nil {
+        panic(NewException("Can't open journey time configuration file", err))
+    }
+    if err := json.Unmarshal(journeyRangeDataJSON, &journeyRangeData); err != nil {
+        panic(NewException("Can't read journey time configuration file", err))
     }
 }
 
@@ -608,62 +620,85 @@ func (f *Fleet) isOnJourney() bool {
     return f.Journey != nil
 }
 
-func (journeyStep *FleetJourneyStep) getDistance() float64{
-    if journeyStep.PlanetStart != nil{
-        if journeyStep.PlanetFinal != nil {
-            if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return 0.
-            }
-			return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - float64(journeyStep.PlanetStart.System.X), 2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - float64(journeyStep.PlanetStart.System.Y), 2.), 0.5)
-        }
-		return math.Pow(math.Pow(journeyStep.MapPosXFinal - float64(journeyStep.PlanetStart.System.X), 2.) + math.Pow(journeyStep.MapPosYFinal - float64(journeyStep.PlanetStart.System.Y), 2.), 0.5)
-	}
-	if journeyStep.PlanetFinal != nil {
-		return math.Pow(math.Pow(float64(journeyStep.PlanetFinal.System.X) - journeyStep.MapPosXStart, 2.) + math.Pow(float64(journeyStep.PlanetFinal.System.Y) - journeyStep.MapPosYStart, 2.), 0.5)
-	}
-	return math.Pow(math.Pow(journeyStep.MapPosXFinal - journeyStep.MapPosXStart, 2.) + math.Pow(journeyStep.MapPosYFinal - journeyStep.MapPosYStart, 2.), 0.5)
+func getDistance(x1, x2, y1, y2 float64) float64{
+    return math.Pow(math.Pow((x2 - x1), 2.) + math.Pow(y2 - y1, 2.), 0.5)
+}
+
+func (s *FleetJourneyStep) getDistanceInsideSystem() float64 {
+    return 0.
+}
+
+func (s *FleetJourneyStep) getDistanceBetweenOrbitAndPlanet() float64 {
+    return 0.
+}
+
+func (s *FleetJourneyStep) getDistanceBetweenPlanetAndPosition() float64 {
+    return getDistance(float64(s.PlanetStart.System.X), s.MapPosXFinal, float64(s.PlanetStart.System.Y), s.MapPosYFinal)
+}
+
+func (s *FleetJourneyStep) getDistanceBetweenPositionAndPlanet() float64 {
+    return getDistance(s.MapPosXStart, float64(s.PlanetFinal.System.X), s.MapPosYStart, float64(s.PlanetFinal.System.Y))
+}
+
+func (s *FleetJourneyStep) getDistanceBetweenPlanets() float64 {
+    return getDistance(float64(s.PlanetStart.System.X), float64(s.PlanetFinal.System.X), float64(s.PlanetStart.System.Y), float64(s.PlanetFinal.System.Y))
+}
+
+func (s *FleetJourneyStep) getDistanceBetweenPositions() float64 {
+	return getDistance(s.MapPosXStart, s.MapPosXFinal, s.MapPosYStart, s.MapPosYFinal)
 }
 
 /*------------------------------------------*/
 // TimeDistanceLaw
 
-func (law *TimeDistanceLaw) getTime(distance float64) float64 {
-    return law.Constane + (law.Linear * distance) + (law.Quadratic * distance * distance)
+func (l *TimeDistanceLaw) getTime(distance float64) float64 {
+    return l.Constane + (l.Linear * distance) + (l.Quadratic * distance * distance)
 }
 
 /*------------------------------------------*/
 // TimeLawsConfig
 
-func (law *TimeLawsConfig) getTimeForStep(journeyStep *FleetJourneyStep) float64 {
+func (l *TimeLawsConfig) getTimeForStep(s *FleetJourneyStep) float64 {
     // I use the Euclidian metric I am too lazy to implement other metric which will probaly not be used
     // NOTE this function will need to be modified if we add other "location"
-    if journeyStep.PlanetStart != nil{
-        if journeyStep.PlanetFinal != nil {
-            if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return law.SameSystem.getTime(0.)
-            }
-			return law.PlanetToPlanet.getTime(journeyStep.getDistance())
-        }
-		return law.PlanetToPosition.getTime(journeyStep.getDistance())
+    switch (s.getType()) {
+        case JourneyStepTypeSamePlanet: return l.SamePlanet.getTime(s.getDistanceBetweenOrbitAndPlanet())
+        case JourneyStepTypeSameSystem: return l.SameSystem.getTime(s.getDistanceInsideSystem())
+        case JourneyStepTypePlanetToPlanet: return l.PlanetToPlanet.getTime(s.getDistanceBetweenPlanets())
+        case JourneyStepTypePlanetToPosition: return l.PlanetToPosition.getTime(s.getDistanceBetweenPlanetAndPosition())
+        case JourneyStepTypePositionToPlanet: return l.PositionToPlanet.getTime(s.getDistanceBetweenPositionAndPlanet())
+        case JourneyStepTypePositionToPosition: return l.PositionToPosition.getTime(s.getDistanceBetweenPositions())
+        default: panic(NewException("unknown step type", nil))
     }
-	if journeyStep.PlanetFinal != nil {
-		return law.PositionToPlanet.getTime(journeyStep.getDistance())
-	}
-	return law.PositionToPosition.getTime(journeyStep.getDistance())
 }
 
-func (rc *RangeContainer) isOnRange(journeyStep *FleetJourneyStep) bool {
-    if journeyStep.PlanetStart != nil{
-        if journeyStep.PlanetFinal != nil {
-            if journeyStep.PlanetFinal.SystemId == journeyStep.PlanetStart.SystemId {
-                return rc.SameSystem >= 0.
-            }
-			return rc.PlanetToPlanet >= journeyStep.getDistance()
-        }
-		return rc.PlanetToPosition >= journeyStep.getDistance()
+func (rc *RangeContainer) isOnRange(s *FleetJourneyStep) bool {
+    switch (s.getType()) {
+        case JourneyStepTypeSamePlanet: return rc.SamePlanet >= s.getDistanceBetweenOrbitAndPlanet()
+        case JourneyStepTypeSameSystem: return rc.SameSystem >= s.getDistanceInsideSystem()
+        case JourneyStepTypePlanetToPlanet: return rc.PlanetToPlanet >= s.getDistanceBetweenPlanets()
+        case JourneyStepTypePlanetToPosition: return rc.PlanetToPosition >= s.getDistanceBetweenPlanetAndPosition()
+        case JourneyStepTypePositionToPlanet: return rc.PositionToPlanet >= s.getDistanceBetweenPositionAndPlanet()
+        case JourneyStepTypePositionToPosition: return rc.PositionToPosition >= s.getDistanceBetweenPositions()
+        default: panic(NewException("unknown step type", nil))
     }
-	if journeyStep.PlanetFinal != nil {
-		return rc.PositionToPlanet >= journeyStep.getDistance()
+}
+
+func (s *FleetJourneyStep) getType() string {
+    if s.PlanetStart != nil{
+        if s.PlanetFinal != nil {
+            if s.PlanetFinalId == s.PlanetStartId {
+                return JourneyStepTypeSamePlanet
+            }
+            if s.PlanetFinal.SystemId == s.PlanetStart.SystemId {
+                return JourneyStepTypeSameSystem
+            }
+			return JourneyStepTypePlanetToPlanet
+        }
+		return JourneyStepTypePlanetToPosition
+    }
+	if s.PlanetFinal != nil {
+		return JourneyStepTypePositionToPlanet
 	}
-	return rc.PositionToPosition >= journeyStep.getDistance()
+	return JourneyStepTypePositionToPosition
 }

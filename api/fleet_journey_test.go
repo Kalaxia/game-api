@@ -49,7 +49,9 @@ func TestIsOnPlanet(t *testing.T) {
 }
 
 func TestGetDistanceBetweenPlanets(t *testing.T) {
+	initJourneyData()
 	s := &FleetJourneyStep{
+		PlanetStartId: 1,
 		PlanetStart: &Planet{
 			SystemId: 1,
 			System: &System {
@@ -57,6 +59,7 @@ func TestGetDistanceBetweenPlanets(t *testing.T) {
 				Y: 16,
 			},
 		},
+		PlanetFinalId: 2,
 		PlanetFinal: &Planet{
 			SystemId: 2,
 			System: &System {
@@ -65,26 +68,70 @@ func TestGetDistanceBetweenPlanets(t *testing.T) {
 			},
 		},
 	}
-	if distance := s.getDistance(); distance != 16.49242250247064234259 {
+	if distance := s.getDistanceBetweenPlanets(); distance != 16.49242250247064234259 {
 		t.Errorf("Journey step from planet to planet should be 16.49242250247064234259, not %.20f", distance)
+	}
+	if s.getType() != JourneyStepTypePlanetToPlanet {
+		t.Errorf("Step is planet to planet")
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 32.98484500494128468517 {
+		t.Errorf("Time should be 32.98484500494128468517, not %.20f", time)
+	}
+	if journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should not be on range")
 	}
 }
 
-func TestGetDistanceBetweenSystemPlanets(t *testing.T) {
+func TestGetDistanceBetweenOrbitAndPlanet(t *testing.T) {
+	initJourneyData()
 	s := &FleetJourneyStep{
+		PlanetStartId: 1,
+		PlanetStart: &Planet{},
+		PlanetFinalId: 1,
+		PlanetFinal: &Planet{},
+	}
+	if distance := s.getDistanceBetweenOrbitAndPlanet(); distance != 0. {
+		t.Errorf("Distance should be 0, not %.20f", distance)
+	}
+	if s.getType() != JourneyStepTypeSamePlanet {
+		t.Errorf("Step is orbit to planet")
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 2. {
+		t.Errorf("Time should be 0., not %.20f", time)
+	}
+	if !journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should be on range")
+	}
+}
+
+func TestGetDistanceInsideSystem(t *testing.T) {
+	initJourneyData()
+	s := &FleetJourneyStep{
+		PlanetStartId: 1,
 		PlanetStart: &Planet{
 			SystemId: 1,
 		},
+		PlanetFinalId: 2,
 		PlanetFinal: &Planet{
 			SystemId: 1,
 		},
 	}
-	if distance := s.getDistance(); distance != 0. {
+	if distance := s.getDistanceInsideSystem(); distance != 0. {
 		t.Errorf("Journey step in same system should be 0, not %.20f", distance)
+	}
+	if sType := s.getType(); sType != JourneyStepTypeSameSystem {
+		t.Errorf("Step is same system, not %s", sType)
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 5. {
+		t.Errorf("Time should be 5., not %.20f", time)
+	}
+	if !journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should be on range")
 	}
 }
 
-func TestGetDistanceBetweenPlanetAndPoint(t *testing.T) {
+func TestGetDistanceBetweenPlanetAndPosition(t *testing.T) {
+	initJourneyData()
 	s := &FleetJourneyStep{
 		PlanetStart: &Planet{
 			System: &System {
@@ -95,12 +142,22 @@ func TestGetDistanceBetweenPlanetAndPoint(t *testing.T) {
 		MapPosXFinal: 8,
 		MapPosYFinal: 20,
 	}
-	if distance := s.getDistance(); distance != 5.65685424949238058190 {
+	if distance := s.getDistanceBetweenPlanetAndPosition(); distance != 5.65685424949238058190 {
 		t.Errorf("Distance should be 5.65685424949238058190, not %.20f", distance)
+	}
+	if s.getType() != JourneyStepTypePlanetToPosition {
+		t.Errorf("Step is position to planet")
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 11.31370849898476116380 {
+		t.Errorf("Time should be 11.31370849898476116380, not %.20f", time)
+	}
+	if !journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should be on range")
 	}
 }
 
-func TestGetDistanceBetweenPointAndPlanet(t *testing.T) {
+func TestGetDistanceBetweenPositionAndPlanet(t *testing.T) {
+	initJourneyData()
 	s := &FleetJourneyStep{
 		MapPosXStart: 30,
 		MapPosYStart: 40,
@@ -111,20 +168,39 @@ func TestGetDistanceBetweenPointAndPlanet(t *testing.T) {
 			},
 		},
 	}
-	if distance := s.getDistance(); distance != 7.07106781186547550533 {
+	if distance := s.getDistanceBetweenPositionAndPlanet(); distance != 7.07106781186547550533 {
 		t.Errorf("Distance should be 7.07106781186547550533, not %.20f", distance)
+	}
+	if sType := s.getType(); sType != JourneyStepTypePositionToPlanet {
+		t.Errorf("Step is position to planet, not %s", sType)
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 14.14213562373095101066 {
+		t.Errorf("Time should be 14.14213562373095101066, not %.20f", time)
+	}
+	if !journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should be on range")
 	}
 }
 
-func TestGetDistanceBetweenPoints(t *testing.T) {
+func TestGetDistanceBetweenPositions(t *testing.T) {
+	initJourneyData()
 	s := &FleetJourneyStep{
 		MapPosXStart: 20,
 		MapPosYStart: 82,
 		MapPosXFinal: 25,
 		MapPosYFinal: 84,
 	}
-	if distance := s.getDistance(); distance != 5.38516480713450373941 {
+	if distance := s.getDistanceBetweenPositions(); distance != 5.38516480713450373941 {
 		t.Errorf("Distance should be 5.38516480713450373941, not %.20f", distance)
+	}
+	if s.getType() != JourneyStepTypePositionToPosition {
+		t.Errorf("Step is position to position")
+	}
+	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 10.77032961426900747881 {
+		t.Errorf("Time should be 10.77032961426900747881, not %.20f", time)
+	}
+	if !journeyRangeData.isOnRange(s) {
+		t.Errorf("Step should be on range")
 	}
 }
 

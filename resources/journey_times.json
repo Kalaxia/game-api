@@ -1,5 +1,10 @@
 {
 	"warm_time" : {
+		"same_planet": {
+			"constante": 5,
+			"linear": 0,
+			"quadratic": 0
+		},
 		"same_system" : {
 			"constante" : 10,
 			"linear" : 0,
@@ -27,8 +32,13 @@
 		}
 	},
 	"travel_time" : {
+		"same_planet": {
+			"constante": 2,
+			"linear": 0,
+			"quadratic": 0
+		},
 		"same_system" : {
-			"constante" : 10,
+			"constante" : 5,
 			"linear" : 0,
 			"quadratic" : 0
 		},
@@ -54,6 +64,11 @@
 		}
 	},
 	"cooldown" : {
+		"same_planet": {
+			"constante": 2,
+			"linear": 0,
+			"quadratic": 0
+		},
 		"same_system" : {
 			"constante" : 10,
 			"linear" : 0,
