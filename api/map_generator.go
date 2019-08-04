@@ -100,6 +100,7 @@ func (s *System) generatePlanet(orbit *SystemOrbit) *Planet {
     if err := Database.Insert(planet); err != nil {
 		panic(NewException("Planet could not be created", err))
     }
+    planet.createStorage()
     planet.Resources = planet.generatePlanetResources()
     s.Planets = append(s.Planets, *planet)
     planet.generatePlanetRelations()

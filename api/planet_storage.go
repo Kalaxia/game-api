@@ -36,6 +36,19 @@ func (s *Storage) storeResource(resource string, quantity int16) bool {
     return true
 }
 
+func (p *Planet) createStorage() {
+    storage := &Storage{
+        Capacity: 5000,
+        Resources: make(map[string]uint16, 0),
+    }
+    if err := Database.Insert(storage); err != nil {
+        panic(NewException("Storage could not be created", err))
+    }
+    p.Storage = storage
+    p.StorageId = storage.Id
+    p.update()
+}
+
 func (s *Storage) update() {
     if err := Database.Update(s); err != nil {
         panic(NewException("Planet storage could not be updated", err))

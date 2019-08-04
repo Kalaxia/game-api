@@ -37,19 +37,6 @@ func getPlanets(offset int, limit int) []*Planet {
     return planets
 }
 
-func getPlanetsById(ids []uint16) []*Planet {
-    planets := make([]*Planet, 0)
-
-    if err := Database.
-        Model(&planets).
-        Column("System", "Player", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
-        WhereIn("planet.id IN (?)", ids).
-        Select(); err != nil {
-            panic(NewException("Planets could not be retrieved", err))
-    }
-    return planets
-}
-
 func calculatePlanetProduction(planet *Planet, wg *sync.WaitGroup) {
     defer wg.Done()
     defer CatchException(nil)
@@ -59,22 +46,8 @@ func calculatePlanetProduction(planet *Planet, wg *sync.WaitGroup) {
 }
 
 func (p *Planet) produceResources() {
-    if p.Storage == nil {
-        storage := &Storage{
-            Capacity: 5000,
-            Resources: make(map[string]uint16, 0),
-        }
-        storage.storeResourceProduction(p)
-        if err := Database.Insert(storage); err != nil {
-            panic(NewException("Storage could not be created", err))
-        }
-        p.Storage = storage
-        p.StorageId = storage.Id
-        p.update()
-    } else {
-        p.Storage.storeResourceProduction(p)
-        p.Storage.update()
-    }
+    p.Storage.storeResourceProduction(p)
+    p.Storage.update()
 }
 
 func (p *Planet) producePoints() {
@@ -91,12 +64,13 @@ func (p *Planet) produceBuildingPoints() {
     constructingBuildings := make(map[string]Building, 0)
     var buildingDates []string
     for _, building := range p.Buildings {
-        if building.Status == BuildingStatusConstructing {
-            date := building.ConstructionState.BuiltAt.Format(time.RFC3339)
-            // we use the date as a key for the constructing buildings map
-            constructingBuildings[date] = building
-            buildingDates = append(buildingDates, date)
+        if building.Status != BuildingStatusConstructing {
+            continue
         }
+        date := building.ConstructionState.BuiltAt.Format(time.RFC3339)
+        // we use the date as a key for the constructing buildings map
+        constructingBuildings[date] = building
+        buildingDates = append(buildingDates, date)
     }
     // Here we sort the dates
     sort.Strings(buildingDates)

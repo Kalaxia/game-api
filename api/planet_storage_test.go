@@ -46,6 +46,20 @@ func TestStoreResource(t *testing.T) {
 	}
 }
 
+func TestCreateStorage(t *testing.T) {
+	InitDatabaseMock()
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
+
+	planet.createStorage()
+
+	if planet.Storage == nil {
+		t.Errorf("Planet storage must not be empty")
+	}
+	if planet.Storage.Capacity != 5000 {
+		t.Errorf("Storage capacity must be 5000")
+	}
+}
+
 func getStorageMock() *Storage {
 	return &Storage{
 		Id: 1,
