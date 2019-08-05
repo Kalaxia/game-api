@@ -27,7 +27,7 @@ func CalculatePlanetsProductions() {
 
         for _, planet := range planets {
             wg.Add(1)
-            go calculatePlanetProduction(planet, &wg)
+            go planet.calculateProduction(&wg)
         }
         wg.Wait()
     }
@@ -47,22 +47,77 @@ func getPlanets(offset int, limit int) []*Planet {
     return planets
 }
 
-func calculatePlanetProduction(planet *Planet, wg *sync.WaitGroup) {
+func (p *Planet) calculateProduction(wg *sync.WaitGroup) {
     defer wg.Done()
     defer CatchException(nil)
 
-	planet.produceResources()
-	planet.producePoints()
-}
-
-func (p *Planet) produceResources() {
-    p.Storage.storeResourceProduction(p)
+    points := p.getAvailablePoints()
+    for _, b := range p.Buildings {
+        b.Planet = p
+        points = b.produce(points)
+    }
+    p.produceBuildingPoints()
     p.Storage.update()
 }
 
-func (p *Planet) producePoints() {
-    p.produceBuildingPoints()
-    p.produceMilitaryPoints()
+func (p *Planet) getAvailablePoints() map[string]uint8 {
+    return map[string]uint8{
+        "services": p.Settings.ServicesPoints,
+        "building": p.Settings.BuildingPoints,
+        "military": p.Settings.MilitaryPoints,
+        "research": p.Settings.ResearchPoints,
+    }
+}
+
+func (b *Building) produce(points map[string]uint8) map[string]uint8 {
+    switch (b.Type) {
+        case "resource": 
+            b.produceResources()
+            return points
+        case "shipyard":
+            return b.produceShips(points)
+        default:
+            return points
+    }
+}
+
+func (b *Building) produceResources() {
+    for _, resourceName := range buildingPlansData[b.Name].Resources {
+        if quantity := int16(b.getProducedQuantity(resourceName)); quantity > 0 {
+            b.Planet.Storage.storeResource(resourceName, quantity)
+        }
+    }
+}
+
+func (b *Building) getProducedQuantity(resourceName string) uint16 {
+    resource := b.Planet.getResource(resourceName)
+    if resource == nil {
+        return 0
+    }
+    return uint16(resource.Density) * 10
+}
+
+func (b *Building) produceShips(points map[string]uint8) map[string]uint8 {
+    constructionGroups := b.Planet.getConstructingShips()
+    if (len(constructionGroups) == 0) {
+        return points
+    }
+    for _, group := range constructionGroups {
+        if points["military"] < 1 {
+            break
+        }
+        neededPoints := group.ConstructionState.Points - group.ConstructionState.CurrentPoints
+        if neededPoints <= points["military"] {
+            points["military"] -= neededPoints
+            group.finishConstruction()
+        } else {
+            group.ConstructionState.CurrentPoints += points["military"]
+            group.ConstructionState.update()
+            points["military"] = 0
+            break
+        }
+    }
+    return points
 }
 
 func (p *Planet) createPointsProduction(points uint8) *PointsProduction {

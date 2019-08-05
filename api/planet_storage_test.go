@@ -18,20 +18,6 @@ func TestHasResource(t *testing.T) {
 	}
 }
 
-func TestStoreResourceProduction(t *testing.T) {
-	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
-	storage := getStorageMock()
-
-	storage.storeResourceProduction(planet)
-
-	if storage.Resources["ore"] != 450 {
-		t.Errorf("Storage has 450 ore")
-	}
-	if storage.Resources["cristal"] != 3100 {
-		t.Errorf("Storage has 3100 cristal")
-	}
-}
-
 func TestStoreResource(t *testing.T) {
 	storage := getStorageMock()
 

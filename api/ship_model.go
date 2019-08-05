@@ -25,14 +25,14 @@ var modulesData map[string]ShipModule
 
 func InitShipConfiguration() {
     defer CatchException(nil)
-    framesDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/ship_frames.json")
+    framesDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/ship_frames.json")
     if err != nil {
         panic(NewException("Can't open ship frames configuration file", err))
     }
     if err := json.Unmarshal(framesDataJSON, &framesData); err != nil {
         panic(NewException("Can't read ship frames configuration file", err))
     }
-    modulesDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/ship_modules.json")
+    modulesDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/ship_modules.json")
     if err != nil {
         panic(NewException("Can't open ship modules configuration file", err))
     }

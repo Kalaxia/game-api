@@ -234,29 +234,6 @@ func (p *Planet) payShipCost(prices []Price, quantity uint8) uint8 {
     return points
 }
 
-func (p *Planet) produceMilitaryPoints() {
-    constructionGroups := p.getConstructingShips()
-
-    if (len(constructionGroups) == 0) {
-        return
-    }
-    remainingPoints := p.Settings.MilitaryPoints
-    for _, group := range constructionGroups {
-        if remainingPoints < 1 {
-            break
-        }
-        neededPoints := group.ConstructionState.Points - group.ConstructionState.CurrentPoints
-        if neededPoints <= remainingPoints {
-            remainingPoints -= neededPoints
-            group.finishConstruction()
-        } else {
-            group.ConstructionState.CurrentPoints += remainingPoints
-            group.ConstructionState.update()
-            remainingPoints = 0
-        }
-    }
-}
-
 func (cg *ShipConstructionGroup) finishConstruction() {
     ships := make([]Ship, 0)
 

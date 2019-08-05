@@ -1,8 +1,10 @@
 {
   "hypodronic-farm": {
     "picture": "bat_prod_a.png",
-    "category": "resource",
     "type": "resource",
+    "resources": [
+      "liquid"
+    ],
     "parent": null,
     "price": [
       {
@@ -13,13 +15,36 @@
   },
   "ore-mine": {
     "picture": "building.png",
-    "category": "resource",
     "type": "resource",
+    "resources": [
+      "ore",
+      "emerald",
+      "red-ore"
+    ],
     "parent": null,
     "price": [
       {
         "type": "points",
         "amount": 35
+      }
+    ]
+  },
+  "cristal-synthetiser": {
+    "picture": "building.png",
+    "type": "resource",
+    "resources": [
+      "geode",
+      "cristal"
+    ],
+    "parent": null,
+    "price": [
+      {
+        "type": "points",
+        "amount": 25
+      },
+      {
+        "type": "credits",
+        "amount": 350
       }
     ]
   },

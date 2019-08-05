@@ -13,12 +13,6 @@ func (s *Storage) hasResource(resource string, quantity uint16) bool {
     return ok && q >= quantity
 }
 
-func (s *Storage) storeResourceProduction(planet *Planet) {
-    for _, resource := range planet.Resources {
-        s.storeResource(resource.Name, int16(resource.Density) * 10)
-    }
-}
-
 func (s *Storage) storeResource(resource string, quantity int16) bool {
     var currentStock uint16
     var newStock int16

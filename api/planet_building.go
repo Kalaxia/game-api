@@ -35,7 +35,8 @@ type(
 	BuildingPlan struct {
 		Name string `json:"name"`
 		ParentName string `json:"parent"`
-		Type string `json:"type"`
+        Type string `json:"type"`
+        Resources []string `json:"resources"`
 		Picture string `json:"picture"`
 		Price []Price `json:"price"`
 	}
@@ -44,7 +45,7 @@ type(
 
 func InitPlanetConstructions() {
     defer CatchException(nil)
-    buildingsDataJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/buildings.json")
+    buildingsDataJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/buildings.json")
     if err != nil {
         panic(NewException("Can't open buildings configuration file", err))
     }

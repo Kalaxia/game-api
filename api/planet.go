@@ -125,12 +125,21 @@ func getPlayerPlanet(id uint16, playerId uint16) *Planet {
             panic(NewHttpException(404, "Planet not found", err))
     }
     if planet.Player != nil && playerId == planet.Player.Id {
-        getPlanetOwnerData(planet)
+        planet.getOwnerData()
     }
     return planet
 }
 
-func getPlanetOwnerData(planet *Planet) {
-    planet.Buildings, planet.AvailableBuildings = planet.getBuildings()
-    planet.NbBuildings = 7
+func (p *Planet) getOwnerData() {
+    p.Buildings, p.AvailableBuildings = p.getBuildings()
+    p.NbBuildings = 7
+}
+
+func (p *Planet) getResource(name string) *PlanetResource {
+    for _, r := range p.Resources {
+        if r.Name == name {
+            return &r
+        }
+    }
+    return nil
 }

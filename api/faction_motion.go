@@ -51,7 +51,7 @@ const(
 
 func InitFactionMotions() {
     defer CatchException(nil)
-    factionMotionsJSON, err := ioutil.ReadFile("../kalaxia-game-api/resources/motion_types.json")
+    factionMotionsJSON, err := ioutil.ReadFile("/go/src/kalaxia-game-api/resources/motion_types.json")
     if err != nil {
         panic(NewException("Can't open faction motions configuration file", err))
     }
