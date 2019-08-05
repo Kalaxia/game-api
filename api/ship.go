@@ -136,13 +136,13 @@ func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup
 func (p *Planet) getConstructingShips() []ShipConstructionGroup {
     scg := make([]ShipConstructionGroup, 0)
     if _, err := Database.Query(&scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
-        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        pp.id as construction_state__id, pp.points as construction_state__points, pp.current_points as construction_state__current_points, COUNT(pp.id) as quantity
         FROM ship__ships s
         INNER JOIN ship__models m ON s.model_id = m.id
-        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        INNER JOIN map__planet_point_productions pp ON s.construction_state_id = pp.id
         WHERE s.hangar_id = ?
-        GROUP BY cs.id, m.id
-        ORDER BY cs.id ASC`, p.Id); err != nil {
+        GROUP BY pp.id, m.id
+        ORDER BY pp.id ASC`, p.Id); err != nil {
             panic(NewHttpException(404, "No constructing ship found", err))
     }
     return scg
@@ -152,13 +152,13 @@ func (p *Planet) getCurrentlyConstructingShips() *ShipConstructionGroup {
     scg := &ShipConstructionGroup{}
     if _, err := Database.
         Query(scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
-        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        pp.id as construction_state__id, pp.points as construction_state__points, pp.current_points as construction_state__current_points, COUNT(pp.id) as quantity
         FROM ship__ships s
         INNER JOIN ship__models m ON s.model_id = m.id
-        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        INNER JOIN map__planet_point_productions pp ON s.construction_state_id = pp.id
         WHERE s.hangar_id = ?
-        GROUP BY cs.id, m.id
-        ORDER BY cs.id ASC
+        GROUP BY pp.id, m.id
+        ORDER BY pp.id ASC
         LIMIT 1`, p.Id); err != nil {
             panic(NewHttpException(404, "No constructing ship found", err))
     }
