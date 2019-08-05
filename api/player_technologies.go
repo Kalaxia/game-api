@@ -8,11 +8,4 @@ type(
 		Name string `json:"name"`
 		Children []*Technology `json:"children"`
 	}
-
-	ResearchState struct {
-		TableName struct{} `json:"-" sql:"technology__research_states"`
-
-		Points uint8 `json:"points"`
-		CurrentPoints uint8 `json:"current_points"`
-	}
 )

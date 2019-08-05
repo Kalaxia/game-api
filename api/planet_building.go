@@ -25,7 +25,7 @@ type(
 		Type string `json:"type" sql:"type"`
 		Planet *Planet `json:"planet"`
 		PlanetId uint16 `json:"-"`
-		ConstructionState *ConstructionState `json:"construction_state"`
+		ConstructionState *PointsProduction `json:"construction_state"`
 		ConstructionStateId uint32 `json:"-"`
 		Status string `json:"status"`
 		CreatedAt time.Time `json:"created_at"`
@@ -40,15 +40,6 @@ type(
 		Price []Price `json:"price"`
 	}
 	BuildingPlansData map[string]BuildingPlan
-
-	ConstructionState struct {
-		TableName struct{} `json:"-" sql:"map__planet_construction_states"`
-
-		Id uint32 `json:"id"`
-		BuiltAt time.Time `json:"built_at"`
-		CurrentPoints uint8 `json:"current_points" sql:",notnull"`
-		Points uint8 `json:"points"`
-	}
 )
 
 func InitPlanetConstructions() {
@@ -127,7 +118,7 @@ func (p *Planet) createBuilding(name string) Building {
     if !isset {
         panic(NewHttpException(400, "unknown building plan", nil))
     }
-    constructionState := createConstructionState(p.Player, buildingPlan)
+    constructionState := p.createPointsProduction(p.payBuildingPrice(buildingPlan))
     building := Building{
         Name: name,
         Type: buildingPlan.Type,
@@ -159,59 +150,29 @@ func (p *Planet) cancelBuilding(id uint32) {
     }
 }
 
-func createConstructionState(player *Player, buildingPlan BuildingPlan) *ConstructionState {
+func (p *Planet) payBuildingPrice(buildingPlan BuildingPlan) uint8 {
     points := uint8(0)
     for _, price := range buildingPlan.Price {
         if price.Type == PriceTypePoints {
             points = uint8(price.Amount)
         } else if price.Type == PriceTypeMoney {
-            if !player.updateWallet(-int32(price.Amount)) {
+            if !p.Player.updateWallet(-int32(price.Amount)) {
                 panic(NewHttpException(400, "The player has not enough money", nil))
             }
-            player.update()
+            p.Player.update()
         }
     }
-    constructionState := &ConstructionState {
-        Points: points,
-        CurrentPoints: 0,
-        BuiltAt: time.Now(),
-    }
-    if err := Database.Insert(constructionState); err != nil {
-      panic(NewHttpException(500, "Construction State could not be created", err))
-    }
-    return constructionState
+    return points
 }
 
-func spendBuildingPoints(building Building, buildingPoints uint8) uint8 {
-    missingPoints := building.ConstructionState.Points - building.ConstructionState.CurrentPoints
-    if missingPoints == 0 {
-        checkConstructionState(building.Id)
-        return buildingPoints
+func (b *Building) spendPoints(points uint8) uint8 {
+    if missingPoints := b.ConstructionState.getMissingPoints(); missingPoints <= points {
+        b.finishConstruction()
+        return points - missingPoints
     }
-    if missingPoints > buildingPoints {
-        building.ConstructionState.CurrentPoints += buildingPoints
-        buildingPoints = 0
-    } else {
-        building.ConstructionState.CurrentPoints += missingPoints
-        buildingPoints -= missingPoints
-    }
-    if err := Database.Update(building.ConstructionState); err != nil {
-        panic(NewException("Construction State could not be updated", err))
-    }
-    if building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
-        checkConstructionState(building.Id)
-    }
-    return buildingPoints
-}
-
-func checkConstructionState(id uint32) {
-    building := &Building{}
-    if err := Database.Model(building).Column("building.*", "ConstructionState").Where("building.id = ?", id).Select(); err != nil {
-        panic(NewException("Building not found", err))
-    }
-    if building.ConstructionState.CurrentPoints == building.ConstructionState.Points {
-        building.finishConstruction()
-    }
+    b.ConstructionState.CurrentPoints += points
+    b.ConstructionState.update()
+    return 0
 }
 
 func (b *Building) finishConstruction() {
@@ -220,7 +181,5 @@ func (b *Building) finishConstruction() {
     if err := Database.Update(b); err != nil {
         panic(NewException("Building could not be updated", err))
     }
-    if err := Database.Delete(b.ConstructionState); err != nil {
-        panic(NewException("Construction State could not be removed", err))
-    }
+    b.ConstructionState.delete()
 }

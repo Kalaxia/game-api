@@ -20,16 +20,15 @@ type(
         TableName struct{} `json:"-" sql:"ship__ships"`
 
         Id uint32 `json:"id"`
-        HangarId uint16 `json:"-"` //< if  the ship is not in a hangar the id wil be nil.
-        Hangar *Planet `json:"hangar"` //< if  the ship is not in a hangar  the pointer will be nil
-        FleetId uint16 `json:"-"` //< if  the ship is not in a fleet the id wil be nil
-        Fleet *Fleet `json:"fleet"` //< if  the ship is not in a fleet the pointer will be nil
-        //IsShipInFleet bool `json:"isShipInFleet"` //< Depreciated : this is used when a ship is try to be removed form the hangar in order to avoid teleporting ships
+        HangarId uint16 `json:"-"`
+        Hangar *Planet `json:"hangar"`
+        FleetId uint16 `json:"-"`
+        Fleet *Fleet `json:"fleet"`
         ModelId uint `json:"-"` 
         Model *ShipModel `json:"model"`
         CreatedAt time.Time `json:"created_at"`
         ConstructionStateId uint32 `json:"-"`
-        ConstructionState *ShipConstructionState `json:"construction_state"`
+        ConstructionState *PointsProduction `json:"construction_state"`
         // Combat fields
         Damage uint8 `json:"-" sql:"-"`
     }
@@ -37,7 +36,7 @@ type(
         TableName struct{} `json:"-" pg:",discard_unknown_columns"`
 
         Model *ShipModel `json:"model"`
-        ConstructionState *ShipConstructionState `json:"construction_state"`
+        ConstructionState *PointsProduction `json:"construction_state"`
         Quantity uint `json:"quantity"`
     }
     ShipGroup struct {
@@ -57,7 +56,7 @@ func CreateShips(w http.ResponseWriter, r *http.Request) {
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
     }
-    SendJsonResponse(w, 201, player.createShips(planet, DecodeJsonRequest(r)))
+    SendJsonResponse(w, 201, planet.createShips(DecodeJsonRequest(r)))
 }
 
 func GetCurrentlyConstructingShips(w http.ResponseWriter, r *http.Request) {
@@ -104,26 +103,18 @@ func GetHangarShipGroups(w http.ResponseWriter, r *http.Request) {
     SendJsonResponse(w, 200, planet.getHangarShipGroups())
 }
 
-func (p *Player) createShips(planet *Planet, data map[string]interface{}) *ShipConstructionGroup {
+func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup {
     modelId := uint32(data["model"].(map[string]interface{})["id"].(float64))
     quantity := uint8(data["quantity"].(float64))
-    shipModel := p.getShipModel(modelId)
+    shipModel := p.Player.getShipModel(modelId)
 
-    points := p.payShipCost(shipModel.Price, planet.Storage, quantity)
-
-    constructionState := &ShipConstructionState{
-        CurrentPoints: 0,
-        Points: points,
-    }
-    if err := Database.Insert(constructionState); err != nil {
-        panic(NewHttpException(500, "Ship construction state could not be created", err))
-	}
+    constructionState := p.createPointsProduction(p.payShipCost(shipModel.Price, quantity))
 	ships := make([]Ship, quantity)
     ship := Ship{
         ModelId: shipModel.Id,
         Model: shipModel,
-        HangarId: planet.Id,
-        Hangar: planet,
+        HangarId: p.Id,
+        Hangar: p,
         CreatedAt: time.Now(),
         ConstructionState: constructionState,
         ConstructionStateId: constructionState.Id,
@@ -134,8 +125,7 @@ func (p *Player) createShips(planet *Planet, data map[string]interface{}) *ShipC
             panic(NewHttpException(500, "Ship could not be created", err))
         }
     }
-    planet.Storage.update()
-    p.update()
+    p.Storage.update()
     return &ShipConstructionGroup{
         ConstructionState: constructionState,
         Model: shipModel,
@@ -219,24 +209,25 @@ func (p *Planet) getHangarShipGroups() []ShipGroup {
     return ships
 }
 
-func (p *Player) payShipCost(prices []Price, storage *Storage, quantity uint8) uint8 {
+func (p *Planet) payShipCost(prices []Price, quantity uint8) uint8 {
     var points uint8
     for _, price := range prices {
         switch price.Type {
             case PriceTypeMoney:
-                if !p.updateWallet(-(int32(price.Amount) * int32(quantity))) {
+                if !p.Player.updateWallet(-(int32(price.Amount) * int32(quantity))) {
                     panic(NewHttpException(400, "Not enough money", nil))
                 }
+                p.Player.update()
                 break
             case PriceTypePoints:
                 points = uint8(price.Amount) * quantity
                 break
             case PriceTypeResources:
                 amount := uint16(price.Amount) * uint16(quantity)
-                if !storage.hasResource(price.Resource, amount) {
+                if !p.Storage.hasResource(price.Resource, amount) {
                     panic(NewHttpException(400, "Not enough resources", nil))
                 }
-                storage.storeResource(price.Resource, -int16(amount))
+                p.Storage.storeResource(price.Resource, -int16(amount))
                 break
         }
     }
@@ -281,18 +272,6 @@ func (cg *ShipConstructionGroup) finishConstruction() {
 func (s *Ship) finishConstruction() {
     s.ConstructionStateId = 0
     s.update()
-}
-
-func (sc *ShipConstructionState) update() {
-	if err := Database.Update(sc); err != nil {
-		panic(NewException("Ship Construction State could not be udpated", err))
-	}
-}
-
-func (sc *ShipConstructionState) delete() {
-	if err := Database.Delete(sc); err != nil {
-		panic(NewException("Ship Construction State could not be deleted", err))
-	}
 }
 
 func getShip(id uint16) *Ship {

@@ -39,7 +39,7 @@ type(
         TableName struct{} `json:"-" sql:"player__technologies"`
 
         Technology *Technology `json:"technology"`
-        ResearchState *ResearchState `json:"research_state"`
+        ResearchState *PointsProduction `json:"research_state"`
     }
 )
 
