@@ -27,6 +27,40 @@
         "type": "points",
         "amount": 35
       }
+    ],
+    "compartments": [
+      {
+        "name": "ore-well",
+        "bonuses": [
+          {
+            "type": "resource",
+            "resource": "ore",
+            "percent": 10
+          },
+          {
+            "type": "resource",
+            "resource": "red-ore",
+            "percent": 10
+          }
+        ],
+        "maluses": [
+          {
+            "type": "resource",
+            "resource": "emerald",
+            "percent": 15
+          }
+        ],
+        "price": [
+          {
+            "type": "points",
+            "amount": 20
+          },
+          {
+            "type": "credits",
+            "amount": 250
+          }
+        ]
+      }
     ]
   },
   "cristal-synthetiser": {

@@ -26,21 +26,44 @@ type(
 		Planet *Planet `json:"planet"`
 		PlanetId uint16 `json:"-"`
 		ConstructionState *PointsProduction `json:"construction_state"`
-		ConstructionStateId uint32 `json:"-"`
+        ConstructionStateId uint32 `json:"-"`
+        Compartments []*BuildingCompartment
 		Status string `json:"status"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
 		
-	}
+    }
+    BuildingCompartment struct {
+        TableName struct{} `json:"-" sql:"map__planet_building_compartments"`
+
+        Id uint32 `json:"id"`
+        Name string `json:"name"`
+        BuildingId uint32 `json:"-"`
+        Building *Building `json:"building"`
+        ConstructionStateId uint32 `json:"-"`
+        ConstructionState *PointsProduction `json:"construction_state"`
+        Status string `json:"status"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
+    }
+
 	BuildingPlan struct {
 		Name string `json:"name"`
 		ParentName string `json:"parent"`
         Type string `json:"type"`
         Resources []string `json:"resources"`
-		Picture string `json:"picture"`
+        Picture string `json:"picture"`
+        Compartments []BuildingCompartmentPlan `json:"compartments"`
 		Price []Price `json:"price"`
 	}
-	BuildingPlansData map[string]BuildingPlan
+    BuildingPlansData map[string]BuildingPlan
+    
+    BuildingCompartmentPlan struct {
+        Name string `json:"name"`
+        Bonuses []Modifier `json:"bonuses"`
+        Maluses []Modifier `json:"maluses"`
+        Price []Price `json:"price"`
+    }
 )
 
 func InitPlanetConstructions() {
