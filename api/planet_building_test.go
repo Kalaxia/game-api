@@ -4,7 +4,7 @@ import(
 	"testing"
 )
 
-func TestPayBuildingPrice(t *testing.T) {
+func TestPayPrice(t *testing.T) {
 	InitDatabaseMock()
 
 	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
@@ -21,7 +21,7 @@ func TestPayBuildingPrice(t *testing.T) {
 		},
 	}
 
-	points := planet.payBuildingPrice(buildingPlan)
+	points := planet.payPrice(buildingPlan.Price, 1)
 
 	if points != 10 {
 		t.Errorf("The price in points should equal 10, not %d", points)

@@ -1,8 +1,6 @@
 package api
 
 import(
-    "time"
-    "sort"
     "sync"
 )
 
@@ -139,6 +137,16 @@ func (pp *PointsProduction) getMissingPoints() uint8 {
     return pp.Points - pp.CurrentPoints
 }
 
+func (pp *PointsProduction) spendPoints(points uint8, callback func()) uint8 {
+    if missingPoints := pp.getMissingPoints(); missingPoints <= points {
+        callback()
+        return points - missingPoints
+    }
+    pp.CurrentPoints += points
+    pp.update()
+    return 0
+}
+
 func (pp *PointsProduction) update() {
 	if err := Database.Update(pp); err != nil {
 		panic(NewException("Points production could not be udpated", err))
@@ -152,28 +160,31 @@ func (pp *PointsProduction) delete() {
 }
 
 func (p *Planet) produceBuildingPoints() {
-    buildingPoints := p.Settings.BuildingPoints
-    if buildingPoints <= 0 || len(p.Buildings) == 0 {
+    points := p.Settings.BuildingPoints
+    if points <= 0 || len(p.Buildings) == 0 {
         return
     }
-    // Sort the buildings by construction date
-    constructingBuildings := make(map[string]*Building, 0)
-    var buildingDates []string
-    for _, building := range p.Buildings {
-        if building.Status != BuildingStatusConstructing {
-            continue
-        }
-        date := building.CreatedAt.Format(time.RFC3339)
-        // we use the date as a key for the constructing buildings map
-        constructingBuildings[date] = &building
-        buildingDates = append(buildingDates, date)
-    }
-    // Here we sort the dates
-    sort.Strings(buildingDates)
-    for _, date := range buildingDates {
-        if buildingPoints <= 0 {
+    for _, b := range p.Buildings {
+        if points <= 0 {
             break
         }
-        buildingPoints = constructingBuildings[date].spendPoints(buildingPoints)
+        if b.Status == BuildingStatusConstructing {
+            points = b.ConstructionState.spendPoints(points, b.finishConstruction)
+        } else {
+            points = b.constructCompartments(points)
+        }
     }
+}
+
+func (b *Building) constructCompartments(points uint8) uint8 {
+    for _, c := range b.Compartments {
+        if points < 1 {
+            break;
+        }
+        if c.Status != BuildingStatusConstructing {
+            continue
+        }
+        points = c.ConstructionState.spendPoints(points, c.finishConstruction)
+    }
+    return points
 }

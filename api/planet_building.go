@@ -108,12 +108,34 @@ func CancelBuilding(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(""))
 }
 
+func CreateBuildingCompartment(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    player := context.Get(r, "player").(*Player)
+
+    planetId, _ := strconv.ParseUint(vars["planet-id"], 10, 16)
+    buildingId, _ := strconv.ParseUint(vars["building-id"], 10, 16)
+    planet := getPlayerPlanet(uint16(planetId), player.Id)
+
+    data := DecodeJsonRequest(r)
+
+    SendJsonResponse(w, 201, planet.getBuilding(uint32(buildingId)).createCompartment(data["name"].(string)))
+}
+
 func (p *Planet) getBuildings() ([]Building, []BuildingPlan) {
     buildings := make([]Building, 0)
     if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Column("building.*", "ConstructionState").Select(); err != nil {
         panic(NewHttpException(500, "buildings.internal_error", err))
     }
     return buildings, getAvailableBuildings(buildings)
+}
+
+func (p *Planet) getBuilding(id uint32) *Building {
+    for _, b := range p.Buildings {
+        if b.Id == id {
+            return &b
+        }
+    }
+    panic(NewHttpException(404, "planets.buildings.not_found", nil))
 }
 
 func getAvailableBuildings(buildings []Building) []BuildingPlan {
@@ -142,7 +164,7 @@ func (p *Planet) createBuilding(name string) Building {
     if !isset {
         panic(NewHttpException(400, "unknown building plan", nil))
     }
-    constructionState := p.createPointsProduction(p.payBuildingPrice(buildingPlan))
+    constructionState := p.createPointsProduction(p.payPrice(buildingPlan.Price, 1))
     building := Building{
         Name: name,
         Type: buildingPlan.Type,
@@ -174,36 +196,63 @@ func (p *Planet) cancelBuilding(id uint32) {
     }
 }
 
-func (p *Planet) payBuildingPrice(buildingPlan BuildingPlan) uint8 {
-    points := uint8(0)
-    for _, price := range buildingPlan.Price {
-        if price.Type == PriceTypePoints {
-            points = uint8(price.Amount)
-        } else if price.Type == PriceTypeMoney {
-            if !p.Player.updateWallet(-int32(price.Amount)) {
-                panic(NewHttpException(400, "The player has not enough money", nil))
-            }
-            p.Player.update()
-        }
+func (b *Building) createCompartment(name string) *BuildingCompartment {
+    compartmentPlan := b.getCompartmentPlan(name)
+    if compartmentPlan == nil {
+        panic(NewHttpException(400, "planets.buildings.compartments.invalid", nil))
     }
-    return points
+    cs := b.Planet.createPointsProduction(b.Planet.payPrice(compartmentPlan.Price, 1))
+    compartment := &BuildingCompartment{
+        Name: name,
+        Status: BuildingStatusConstructing,
+        Building: b,
+        BuildingId: b.Id,
+        ConstructionState: cs,
+        ConstructionStateId: cs.Id,
+        CreatedAt: time.Now(),
+        UpdatedAt: time.Now(),
+    }
+    if err := Database.Insert(compartment); err != nil {
+        panic(NewException("Could not create building compartment", err))
+    }
+    return compartment
 }
 
-func (b *Building) spendPoints(points uint8) uint8 {
-    if missingPoints := b.ConstructionState.getMissingPoints(); missingPoints <= points {
-        b.finishConstruction()
-        return points - missingPoints
+func (b *Building) getCompartmentPlan(name string) *BuildingCompartmentPlan {
+    for _, plan := range buildingPlansData[b.Name].Compartments {
+        if plan.Name == name {
+            return &plan
+        }
     }
-    b.ConstructionState.CurrentPoints += points
-    b.ConstructionState.update()
-    return 0
+    return nil
+}
+
+func (b *Building) update() {
+    b.UpdatedAt = time.Now()
+    if err := Database.Update(b); err != nil {
+        panic(NewException("Building could not be updated", err))
+    }
 }
 
 func (b *Building) finishConstruction() {
     b.Status = BuildingStatusOperational
     b.ConstructionStateId = 0
-    if err := Database.Update(b); err != nil {
-        panic(NewException("Building could not be updated", err))
-    }
     b.ConstructionState.delete()
+    b.update()
+}
+
+func (c *BuildingCompartment) finishConstruction() {
+    c.Status = BuildingStatusOperational
+    c.ConstructionStateId = 0
+    c.ConstructionState.delete()
+
+    c.Building.update()
+    c.update()
+}
+
+func (c *BuildingCompartment) update() {
+    c.UpdatedAt = time.Now()
+    if err := Database.Update(c); err != nil {
+        panic(NewException("Building Compartment could not be updated", err))
+    }
 }

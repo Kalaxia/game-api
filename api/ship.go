@@ -108,7 +108,7 @@ func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup
     quantity := uint8(data["quantity"].(float64))
     shipModel := p.Player.getShipModel(modelId)
 
-    constructionState := p.createPointsProduction(p.payShipCost(shipModel.Price, quantity))
+    constructionState := p.createPointsProduction(p.payPrice(shipModel.Price, quantity))
 	ships := make([]Ship, quantity)
     ship := Ship{
         ModelId: shipModel.Id,
@@ -207,31 +207,6 @@ func (p *Planet) getHangarShipGroups() []ShipGroup {
             panic(NewHttpException(404, "fleet not found", err))
     }
     return ships
-}
-
-func (p *Planet) payShipCost(prices []Price, quantity uint8) uint8 {
-    var points uint8
-    for _, price := range prices {
-        switch price.Type {
-            case PriceTypeMoney:
-                if !p.Player.updateWallet(-(int32(price.Amount) * int32(quantity))) {
-                    panic(NewHttpException(400, "Not enough money", nil))
-                }
-                p.Player.update()
-                break
-            case PriceTypePoints:
-                points = uint8(price.Amount) * quantity
-                break
-            case PriceTypeResources:
-                amount := uint16(price.Amount) * uint16(quantity)
-                if !p.Storage.hasResource(price.Resource, amount) {
-                    panic(NewHttpException(400, "Not enough resources", nil))
-                }
-                p.Storage.storeResource(price.Resource, -int16(amount))
-                break
-        }
-    }
-    return points
 }
 
 func (cg *ShipConstructionGroup) finishConstruction() {
