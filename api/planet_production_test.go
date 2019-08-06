@@ -95,3 +95,35 @@ func TestGetMissingPoints(t *testing.T) {
 		t.Errorf("Missing points should equal 4, not %d", missingPoints)
 	}
 }
+
+
+func TestSpendPoints(t *testing.T) {
+	InitDatabaseMock()
+	building := &Building{
+		Status: BuildingStatusConstructing,
+		ConstructionStateId: 1,
+		ConstructionState: &PointsProduction{
+			Id: 1,
+			Points: 10,
+			CurrentPoints: 2,
+		},
+	}
+	if points := building.ConstructionState.spendPoints(5, building.finishConstruction); points != 0 {
+		t.Errorf("Remaining points should equal 0, not %d", points)
+	}
+	if building.ConstructionState.CurrentPoints != 7 {
+		t.Errorf("Current points should equal 7, not %d", building.ConstructionState.CurrentPoints)
+	}
+	if building.Status != BuildingStatusConstructing {
+		t.Errorf("Building status should be constructing")
+	}
+	if points := building.ConstructionState.spendPoints(5, building.finishConstruction); points != 2 {
+		t.Errorf("Remaining points should equal 2, not %d", points)
+	}
+	if building.Status != BuildingStatusOperational {
+		t.Errorf("Building status should be operational")
+	}
+	if building.ConstructionStateId != 0 {
+		t.Errorf("Building construction state ID should equal 0")
+	}
+}
