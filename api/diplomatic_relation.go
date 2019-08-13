@@ -34,7 +34,8 @@ func (p *Planet) getPlanetRelations() []DiplomaticRelation {
   relations := make([]DiplomaticRelation, 0)
   if err := Database.
     Model(&relations).
-    Column("diplomatic_relation.*", "Faction", "Player", "Player.Faction").
+    Relation("Faction").
+    Relation("Player.Faction").
     Where("diplomatic_relation.planet_id = ?", p.Id).
     Select(); err != nil {
     panic(NewException("Planet not found", err))

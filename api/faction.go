@@ -67,7 +67,7 @@ func getFaction(id uint16) *Faction {
 	faction := &Faction{}
 	if err := Database.
 		Model(faction).
-		Column("faction.*", "Relations", "Relations.OtherFaction").
+		Relation("Relations.OtherFaction").
 		Where("faction.id = ?", id).
 		Select(); err != nil {
 		panic(NewHttpException(404, "Faction not found", err))
@@ -77,7 +77,7 @@ func getFaction(id uint16) *Faction {
 
 func getAllFactions() []*Faction {
 	factions := make([]*Faction, 0)
-	if err := Database.Model(&factions).Column("Relations", "Settings").Select(); err != nil {
+	if err := Database.Model(&factions).Relation("Relations").Relation("Settings").Select(); err != nil {
 		panic(NewException("Could not retrieve factions", err))
 	}
 	return factions
@@ -198,7 +198,7 @@ func (f *Faction) calculateWage() {
 
 func (f *Faction) getControlledPlanets() []*Planet {
 	planets := make([]*Planet, 0)
-	if err := Database.Model(&planets).Column("Player.Faction").Where("player__faction.id = ?", f.Id).Select(); err != nil {
+	if err := Database.Model(&planets).Relation("Player.Faction").Where("player__faction.id = ?", f.Id).Select(); err != nil {
 		panic(NewException("Could not retrieve faction controlled planets", err))
 	}
 	return planets

@@ -91,7 +91,7 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
 
 func getPlayer(id uint16, isSelf bool) *Player {
     player := &Player{}
-    if err := Database.Model(player).Column("player.*", "Faction", "Notifications", "CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
+    if err := Database.Model(player).Relation("Faction").Relation("Notifications").Relation("CurrentPlanet").Where("player.id = ?", id).Select(); err != nil {
         panic(NewException("players.not_found", err))
     }
     if !isSelf {
@@ -105,7 +105,7 @@ func (s *Server) getPlayerByUsername(username string) *Player {
     player := &Player{}
     if err := Database.
         Model(player).
-        Column("player.*", "Server").
+        Relation("Server").
         Where("username = ?", username).
         Where("server_id = ?", s.Id).
         Select(); err != nil {

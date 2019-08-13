@@ -107,7 +107,9 @@ func AcceptOffer(w http.ResponseWriter, r *http.Request) {
 
 func getOffer(id uint32) *ResourceOffer {
     offer := &ResourceOffer{}
-    if err := Database.Model(offer).Column("Location.Player.Faction", "Location.System", "Location.Storage").Where("resource_offer.id = ?", id).Select(); err != nil {
+    if err := Database.Model(offer).Relation("Location.Player.Faction").
+        Relation("Location.System").
+        Relation("Location.Storage").Where("resource_offer.id = ?", id).Select(); err != nil {
         panic(NewHttpException(404, "Offer not found", err))
     }
     offer.Type = "resources"
@@ -156,7 +158,7 @@ func searchOffers(data map[string]interface{}) []OfferInterface {
     operation := data["operation"].(string)
 
     resourceOffers := make([]*ResourceOffer, 0)
-    if err := Database.Model(&resourceOffers).Column("Location.Player.Faction", "Location.System").Where("operation = ?", operation).Select(); err != nil {
+    if err := Database.Model(&resourceOffers).Relation("Location.Player.Faction").Relation("Location.System").Where("operation = ?", operation).Select(); err != nil {
         panic(NewHttpException(500, "Resource offers could not be retrieved", err))
     }
     // shipOffers := make([]*model.ShipOffer, 0)

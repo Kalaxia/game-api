@@ -174,7 +174,7 @@ func (sm *ShipModel) createShipModelSlots() {
 
 func (p *Player) getShipModels() []*ShipModel {
     shipPlayerModels := make([]ShipPlayerModel, 0)
-    if err := Database.Model(&shipPlayerModels).Column("Model").Where("Model.player_id = ?", p.Id).Select(); err != nil {
+    if err := Database.Model(&shipPlayerModels).Relation("Model").Where("Model.player_id = ?", p.Id).Select(); err != nil {
         panic(NewHttpException(500, "Could not retrieve player ship models", err))
     }
     models := make([]*ShipModel, len(shipPlayerModels))
@@ -191,7 +191,7 @@ func (p *Player) getShipModels() []*ShipModel {
 
 func (p *Player) getShipModel(modelId uint32) *ShipModel {
     shipPlayerModel := &ShipPlayerModel{}
-    if err := Database.Model(shipPlayerModel).Column("Model").Where("Model.player_id = ?", p.Id).Where("Model.id = ?", modelId).Select(); err != nil {
+    if err := Database.Model(shipPlayerModel).Relation("Model").Where("Model.player_id = ?", p.Id).Where("Model.id = ?", modelId).Select(); err != nil {
         panic(NewHttpException(404, "Player ship model not found", err))
     }
     slots := make([]ShipSlot, 0)

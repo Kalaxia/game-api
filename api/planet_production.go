@@ -35,7 +35,11 @@ func getPlanets(offset int, limit int) []*Planet {
     planets := make([]*Planet, 0)
     if err := Database.
         Model(&planets).
-        Column("planet.*", "Player", "Buildings", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
+        Relation("Player").
+        Relation("Buildings.ConstructionState").
+        Relation("Resources").
+        Relation("Storage").
+        Relation("Settings").
         Limit(limit).
         Offset(offset).
         Order("planet.id ASC").

@@ -27,7 +27,7 @@ type(
 		PlanetId uint16 `json:"-"`
 		ConstructionState *PointsProduction `json:"construction_state"`
         ConstructionStateId uint32 `json:"-"`
-        Compartments []*BuildingCompartment
+        Compartments []*BuildingCompartment `json:"compartments"`
 		Status string `json:"status"`
 		CreatedAt time.Time `json:"created_at"`
 		UpdatedAt time.Time `json:"updated_at"`
@@ -123,7 +123,7 @@ func CreateBuildingCompartment(w http.ResponseWriter, r *http.Request) {
 
 func (p *Planet) getBuildings() ([]Building, []BuildingPlan) {
     buildings := make([]Building, 0)
-    if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Column("building.*", "ConstructionState").Select(); err != nil {
+    if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Relation("ConstructionState").Select(); err != nil {
         panic(NewHttpException(500, "buildings.internal_error", err))
     }
     return buildings, getAvailableBuildings(buildings)
@@ -132,6 +132,7 @@ func (p *Planet) getBuildings() ([]Building, []BuildingPlan) {
 func (p *Planet) getBuilding(id uint32) *Building {
     for _, b := range p.Buildings {
         if b.Id == id {
+            b.Planet = p
             return &b
         }
     }
@@ -185,7 +186,7 @@ func (p *Planet) createBuilding(name string) Building {
 
 func (p *Planet) cancelBuilding(id uint32) {
     building := &Building{}
-    if err := Database.Model(building).Column("building.*", "ConstructionState").Where("building.id = ?", id).Select(); err != nil {
+    if err := Database.Model(building).Relation("ConstructionState").Where("building.id = ?", id).Select(); err != nil {
         panic(NewHttpException(404, "Building not found", err))
     }
     if building.PlanetId != p.Id {

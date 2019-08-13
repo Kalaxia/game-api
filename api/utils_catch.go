@@ -25,7 +25,7 @@ func CatchHttpException(w http.ResponseWriter) {
 
 func CatchException(r interface{}) (bool, int, string) {
     if r == nil {
-        r := recover()
+        r = recover()
         if r == nil {
             return false, 200, ""
         }
@@ -53,6 +53,8 @@ func CatchException(r interface{}) (bool, int, string) {
         }
     } else if err, ok := r.(error); ok {
         log.Println("[Error]: " + err.Error())
+    } else {
+        log.Println("[Unknown Error]: " , r)
     }
     pc := make([]uintptr, 10)
     if n := runtime.Callers(0, pc); code >= 500 && n > 0 {

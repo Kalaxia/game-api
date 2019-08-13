@@ -54,7 +54,8 @@ func getCombatReport(id uint16) *FleetCombat {
 	report := &FleetCombat{}
 	if err := Database.
 		Model(report).
-		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
+		Relation("Attacker.Player.Faction").
+		Relation("Defender.Player.Faction").
 		Where("fleet_combat.id = ?", id).
 		Select(); err != nil {
 		panic(NewHttpException(404, "Report not found", err))
@@ -67,7 +68,8 @@ func (p *Player) getCombatReports() []FleetCombat {
 
 	if err := Database.
 		Model(&reports).
-		Column("Attacker", "Attacker.Player", "Attacker.Player.Faction", "Defender", "Defender.Player", "Defender.Player.Faction").
+		Relation("Attacker.Player.Faction").
+		Relation("Defender.Player.Faction").
 		Where("attacker__player.id = ?", p.Id).
 		WhereOr("defender__player.id = ?", p.Id).
 		Order("end_at DESC").

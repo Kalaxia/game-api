@@ -169,7 +169,7 @@ func (p *Planet) getHangarShips() []Ship {
     ships := make([]Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("Model").
+        Relation("Model").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", p.Id).
         Select(); err != nil {
@@ -182,7 +182,8 @@ func (p *Planet) getHangarShipsByModel(modelId int, quantity int) []Ship {
     ships := make([]Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("Hangar", "Fleet").
+        Relation("Hangar").
+        Relation("Fleet").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", p.Id).
         Where("model_id = ?", modelId).
@@ -230,7 +231,10 @@ func getShip(id uint16) *Ship {
     ship := &Ship{}
     if err := Database.
         Model(ship).
-        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        Relation("Model").
+        Relation("Hangar.Player").
+        Relation("Fleet.Location.Player").
+        Relation("Fleet.Player").
         Where("construction_state_id IS NULL").
         Where("ship.id = ?", id).
         Select(); err != nil {
@@ -243,7 +247,10 @@ func getShipsByIds(ids []uint16) []*Ship {
     ships := make([]*Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("ship.*", "Hangar", "Fleet", "Model", "Hangar.Player", "Fleet.Location", "Fleet.Location.Player", "Fleet.Player").
+        Relation("Model").
+        Relation("Hangar.Player").
+        Relation("Fleet.Location.Player").
+        Relation("Fleet.Player").
         Where("construction_state_id IS NULL").
         WhereIn("ship.id IN ?", ids).
         Select(); err != nil {
