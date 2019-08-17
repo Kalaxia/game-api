@@ -34,6 +34,7 @@
     "compartments": [
       {
         "name": "ore-well",
+        "picture": "bat_prod_a.png",
         "bonuses": [
           {
             "type": "resource",

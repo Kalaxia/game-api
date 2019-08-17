@@ -1,6 +1,7 @@
 package api
 
 import(
+    "math"
     "sync"
 )
 
@@ -37,6 +38,7 @@ func getPlanets(offset int, limit int) []*Planet {
         Model(&planets).
         Relation("Player").
         Relation("Buildings.ConstructionState").
+        Relation("Buildings.Compartments.ConstructionState").
         Relation("Resources").
         Relation("Storage").
         Relation("Settings").
@@ -72,6 +74,9 @@ func (p *Planet) getAvailablePoints() map[string]uint8 {
 }
 
 func (b *Building) produce(points map[string]uint8) map[string]uint8 {
+    if b.Status != BuildingStatusOperational {
+        return points
+    }
     switch (b.Type) {
         case "resource": 
             b.produceResources()
@@ -96,7 +101,41 @@ func (b *Building) getProducedQuantity(resourceName string) uint16 {
     if resource == nil {
         return 0
     }
-    return uint16(resource.Density) * 10
+    modifiers := b.getResourceModifiers()
+    baseQuantity := uint16(resource.Density) * 10
+
+    if percent, ok := modifiers[resourceName]; ok {
+        if percent > 0 {
+            return baseQuantity + uint16(math.Floor(float64(baseQuantity) * (float64(percent) / 100)))
+        } else {
+            return baseQuantity - uint16(math.Floor(float64(baseQuantity) * math.Abs(float64(percent) / 100)))
+        }
+    }
+    return baseQuantity
+}
+
+func (b *Building) getResourceModifiers() map[string]uint8 {
+    resourceModifiers := make(map[string]uint8, 0)
+
+    for _, c := range b.Compartments {
+        if c.Status != BuildingStatusOperational {
+            continue
+        }
+        plan := b.getCompartmentPlan(c.Name)
+        for _, bonus := range plan.Bonuses {
+            if bonus.Type != "resource" {
+                continue
+            }
+            resourceModifiers[bonus.Resource] = bonus.Percent
+        }
+        for _, malus := range plan.Maluses {
+            if malus.Type != "resource" {
+                continue
+            }
+            resourceModifiers[malus.Resource] = -malus.Percent
+        }
+    }
+    return resourceModifiers
 }
 
 func (b *Building) produceShips(points map[string]uint8) map[string]uint8 {

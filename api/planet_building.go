@@ -123,7 +123,7 @@ func CreateBuildingCompartment(w http.ResponseWriter, r *http.Request) {
 
 func (p *Planet) getBuildings() ([]Building, []BuildingPlan) {
     buildings := make([]Building, 0)
-    if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Relation("ConstructionState").Select(); err != nil {
+    if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Relation("ConstructionState").Relation("Compartments.ConstructionState").Select(); err != nil {
         panic(NewHttpException(500, "buildings.internal_error", err))
     }
     return buildings, getAvailableBuildings(buildings)
@@ -238,17 +238,18 @@ func (b *Building) update() {
 func (b *Building) finishConstruction() {
     b.Status = BuildingStatusOperational
     b.ConstructionStateId = 0
-    b.ConstructionState.delete()
     b.update()
+    b.ConstructionState.delete()
 }
 
 func (c *BuildingCompartment) finishConstruction() {
     c.Status = BuildingStatusOperational
     c.ConstructionStateId = 0
-    c.ConstructionState.delete()
 
-    c.Building.update()
     c.update()
+    c.Building.update()
+    
+    c.ConstructionState.delete()
 }
 
 func (c *BuildingCompartment) update() {
