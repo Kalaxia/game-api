@@ -13,7 +13,7 @@ type(
         TableName struct{} `json:"-" sql:"ship__construction_states"`
 
         Id uint32 `json:"id"`
-        CurrentPoints uint8 `json:"current_points" sql:",notnull"`
+        CurrentPoints uint8 `json:"current_points" sql:",notnull" pg:",use_zero"`
         Points uint8 `json:"points"`
     }
     Ship struct {
