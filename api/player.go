@@ -24,7 +24,7 @@ type(
         Server *Server `json:"-"`
         FactionId uint16 `json:"-"`
         Faction *Faction `json:"faction"`
-        IsActive bool `json:"is_active" sql:",notnull"`
+        IsActive bool `json:"is_active" sql:",notnull" pg:",use_zero"`
         Wallet uint32 `json:"wallet"`
         Notifications Notifications `json:"notifications"`
         CurrentPlanet *Planet `json:"current_planet"`

@@ -11,7 +11,7 @@ type(
 		Id uint16 `json:"-"`
 		Faction *Faction `json:"faction"`
 		FactionId uint16 `json:"-"`
-		IsPublic bool `json:"is_public" sql:",notnull"`
+		IsPublic bool `json:"is_public" sql:",notnull" pg:",use_zero"`
 		Name string `json:"name"`
 		Value int `json:"value"`
 		UpdatedAt time.Time `json:"updated_at"`

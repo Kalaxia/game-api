@@ -20,8 +20,8 @@ type(
 		AuthorId uint16 `json:"-"`
 		Author *Player `json:"author"`
 		Type string `json:"type"`
-		IsApproved bool `json:"is_approved" sql:",notnull"`
-		IsProcessed bool `json:"is_processed" sql:",notnull"`
+		IsApproved bool `json:"is_approved" sql:",notnull" pg:",use_zero"`
+		IsProcessed bool `json:"is_processed" sql:",notnull" pg:",use_zero"`
 		Data map[string]interface{} `json:"data"`
 		CreatedAt time.Time `json:"created_at"`
 		EndedAt time.Time `json:"ended_at"`

@@ -18,7 +18,7 @@ type FleetCombat struct {
 	AttackerId uint16 `json:"-"`
 	Defender *Fleet `json:"defender"`
 	DefenderId uint16 `json:"-"`
-	IsVictory bool `json:"is_victory" sql:",notnull"`
+	IsVictory bool `json:"is_victory" sql:",notnull" pg:",use_zero"`
 
 	AttackerShips map[string]uint16 `json:"attacker_ships" sql:",notnull" pg:",use_zero"`
 	DefenderShips map[string]uint16 `json:"defender_ships" sql:",notnull" pg:",use_zero"`
