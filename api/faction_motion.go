@@ -281,7 +281,7 @@ func (m *FactionMotion) countVotesByOption(option int) int {
 
 func (f *Faction) getMotion(id uint32) *FactionMotion {
 	motion := &FactionMotion{}
-	if err := Database.Model(motion).Column("Faction", "Author.Faction").Where("faction_motion.id = ?", id).Where("faction_motion.faction_id = ?", f.Id).Select(); err != nil {
+	if err := Database.Model(motion).Relation("Faction").Relation("Author.Faction").Where("faction_motion.id = ?", id).Where("faction_motion.faction_id = ?", f.Id).Select(); err != nil {
 		panic(NewHttpException(404, "Motion not found", err))
 	}
 	return motion
@@ -289,7 +289,7 @@ func (f *Faction) getMotion(id uint32) *FactionMotion {
 
 func (f *Faction) getCurrentMotions() []*FactionMotion {
 	motions := make([]*FactionMotion, 0)
-	if err := Database.Model(&motions).Column("Faction", "Author.Faction").Where("faction_motion.faction_id = ?", f.Id).Where("is_processed = ?", false).Select(); err != nil {
+	if err := Database.Model(&motions).Relation("Faction").Relation("Author.Faction").Where("faction_motion.faction_id = ?", f.Id).Where("is_processed = ?", false).Select(); err != nil {
 		panic(NewHttpException(404, "Faction motions not found", err))
 	}
 	return motions
@@ -298,7 +298,7 @@ func (f *Faction) getCurrentMotions() []*FactionMotion {
 func scheduleInProgressMotions() {
 	motions := make([]*FactionMotion, 0)
 	
-	if err := Database.Model(&motions).Column("Author", "Faction").Where("is_processed = ?", false).Select(); err != nil {
+	if err := Database.Model(&motions).Relation("Author").Relation("Faction").Where("is_processed = ?", false).Select(); err != nil {
 		panic(NewException("Faction motions could not be retrieved", err))
 	}
 	for _, m := range motions {

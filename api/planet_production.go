@@ -1,8 +1,7 @@
 package api
 
 import(
-    "time"
-    "sort"
+    "math"
     "sync"
 )
 
@@ -11,7 +10,7 @@ type(
 		TableName struct{} `json:"-" sql:"map__planet_point_productions"`
 
 		Id uint32 `json:"id"`
-		CurrentPoints uint8 `json:"current_points" sql:",notnull"`
+		CurrentPoints uint8 `json:"current_points" sql:",notnull" pg:",use_zero"`
 		Points uint8 `json:"points"`
     }
 )
@@ -37,7 +36,12 @@ func getPlanets(offset int, limit int) []*Planet {
     planets := make([]*Planet, 0)
     if err := Database.
         Model(&planets).
-        Column("planet.*", "Player", "Buildings", "Buildings.ConstructionState", "Resources", "Storage", "Settings").
+        Relation("Player").
+        Relation("Buildings.ConstructionState").
+        Relation("Buildings.Compartments.ConstructionState").
+        Relation("Resources").
+        Relation("Storage").
+        Relation("Settings").
         Limit(limit).
         Offset(offset).
         Order("planet.id ASC").
@@ -70,6 +74,9 @@ func (p *Planet) getAvailablePoints() map[string]uint8 {
 }
 
 func (b *Building) produce(points map[string]uint8) map[string]uint8 {
+    if b.Status != BuildingStatusOperational {
+        return points
+    }
     switch (b.Type) {
         case "resource": 
             b.produceResources()
@@ -94,7 +101,41 @@ func (b *Building) getProducedQuantity(resourceName string) uint16 {
     if resource == nil {
         return 0
     }
-    return uint16(resource.Density) * 10
+    modifiers := b.getResourceModifiers()
+    baseQuantity := uint16(resource.Density) * 10
+
+    if percent, ok := modifiers[resourceName]; ok {
+        if percent > 0 {
+            return baseQuantity + uint16(math.Floor(float64(baseQuantity) * (float64(percent) / 100)))
+        } else {
+            return baseQuantity - uint16(math.Floor(float64(baseQuantity) * math.Abs(float64(percent) / 100)))
+        }
+    }
+    return baseQuantity
+}
+
+func (b *Building) getResourceModifiers() map[string]uint8 {
+    resourceModifiers := make(map[string]uint8, 0)
+
+    for _, c := range b.Compartments {
+        if c.Status != BuildingStatusOperational {
+            continue
+        }
+        plan := b.getCompartmentPlan(c.Name)
+        for _, bonus := range plan.Bonuses {
+            if bonus.Type != "resource" {
+                continue
+            }
+            resourceModifiers[bonus.Resource] = bonus.Percent
+        }
+        for _, malus := range plan.Maluses {
+            if malus.Type != "resource" {
+                continue
+            }
+            resourceModifiers[malus.Resource] = -malus.Percent
+        }
+    }
+    return resourceModifiers
 }
 
 func (b *Building) produceShips(points map[string]uint8) map[string]uint8 {
@@ -139,6 +180,16 @@ func (pp *PointsProduction) getMissingPoints() uint8 {
     return pp.Points - pp.CurrentPoints
 }
 
+func (pp *PointsProduction) spendPoints(points uint8, callback func()) uint8 {
+    if missingPoints := pp.getMissingPoints(); missingPoints <= points {
+        callback()
+        return points - missingPoints
+    }
+    pp.CurrentPoints += points
+    pp.update()
+    return 0
+}
+
 func (pp *PointsProduction) update() {
 	if err := Database.Update(pp); err != nil {
 		panic(NewException("Points production could not be udpated", err))
@@ -152,28 +203,31 @@ func (pp *PointsProduction) delete() {
 }
 
 func (p *Planet) produceBuildingPoints() {
-    buildingPoints := p.Settings.BuildingPoints
-    if buildingPoints <= 0 || len(p.Buildings) == 0 {
+    points := p.Settings.BuildingPoints
+    if points <= 0 || len(p.Buildings) == 0 {
         return
     }
-    // Sort the buildings by construction date
-    constructingBuildings := make(map[string]*Building, 0)
-    var buildingDates []string
-    for _, building := range p.Buildings {
-        if building.Status != BuildingStatusConstructing {
-            continue
-        }
-        date := building.CreatedAt.Format(time.RFC3339)
-        // we use the date as a key for the constructing buildings map
-        constructingBuildings[date] = &building
-        buildingDates = append(buildingDates, date)
-    }
-    // Here we sort the dates
-    sort.Strings(buildingDates)
-    for _, date := range buildingDates {
-        if buildingPoints <= 0 {
+    for _, b := range p.Buildings {
+        if points <= 0 {
             break
         }
-        buildingPoints = constructingBuildings[date].spendPoints(buildingPoints)
+        if b.Status == BuildingStatusConstructing {
+            points = b.ConstructionState.spendPoints(points, b.finishConstruction)
+        } else {
+            points = b.constructCompartments(points)
+        }
     }
+}
+
+func (b *Building) constructCompartments(points uint8) uint8 {
+    for _, c := range b.Compartments {
+        if points < 1 {
+            break;
+        }
+        if c.Status != BuildingStatusConstructing {
+            continue
+        }
+        points = c.ConstructionState.spendPoints(points, c.finishConstruction)
+    }
+    return points
 }

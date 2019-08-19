@@ -13,7 +13,7 @@ type(
         TableName struct{} `json:"-" sql:"ship__construction_states"`
 
         Id uint32 `json:"id"`
-        CurrentPoints uint8 `json:"current_points" sql:",notnull"`
+        CurrentPoints uint8 `json:"current_points" sql:",notnull" pg:",use_zero"`
         Points uint8 `json:"points"`
     }
     Ship struct {
@@ -108,7 +108,7 @@ func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup
     quantity := uint8(data["quantity"].(float64))
     shipModel := p.Player.getShipModel(modelId)
 
-    constructionState := p.createPointsProduction(p.payShipCost(shipModel.Price, quantity))
+    constructionState := p.createPointsProduction(p.payPrice(shipModel.Price, quantity))
 	ships := make([]Ship, quantity)
     ship := Ship{
         ModelId: shipModel.Id,
@@ -136,13 +136,13 @@ func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup
 func (p *Planet) getConstructingShips() []ShipConstructionGroup {
     scg := make([]ShipConstructionGroup, 0)
     if _, err := Database.Query(&scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
-        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        pp.id as construction_state__id, pp.points as construction_state__points, pp.current_points as construction_state__current_points, COUNT(pp.id) as quantity
         FROM ship__ships s
         INNER JOIN ship__models m ON s.model_id = m.id
-        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        INNER JOIN map__planet_point_productions pp ON s.construction_state_id = pp.id
         WHERE s.hangar_id = ?
-        GROUP BY cs.id, m.id
-        ORDER BY cs.id ASC`, p.Id); err != nil {
+        GROUP BY pp.id, m.id
+        ORDER BY pp.id ASC`, p.Id); err != nil {
             panic(NewHttpException(404, "No constructing ship found", err))
     }
     return scg
@@ -152,13 +152,13 @@ func (p *Planet) getCurrentlyConstructingShips() *ShipConstructionGroup {
     scg := &ShipConstructionGroup{}
     if _, err := Database.
         Query(scg, `SELECT m.id as model__id, m.name as model__name, m.type as model__type, m.frame_slug as model__frame_slug,
-        cs.id as construction_state__id, cs.points as construction_state__points, cs.current_points as construction_state__current_points, COUNT(cs.id) as quantity
+        pp.id as construction_state__id, pp.points as construction_state__points, pp.current_points as construction_state__current_points, COUNT(pp.id) as quantity
         FROM ship__ships s
         INNER JOIN ship__models m ON s.model_id = m.id
-        INNER JOIN ship__construction_states cs ON s.construction_state_id = cs.id
+        INNER JOIN map__planet_point_productions pp ON s.construction_state_id = pp.id
         WHERE s.hangar_id = ?
-        GROUP BY cs.id, m.id
-        ORDER BY cs.id ASC
+        GROUP BY pp.id, m.id
+        ORDER BY pp.id ASC
         LIMIT 1`, p.Id); err != nil {
             panic(NewHttpException(404, "No constructing ship found", err))
     }
@@ -169,7 +169,7 @@ func (p *Planet) getHangarShips() []Ship {
     ships := make([]Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("Model").
+        Relation("Model").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", p.Id).
         Select(); err != nil {
@@ -182,7 +182,8 @@ func (p *Planet) getHangarShipsByModel(modelId int, quantity int) []Ship {
     ships := make([]Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("Hangar", "Fleet").
+        Relation("Hangar").
+        Relation("Fleet").
         Where("construction_state_id IS NULL").
         Where("hangar_id = ?", p.Id).
         Where("model_id = ?", modelId).
@@ -209,31 +210,6 @@ func (p *Planet) getHangarShipGroups() []ShipGroup {
     return ships
 }
 
-func (p *Planet) payShipCost(prices []Price, quantity uint8) uint8 {
-    var points uint8
-    for _, price := range prices {
-        switch price.Type {
-            case PriceTypeMoney:
-                if !p.Player.updateWallet(-(int32(price.Amount) * int32(quantity))) {
-                    panic(NewHttpException(400, "Not enough money", nil))
-                }
-                p.Player.update()
-                break
-            case PriceTypePoints:
-                points = uint8(price.Amount) * quantity
-                break
-            case PriceTypeResources:
-                amount := uint16(price.Amount) * uint16(quantity)
-                if !p.Storage.hasResource(price.Resource, amount) {
-                    panic(NewHttpException(400, "Not enough resources", nil))
-                }
-                p.Storage.storeResource(price.Resource, -int16(amount))
-                break
-        }
-    }
-    return points
-}
-
 func (cg *ShipConstructionGroup) finishConstruction() {
     ships := make([]Ship, 0)
 
@@ -255,7 +231,10 @@ func getShip(id uint16) *Ship {
     ship := &Ship{}
     if err := Database.
         Model(ship).
-        Column("ship.*", "Hangar", "Fleet", "Model","Hangar.Player","Fleet.Location", "Fleet.Location.Player","Fleet.Player").
+        Relation("Model").
+        Relation("Hangar.Player").
+        Relation("Fleet.Location.Player").
+        Relation("Fleet.Player").
         Where("construction_state_id IS NULL").
         Where("ship.id = ?", id).
         Select(); err != nil {
@@ -268,7 +247,10 @@ func getShipsByIds(ids []uint16) []*Ship {
     ships := make([]*Ship, 0)
     if err := Database.
         Model(&ships).
-        Column("ship.*", "Hangar", "Fleet", "Model", "Hangar.Player", "Fleet.Location", "Fleet.Location.Player", "Fleet.Player").
+        Relation("Model").
+        Relation("Hangar.Player").
+        Relation("Fleet.Location.Player").
+        Relation("Fleet.Player").
         Where("construction_state_id IS NULL").
         WhereIn("ship.id IN ?", ids).
         Select(); err != nil {

@@ -83,7 +83,13 @@ func getPlanet(id uint16) *Planet {
     planet := &Planet{}
     if err := Database.
         Model(planet).
-        Column("planet.*", "Player", "Player.Faction", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
+        Relation("Player.Faction").
+        Relation("Settings").
+        Relation("Relations.Player.Faction").
+        Relation("Relations.Faction").
+        Relation("Resources").
+        Relation("System").
+        Relation("Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
             return nil
@@ -95,7 +101,8 @@ func (s *System) getPlanets() []Planet {
     planets := make([]Planet, 0)
     if err := Database.
         Model(&planets).
-        Column("planet.*", "Orbit", "Player", "Player.Faction").
+        Relation("Orbit").
+        Relation("Player.Faction").
         Where("planet.system_id = ?", s.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "System not found", err))
@@ -107,7 +114,10 @@ func (p *Player) getPlanets() []Planet {
     planets := make([]Planet, 0)
     if err := Database.
         Model(&planets).
-        Column("planet.*", "Player", "Player.Faction", "System", "Resources", "Settings").
+        Relation("Player.Faction").
+        Relation("System").
+        Relation("Resources").
+        Relation("Settings").
         Where("planet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Player not found", err))
@@ -119,7 +129,13 @@ func getPlayerPlanet(id uint16, playerId uint16) *Planet {
     planet := &Planet{}
     if err := Database.
         Model(planet).
-        Column("planet.*", "Player", "Player.Faction", "Settings", "Relations", "Relations.Player", "Relations.Player.Faction", "Relations.Faction", "Resources", "System", "Storage").
+        Relation("Player.Faction").
+        Relation("Settings").
+        Relation("Relations.Player.Faction").
+        Relation("Relations.Faction").
+        Relation("Resources").
+        Relation("System").
+        Relation("Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Planet not found", err))

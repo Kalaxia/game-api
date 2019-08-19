@@ -517,7 +517,7 @@ func getJourney(id uint16) *FleetJourney {
     journey := &FleetJourney{}
     if err := Database.
         Model(journey).
-        Column("CurrentStep.PlanetFinal").
+        Relation("CurrentStep.PlanetFinal").
         Where("fleet_journey.id = ?", id).
         Select(); err != nil {
             panic(NewException("journey not found on GetJourneyById", err))
@@ -529,7 +529,8 @@ func (j *FleetJourney) getFleet() *Fleet{
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player.Faction", "Journey").
+        Relation("Player.Faction").
+        Relation("Journey").
         Where("journey_id = ?", j.Id).
         Select(); err != nil {
             panic(NewException("Fleet not found on GetFleetOnJourney", err))
@@ -542,7 +543,10 @@ func getAllJourneys() []*FleetJourney {
     journeys := make([]*FleetJourney, 0)
     if err := Database.
         Model(&journeys).
-        Column("CurrentStep.PlanetStart", "CurrentStep.PlanetFinal", "CurrentStep.NextStep.PlanetStart", "CurrentStep.NextStep.PlanetFinal").
+        Relation("CurrentStep.PlanetStart").
+        Relation("CurrentStep.PlanetFinal").
+        Relation("CurrentStep.NextStep.PlanetStart").
+        Relation("CurrentStep.NextStep.PlanetFinal").
         Select(); err != nil {
             panic(NewException("Journeys could not be retrieved", err))
     }
@@ -555,8 +559,13 @@ func getStep(stepId uint16) *FleetJourneyStep {
     }
     if err := Database.
         Model(step).
-        Column("Journey.CurrentStep", "NextStep.Journey", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","PlanetFinal.System", "PlanetStart.System").
-        Where( "fleet_journey_step.id = ?",stepId).
+        Relation("Journey.CurrentStep").
+        Relation("NextStep.Journey").
+        Relation("NextStep.PlanetFinal.System").
+        Relation("NextStep.PlanetStart.System").
+        Relation("PlanetFinal.System").
+        Relation("PlanetStart.System").
+        Where("fleet_journey_step.id = ?",stepId).
         Select(); err != nil {
             panic(NewException("step not found in GetStep", err))
     }
@@ -567,7 +576,11 @@ func getStepsById(ids []uint16) []*FleetJourneyStep {
     steps := make([]*FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
-        Column("Journey.CurrentStep", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System", "PlanetFinal.System", "PlanetStart.System").
+        Relation("Journey.CurrentStep").
+        Relation("NextStep.PlanetFinal.System").
+        Relation("NextStep.PlanetStart.System").
+        Relation("PlanetFinal.System").
+        Relation("PlanetStart.System").
         WhereIn("fleet_journey_step.id IN ?", ids).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
@@ -579,7 +592,11 @@ func (j *FleetJourney) getSteps() []*FleetJourneyStep {
     steps := make([]*FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
-        Column("Journey.CurrentStep", "NextStep.PlanetFinal.System", "NextStep.PlanetStart.System","PlanetFinal.System", "PlanetStart.System").
+        Relation("Journey.CurrentStep").
+        Relation("NextStep.PlanetFinal.System").
+        Relation("NextStep.PlanetStart.System").
+        Relation("PlanetFinal.System").
+        Relation("PlanetStart.System").
         Where("fleet_journey_step.journey_id = ?", j.Id).
         Order("fleet_journey_step.step_number ASC").
         Select(); err != nil {

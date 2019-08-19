@@ -13,10 +13,10 @@ type(
 		TableName struct{} `json:"-" sql:"map__planet_settings"`
   
 		Id uint16 `json:"-"`
-		ServicesPoints uint8 `json:"services_points" sql:",notnull"`
-		BuildingPoints uint8 `json:"building_points" sql:",notnull"`
-		MilitaryPoints uint8 `json:"military_points" sql:",notnull"`
-		ResearchPoints uint8 `json:"research_points" sql:",notnull"`
+		ServicesPoints uint8 `json:"services_points" sql:",notnull" pg:",use_zero"`
+		BuildingPoints uint8 `json:"building_points" sql:",notnull" pg:",use_zero"`
+		MilitaryPoints uint8 `json:"military_points" sql:",notnull" pg:",use_zero"`
+		ResearchPoints uint8 `json:"research_points" sql:",notnull" pg:",use_zero"`
 	}
 )
 

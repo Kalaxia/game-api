@@ -59,7 +59,7 @@ func (m *Map) getSectorSystems(sector uint16) []System {
     systems := make([]System, 0)
     if err := Database.
         Model(&systems).
-        Column("Planets", "Planets.Player", "Planets.Player.Faction").
+        Relation("Planets.Player.Faction").
         Where("map_id = ?", m.Id).
         Where("x >= ?", (sector - ((lineNumber * sectorsPerLine) + 1)) * m.SectorSize).
         Where("x <= ?", (sector - (lineNumber * sectorsPerLine)) * m.SectorSize).

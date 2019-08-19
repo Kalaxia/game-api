@@ -168,7 +168,11 @@ func getFleet(id uint16) *Fleet {
     fleet := &Fleet{}
     if err := Database.
         Model(fleet).
-        Column("Player.Faction", "Journey.CurrentStep.PlanetStart.System", "Journey.CurrentStep.PlanetFinal.System", "Location.System", "Location.Player.Faction").
+        Relation("Player.Faction").
+        Relation("Journey.CurrentStep.PlanetStart.System").
+        Relation("Journey.CurrentStep.PlanetFinal.System").
+        Relation("Location.System").
+        Relation("Location.Player.Faction").
         Where("fleet.id = ?", id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleet not found", err))
@@ -180,7 +184,9 @@ func getTravellingFleets() []Fleet {
     fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player.Faction", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
+        Relation("Player.Faction").
+        Relation("Journey.CurrentStep.PlanetStart").
+        Relation("Journey.CurrentStep.PlanetFinal").
         Where("fleet.journey_id IS NOT NULL").
         Select(); err != nil {
             panic(NewHttpException(404, "Could not retrieve travelling fleets", err))
@@ -206,7 +212,10 @@ func (p *Player) getFleets() []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player", "Location", "Journey.CurrentStep.PlanetStart", "Journey.CurrentStep.PlanetFinal").
+        Relation("Player").
+        Relation("Location").
+        Relation("Journey.CurrentStep.PlanetStart").
+        Relation("Journey.CurrentStep.PlanetFinal").
         Where("fleet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
@@ -219,7 +228,8 @@ func (p *Planet) getComingFleets() []Fleet {
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
-        Column("Journey", "PlanetFinal").
+        Relation("Journey").
+        Relation("PlanetFinal").
         Where("planet_final.id = ?", p.Id).
         Select(); err != nil {
             panic(NewException("Coming journey steps could not be retrieved", err))
@@ -234,7 +244,7 @@ func (p *Planet) getComingFleets() []Fleet {
 
     if err := Database.
         Model(&fleets).
-        Column("Player.Faction").
+        Relation("Player.Faction").
         WhereIn("fleet.journey_id IN (?)", journeyIds).
         Select(); err != nil {
             panic(NewException("Could not retrieve coming fleets", err))
@@ -247,7 +257,8 @@ func (p *Planet) getLeavingFleets() []Fleet {
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
-        Column("Journey", "PlanetStart").
+        Relation("Journey").
+        Relation("PlanetStart").
         Where("planet_start.id = ?", p.Id).
         Where("step_number = 1").
         Select(); err != nil {
@@ -263,7 +274,7 @@ func (p *Planet) getLeavingFleets() []Fleet {
 
     if err := Database.
         Model(&fleets).
-        Column("Player.Faction").
+        Relation("Player.Faction").
         WhereIn("fleet.journey_id IN (?)", journeyIds).
         Where("fleet.player_id = ?", p.Player.Id).
         Select(); err != nil {
@@ -276,7 +287,8 @@ func (p *Planet) getOrbitingFleets() []Fleet {
     fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column("Player.Faction", "Journey").
+        Relation("Player.Faction").
+        Relation("Journey").
         Where("fleet.location_id = ?", p.Id).
         Where("fleet.journey_id IS NULL").
         Select(); err != nil {
@@ -289,7 +301,9 @@ func (p *Planet) getFleets(player *Player) []Fleet {
 	fleets := make([]Fleet, 0)
     if err := Database.
         Model(&fleets).
-        Column( "Player.Faction", "Location", "Journey").
+        Relation("Player.Faction").
+        Relation("Location").
+        Relation("Journey").
         Where("fleet.player_id = ?", player.Id).
 		Where("fleet.location_id = ?", p.Id).
         Select(); err != nil {
@@ -327,7 +341,7 @@ func (f *Fleet) getShips() []Ship {
     
     if err := Database.
         Model(&ships).
-        Column("Model").
+        Relation("Model").
         Where("construction_state_id IS NULL").
         Where("ship.fleet_id = ?", f.Id).
         Select(); err != nil {
@@ -342,7 +356,8 @@ func (f *Fleet) getShipsByModel(modelId int, quantity int) []Ship {
 	
     if err := Database.
         Model(&ships).
-        Column("Hangar", "Fleet").
+        Relation("Hangar").
+        Relation("Fleet").
         Where("construction_state_id IS NULL").
         Where("fleet_id = ?", f.Id).
         Where("model_id = ?", modelId).

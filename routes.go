@@ -120,6 +120,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Launch Building Compartment Construction",
+		"POST",
+		"/api/planets/{planet-id}/buildings/{building-id}/compartments",
+		api.CreateBuildingCompartment,
+		true,
+	},
+	Route{
 		"Launch Ships Construction",
 		"POST",
 		"/api/planets/{id}/ships",
