@@ -76,6 +76,18 @@ func CreateFactionMotion(w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, 201, motion)
 }
 
+func GetFactionPreviousMotions(w http.ResponseWriter, r *http.Request) {
+	factionId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	player := context.Get(r, "player").(*Player)
+
+	faction := getFaction(uint16(factionId))
+
+	if faction.Id != player.Faction.Id {
+		panic(NewHttpException(403, "forbidden", nil))
+	}
+	SendJsonResponse(w, 200, faction.getPreviousMotions())
+}
+
 func GetFactionCurrentMotions(w http.ResponseWriter, r *http.Request) {
 	factionId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 	player := context.Get(r, "player").(*Player)
@@ -206,7 +218,7 @@ func (m *FactionMotion) vote(author *Player, option uint8) *FactionVote {
 	return vote
 }
 
-func isMotionTypeValid (mType string) bool {
+func isMotionTypeValid(mType string) bool {
 	m := &FactionMotion{}
 	if err := Database.Model(m).Where("type = ?", mType).Where("is_processed = ?", false).Select(); err == nil {
 		panic(NewHttpException(403, "faction.motions.currently_voting", nil))
@@ -290,6 +302,14 @@ func (f *Faction) getMotion(id uint32) *FactionMotion {
 func (f *Faction) getCurrentMotions() []*FactionMotion {
 	motions := make([]*FactionMotion, 0)
 	if err := Database.Model(&motions).Relation("Faction").Relation("Author.Faction").Where("faction_motion.faction_id = ?", f.Id).Where("is_processed = ?", false).Select(); err != nil {
+		panic(NewHttpException(404, "Faction motions not found", err))
+	}
+	return motions
+}
+
+func (f *Faction) getPreviousMotions() []*FactionMotion {
+	motions := make([]*FactionMotion, 0)
+	if err := Database.Model(&motions).Relation("Faction").Relation("Author.Faction").Where("faction_motion.faction_id = ?", f.Id).Where("is_processed = ?", true).Order("ended_at DESC").Select(); err != nil {
 		panic(NewHttpException(404, "Faction motions not found", err))
 	}
 	return motions
