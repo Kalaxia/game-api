@@ -416,6 +416,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Get Faction previous Motions",
+		"GET",
+		"/api/factions/{id}/motions/previous",
+		api.GetFactionPreviousMotions,
+		true,
+	},
+	Route{
 		"Create Faction Motion",
 		"POST",
 		"/api/factions/{id}/motions",
