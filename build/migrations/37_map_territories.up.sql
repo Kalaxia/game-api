@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS map__territories(
     id SERIAL PRIMARY KEY,
     map_id INT NOT NULL REFERENCES map__maps(id) ON DELETE CASCADE,
-    planet_id INT NOT NULL REFERENCES players(id),
+    planet_id INT NOT NULL REFERENCES map__planets(id),
     military_influence INT NOT NULL,
     political_influence INT NOT NULL,
     economic_influence INT NOT NULL,

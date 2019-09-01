@@ -37,7 +37,7 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
 		Action string `json:"action"`
-		Data map[string]interface{} `json:"data"`
+		Data map[string]interface{} `json:"data" pg:",use_zero"`
 		HappenedAt time.Time `json:"happened_at"`
 	}
 
@@ -77,7 +77,7 @@ func (p *Planet) createTerritory() *Territory {
 	if err := Database.Insert(t); err != nil {
 		panic(NewException("Could not create territory", err))
 	}
-	t.addHistory(p.Player, TerritoryActionCreation, make(map[string]interface{}))
+	t.addHistory(p.Player, TerritoryActionCreation, make(map[string]interface{}, 0))
 	p.addTerritory(t, TerritoryStatusPledge)
 	p.System.addTerritory(t)
 	return t

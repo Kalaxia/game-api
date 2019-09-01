@@ -89,7 +89,7 @@ func getPlanet(id uint16) *Planet {
         Relation("Relations.Player.Faction").
         Relation("Relations.Faction").
         Relation("Resources").
-        Relation("System").
+        Relation("System.Map").
         Relation("Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {
