@@ -15,6 +15,7 @@ type(
     Id uint16 `json:"id"`
     MapId uint16 `json:"-"`
     Map *Map `json:"-"`
+    Territories []*SystemTerritory `json:"territories"`
     Planets []Planet `json:"planets"`
     X uint16 `json:"coord_x"`
     Y uint16 `json:"coord_y"`

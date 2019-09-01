@@ -149,5 +149,22 @@
     ],
     "nb_compartments": 2,
     "compartments": []
+  },
+  "governor-palace": {
+    "picture": "governor_palace.png",
+    "type": "territorial-control",
+    "parent": null,
+    "price": [
+      {
+        "type": "points",
+        "amount": 50
+      },
+      {
+        "type": "credits",
+        "amount": 5000
+      }
+    ],
+    "nb_compartments": 2,
+    "compartments": []
   }
 }

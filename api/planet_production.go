@@ -78,10 +78,10 @@ func (b *Building) produce(points map[string]uint8) map[string]uint8 {
         return points
     }
     switch (b.Type) {
-        case "resource": 
+        case BuildingTypeResource: 
             b.produceResources()
             return points
-        case "shipyard":
+        case BuildingTypeShipyard:
             return b.produceShips(points)
         default:
             return points

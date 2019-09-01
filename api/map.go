@@ -12,7 +12,8 @@ type(
 	  Id uint16 `json:"-"`
 	  ServerId uint16 `json:"-"`
 	  Server *Server `json:"-"`
-	  Systems []System `json:"systems" sql:"-"`
+      Systems []System `json:"systems" sql:"-"`
+      Territories []Territory `json:"territories"`
 	  Size uint16 `json:"size"`
 	  SectorSize uint16 `json:"sector_size" sql:"-"`
 	}

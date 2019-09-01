@@ -37,7 +37,8 @@ type(
 		Relations []DiplomaticRelation `json:"relations"`
 		Buildings []Building `json:"buildings"`
 		NbBuildings uint8 `json:"nb_buildings" sql:"-"`
-		AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
+        AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
+        Territories []*PlanetTerritory `json:"territories"`
 	}
 	
 	PlanetResource struct {
