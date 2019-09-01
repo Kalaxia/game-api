@@ -20,7 +20,11 @@ type(
 		Map *Map `json:"-"`
 		PlanetId uint16 `json:"-"`
 		Planet *Planet `json:"planet"`
-		Influence uint16 `json:"influence"`
+		MilitaryInfluence uint16 `json:"military_influence"`
+		EconomicInfluence uint16 `json:"economic_influence"`
+		CulturalInfluence uint16 `json:"cultural_influence"`
+		PoliticalInfluence uint16 `json:"political_influence"`
+		ReligiousInfluence uint16 `json:"religious_influence"`
 		History []*TerritoryHistory `json:"history"`
 	}
 
@@ -33,6 +37,7 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
 		Action string `json:"action"`
+		Data map[string]interface{} `json:"data"`
 		HappenedAt time.Time `json:"happened_at"`
 	}
 
@@ -63,12 +68,16 @@ func (p *Planet) createTerritory() *Territory {
 		Map: p.System.Map,
 		PlanetId: p.Id,
 		Planet: p,
-		Influence: 20,
+		MilitaryInfluence: 20,
+		EconomicInfluence: 20,
+		PoliticalInfluence: 20,
+		ReligiousInfluence: 20,
+		CulturalInfluence: 20,
 	}
 	if err := Database.Insert(t); err != nil {
 		panic(NewException("Could not create territory", err))
 	}
-	t.addHistory(TerritoryActionCreation, p.Player)
+	t.addHistory(p.Player, TerritoryActionCreation, make(map[string]interface{}))
 	p.addTerritory(t, TerritoryStatusPledge)
 	p.System.addTerritory(t)
 	return t
@@ -102,13 +111,14 @@ func (s *System) addTerritory(t *Territory) {
 	s.Territories = append(s.Territories, st)
 }
 
-func (t *Territory) addHistory(action string, p *Player) *TerritoryHistory {
+func (t *Territory) addHistory(p *Player, action string, data map[string]interface{}) *TerritoryHistory {
 	th := &TerritoryHistory{
-		Action: action,
 		TerritoryId: t.Id,
 		Territory: t,
 		PlayerId: p.Id,
 		Player: p,
+		Action: action,
+		Data: data,
 		HappenedAt: time.Now(),
 	}
 	if err := Database.Insert(th); err != nil {
