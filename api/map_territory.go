@@ -155,7 +155,7 @@ func (t *Territory) getTotalInfluence() uint16 {
 
 func (t *Territory) expand() {
 	influence := t.getTotalInfluence()
-	radius := math.Floor(float64(influence) / 100)
+	radius := math.Sqrt(float64(influence / 10) / math.Pi)
 
 	centerX := float64(t.Planet.System.X)
 	centerY := float64(t.Planet.System.Y)
