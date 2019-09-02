@@ -1,6 +1,9 @@
 package api
 
 import(
+	"net/http"
+	"github.com/gorilla/context"
+	"math"
 	"time"
 )
 
@@ -25,6 +28,7 @@ type(
 		CulturalInfluence uint16 `json:"cultural_influence"`
 		PoliticalInfluence uint16 `json:"political_influence"`
 		ReligiousInfluence uint16 `json:"religious_influence"`
+		Coordinates []*Coordinates `json:"coordinates" sql:"type:jsonb" pq:",use_zero"`
 		History []*TerritoryHistory `json:"history"`
 	}
 
@@ -62,6 +66,21 @@ type(
 	}
 )
 
+func GetMapTerritories(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*Player)
+	starmap := getServerMap(player.ServerId)
+	
+	SendJsonResponse(w, 200, starmap.getTerritories())
+}
+
+func (m *Map) getTerritories() []*Territory {
+	territories := make([]*Territory, 0)
+	if err := Database.Model(&territories).Relation("Planet.Player.Faction").Where("map_id = ?", m.Id).Select(); err != nil {
+		panic(NewException("Could not retrieve map territories", err))
+	}
+	return territories
+}
+
 func (p *Planet) createTerritory() *Territory {
 	t := &Territory{
 		MapId: p.System.MapId,
@@ -73,6 +92,7 @@ func (p *Planet) createTerritory() *Territory {
 		PoliticalInfluence: 20,
 		ReligiousInfluence: 20,
 		CulturalInfluence: 20,
+		Coordinates: make([]*Coordinates, 0),
 	}
 	if err := Database.Insert(t); err != nil {
 		panic(NewException("Could not create territory", err))
@@ -80,6 +100,7 @@ func (p *Planet) createTerritory() *Territory {
 	t.addHistory(p.Player, TerritoryActionCreation, make(map[string]interface{}, 0))
 	p.addTerritory(t, TerritoryStatusPledge)
 	p.System.addTerritory(t)
+	t.expand()
 	return t
 }
 
@@ -126,4 +147,33 @@ func (t *Territory) addHistory(p *Player, action string, data map[string]interfa
 	}
 	t.History = append(t.History, th)
 	return th
+}
+
+func (t *Territory) getTotalInfluence() uint16 {
+	return t.MilitaryInfluence + t.PoliticalInfluence + t.EconomicInfluence + t.ReligiousInfluence + t.CulturalInfluence
+}
+
+func (t *Territory) expand() {
+	influence := t.getTotalInfluence()
+	radius := math.Floor(float64(influence) / 100)
+
+	centerX := float64(t.Planet.System.X)
+	centerY := float64(t.Planet.System.Y)
+	t.Coordinates = make([]*Coordinates, 0)
+
+	for i := float64(0); i < 6; i++ {
+		angle := float64(i * (float64(2) * math.Pi) / 6)
+		coords := &Coordinates{
+			X: centerX + (radius * math.Cos(angle)),
+			Y: centerY + (radius * math.Sin(angle)),
+		}
+		t.Coordinates = append(t.Coordinates, coords)
+	}
+	t.update()
+}
+
+func (t *Territory) update() {
+	if err := Database.Update(t); err != nil {
+		panic(NewException("Could not update territory", err))
+	}
 }

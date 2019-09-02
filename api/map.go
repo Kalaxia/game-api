@@ -16,7 +16,12 @@ type(
       Territories []Territory `json:"territories"`
 	  Size uint16 `json:"size"`
 	  SectorSize uint16 `json:"sector_size" sql:"-"`
-	}
+    }
+    
+    Coordinates struct {
+        X float64 `json:"x"`
+        Y float64 `json:"y"`
+    }
 )  
 
 func GetMap(w http.ResponseWriter, r *http.Request) {

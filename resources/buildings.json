@@ -157,7 +157,7 @@
     "price": [
       {
         "type": "points",
-        "amount": 50
+        "amount": 10
       },
       {
         "type": "credits",

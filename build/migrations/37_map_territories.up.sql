@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS map__territories(
     political_influence INT NOT NULL,
     economic_influence INT NOT NULL,
     cultural_influence INT NOT NULL,
-    religious_influence INT NOT NULL
+    religious_influence INT NOT NULL,
+    coordinates JSON[] NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS map__territory_histories(

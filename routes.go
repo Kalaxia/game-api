@@ -345,11 +345,19 @@ var routes = Routes{
 		api.GetPlayer,
 		true,
 	},
+	/******** MAP ********/
 	Route{
 		"Get Map",
 		"GET",
 		"/api/map",
 		api.GetMap,
+		true,
+	},
+	Route{
+		"Get Map Territories",
+		"GET",
+		"/api/map/territories",
+		api.GetMapTerritories,
 		true,
 	},
 	Route{
