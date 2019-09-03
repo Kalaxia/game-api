@@ -251,9 +251,9 @@ func (b *Building) finishConstruction() {
 }
 
 func (b *Building) apply() {
-    planet := getPlanet(b.PlanetId)
     switch (b.Type) {
         case BuildingTypeTerritorialControl:
+            planet := getPlanet(b.PlanetId)
             planet.createTerritory()
             break;
     }

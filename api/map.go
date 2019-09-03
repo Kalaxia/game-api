@@ -22,6 +22,7 @@ type(
         X float64 `json:"x"`
         Y float64 `json:"y"`
     }
+    CoordinatesSlice []*Coordinates
 )  
 
 func GetMap(w http.ResponseWriter, r *http.Request) {
@@ -50,4 +51,19 @@ func getServerMap(serverId uint16) *Map {
     gameMap.Systems = gameMap.getSystems()
     gameMap.SectorSize = 10
     return gameMap
+}
+
+func (cs CoordinatesSlice) Len() int {
+	return len(cs)
+}
+
+func (cs CoordinatesSlice) Swap(i, j int) {
+	cs[i], cs[j] = cs[j], cs[i]
+}
+
+func (cs CoordinatesSlice) Less(i, j int) bool {
+	if cs[i].X != cs[j].X {
+		return cs[i].X < cs[j].X
+	}
+	return cs[i].Y < cs[j].Y
 }

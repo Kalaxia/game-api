@@ -4,6 +4,7 @@ import(
 	"net/http"
 	"github.com/gorilla/context"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -28,7 +29,7 @@ type(
 		CulturalInfluence uint16 `json:"cultural_influence"`
 		PoliticalInfluence uint16 `json:"political_influence"`
 		ReligiousInfluence uint16 `json:"religious_influence"`
-		Coordinates []*Coordinates `json:"coordinates" sql:"type:jsonb" pq:",use_zero"`
+		Coordinates CoordinatesSlice `json:"coordinates" sql:"type:jsonb" pq:",use_zero"`
 		History []*TerritoryHistory `json:"history"`
 	}
 
@@ -92,7 +93,7 @@ func (p *Planet) createTerritory() *Territory {
 		PoliticalInfluence: 20,
 		ReligiousInfluence: 20,
 		CulturalInfluence: 20,
-		Coordinates: make([]*Coordinates, 0),
+		Coordinates: make(CoordinatesSlice, 0),
 	}
 	if err := Database.Insert(t); err != nil {
 		panic(NewException("Could not create territory", err))
@@ -118,20 +119,6 @@ func (p *Planet) addTerritory(t *Territory, status string) {
 	p.Territories = append(p.Territories, pt)
 }
 
-func (s *System) addTerritory(t *Territory) {
-	st := &SystemTerritory{
-		TerritoryId: t.Id,
-		Territory: t,
-		SystemId: s.Id,
-		System: s,
-		Status: TerritoryStatusContest,
-	}
-	if err := Database.Insert(st); err != nil {
-		panic(NewException("Could not create system territory", err))
-	}
-	s.Territories = append(s.Territories, st)
-}
-
 func (t *Territory) addHistory(p *Player, action string, data map[string]interface{}) *TerritoryHistory {
 	th := &TerritoryHistory{
 		TerritoryId: t.Id,
@@ -154,12 +141,17 @@ func (t *Territory) getTotalInfluence() uint16 {
 }
 
 func (t *Territory) expand() {
-	influence := t.getTotalInfluence()
-	radius := math.Sqrt(float64(influence / 10) / math.Pi)
+	t.generateCoordinates()
+	t.checkForIncludedSystems()
+	
+	t.update()
+}
 
+func (t *Territory) generateCoordinates() {
+	radius := t.getRadius()
 	centerX := float64(t.Planet.System.X)
 	centerY := float64(t.Planet.System.Y)
-	t.Coordinates = make([]*Coordinates, 0)
+	t.Coordinates = make(CoordinatesSlice, 0)
 
 	for i := float64(0); i < 6; i++ {
 		angle := float64(i * (float64(2) * math.Pi) / 6)
@@ -169,8 +161,93 @@ func (t *Territory) expand() {
 		}
 		t.Coordinates = append(t.Coordinates, coords)
 	}
-	t.update()
+	//t.convexHull()
 }
+
+func (t *Territory) checkForIncludedSystems() {
+	radius := t.getRadius()
+	centerX := float64(t.Planet.System.X)
+	centerY := float64(t.Planet.System.Y)
+
+	systems := make([]*System, 0)
+	if err := Database.
+		Model(&systems).
+		Where("x <= ?", centerX + radius).
+		Where("x >= ?", centerX - radius).
+		Where("y <= ?", centerY + radius).
+		Where("y >= ?", centerY - radius).
+		Where("id != ?", t.Planet.System.Id).
+		Where("map_id = ?", t.Planet.System.MapId).
+		Select(); err != nil {
+		panic(NewException("Could not retrieve included systems", err))
+	}
+	for _, s := range systems {
+		if t.isSystemIn(s) == true {
+			s.addTerritory(t)
+		}
+	}
+}
+
+func (t *Territory) isSystemIn(s *System) bool {
+    minX := t.Coordinates[0].X
+    maxX := t.Coordinates[0].X
+    minY := t.Coordinates[0].Y
+    maxY := t.Coordinates[0].Y
+
+    for _, p := range t.Coordinates {
+        minX = math.Min(p.X, minX)
+        maxX = math.Max(p.X, maxX)
+        minY = math.Min(p.Y, minY)
+        maxY = math.Max(p.Y, maxY)
+	}
+	systemX := float64(s.X)
+	systemY := float64(s.Y)
+
+    if systemX < minX || systemX > maxX || systemY < minY || systemY > maxY {
+        return false
+    }
+
+    inside := false
+    j := len(t.Coordinates) - 1
+    for i := 0; i < len(t.Coordinates); i++ {
+        if (t.Coordinates[i].Y > systemY) != (t.Coordinates[j].Y > systemY) && systemX < (t.Coordinates[j].X-t.Coordinates[i].X)*(systemY-t.Coordinates[i].Y)/(t.Coordinates[j].Y-t.Coordinates[i].Y)+t.Coordinates[i].X {
+            inside = !inside
+        }
+        j = i
+    }
+    return inside
+}
+
+func (t *Territory) getRadius() float64 {
+	return math.Sqrt(float64(t.getTotalInfluence() / 10) / math.Pi)
+}
+
+// func (t *Territory) convexHull() {
+// 	sort.Sort(CoordinatesSlice(t.Coordinates));
+
+// 	n := len(t.Coordinates);
+// 	hull := CoordinatesSlice{}
+
+// 	for i := 0; i < 2 * n; i++ {
+// 		var j int
+// 		if i < n {
+// 			j = i
+// 		} else {
+// 			j = 2 * n - 1 - i
+// 		}
+// 		for len(hull) >= 2 && t.removeMiddle(hull[len(hull) - 2], hull[len(hull) - 1], t.Coordinates[j]) {
+// 			hull = hull[1:]
+// 		}
+// 		hull = append(hull, t.Coordinates[j]);
+// 	}
+// 	t.Coordinates = hull[1:]
+// }
+
+// func (t *Territory) removeMiddle(a, b, c *Coordinates) bool {
+// 	cross := (a.X - b.X) * (c.Y - b.Y) - (a.Y - b.Y) * (c.X - b.X);
+// 	dot := (a.X - b.X) * (c.X - b.X) + (a.Y - b.Y) * (c.Y - b.Y);
+// 	return cross < 0 || cross == 0 && dot <= 0;
+// }
 
 func (t *Territory) update() {
 	if err := Database.Update(t); err != nil {
