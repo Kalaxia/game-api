@@ -4,7 +4,6 @@ import(
 	"net/http"
 	"github.com/gorilla/context"
 	"math"
-	"sort"
 	"time"
 )
 

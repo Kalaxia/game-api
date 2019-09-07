@@ -15,6 +15,8 @@ type(
     Id uint16 `json:"id"`
     MapId uint16 `json:"-"`
     Map *Map `json:"-"`
+    FactionId uint16 `json:"-"`
+    Faction *Faction `json:"faction"`
     Territories []*SystemTerritory `json:"territories"`
     Planets []Planet `json:"planets"`
     X uint16 `json:"coord_x"`
@@ -60,6 +62,7 @@ func (m *Map) getSectorSystems(sector uint16) []System {
     systems := make([]System, 0)
     if err := Database.
         Model(&systems).
+        Relation("Faction").
         Relation("Planets.Player.Faction").
         Where("map_id = ?", m.Id).
         Where("x >= ?", (sector - ((lineNumber * sectorsPerLine) + 1)) * m.SectorSize).
@@ -79,4 +82,10 @@ func getSystem(id uint16) *System {
     }
     system.Planets = system.getPlanets()
     return &system
+}
+
+func (s *System) update() {
+    if err := Database.Update(s); err != nil {
+        panic(NewException("Could not update system", err))
+    }
 }

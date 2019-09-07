@@ -1,0 +1,1 @@
+ALTER TABLE map__systems ADD faction_id INT DEFAULT NULL REFERENCES faction__factions(id) ON DELETE SET NULL;
