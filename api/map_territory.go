@@ -54,7 +54,7 @@ func GetMapTerritories(w http.ResponseWriter, r *http.Request) {
 
 func (m *Map) getTerritories() []*Territory {
 	territories := make([]*Territory, 0)
-	if err := Database.Model(&territories).Relation("Planet.Player.Faction").Where("map_id = ?", m.Id).Select(); err != nil {
+	if err := Database.Model(&territories).Relation("Planet.Player.Faction").Relation("Planet.System").Where("territory.map_id = ?", m.Id).Select(); err != nil {
 		panic(NewException("Could not retrieve map territories", err))
 	}
 	return territories
