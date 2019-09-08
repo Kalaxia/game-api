@@ -1,0 +1,2 @@
+ALTER TABLE map__planet_territories DROP military_influence, DROP political_influence, DROP religious_influence, DROP economic_influence, DROP cultural_influence;
+ALTER TABLE map__territories ADD COLUMN military_influence INT NOT NULL DEFAULT 0, ADD COLUMN political_influence INT NOT NULL DEFAULT 0, ADD COLUMN religious_influence INT NOT NULL DEFAULT 0, ADD COLUMN economic_influence INT NOT NULL DEFAULT 0, ADD COLUMN cultural_influence INT NOT NULL DEFAULT 0;
