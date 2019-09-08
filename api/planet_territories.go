@@ -17,13 +17,13 @@ type(
 	}
 )
 
-func (p *Planet) addTerritory(t *Territory, status string) {
+func (p *Planet) addTerritory(t *Territory) {
 	pt := &PlanetTerritory{
 		TerritoryId: t.Id,
 		Territory: t,
 		PlanetId: p.Id,
 		Planet: p,
-		Status: status,
+		Status: p.getNewTerritoryStatus(t),
 	}
 	pt.calculateInfluence()
 	if err := Database.Insert(pt); err != nil {
@@ -34,6 +34,18 @@ func (p *Planet) addTerritory(t *Territory, status string) {
 		"id": p.Id,
 		"name": p.Name,
 	})
+}
+
+func (p *Planet) getNewTerritoryStatus(t *Territory) string {
+	if p.Player.FactionId != t.Planet.Player.FactionId {
+		return TerritoryStatusContest
+	}
+	for _, pt := range p.Territories {
+		if pt.Status == TerritoryStatusPledge {
+			return TerritoryStatusContest
+		}
+	}
+	return TerritoryStatusPledge
 }
 
 func (pt *PlanetTerritory) calculateInfluence() {

@@ -44,21 +44,7 @@ func (s *System) addPlanetTerritories(t *Territory) {
 		if p.Player == nil {
 			continue
 		}
-		if p.Player.FactionId != t.Planet.Player.FactionId {
-			p.addTerritory(t, TerritoryStatusContest)
-			continue
-		}
-		found := false
-		for _, pt := range p.Territories {
-			if pt.Status == TerritoryStatusPledge {
-				p.addTerritory(t, TerritoryStatusPledge)
-				found = true
-				break
-			}
-		}
-		if !found {
-			p.addTerritory(t, TerritoryStatusContest)
-		}
+		p.addTerritory(t)
 	}
 } 
 
