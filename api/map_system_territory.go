@@ -1,5 +1,9 @@
 package api
 
+import (
+	"math"
+)
+
 type(
 	SystemTerritory struct {
 		TableName struct{} `json:"-" sql:"map__system_territories"`
@@ -37,7 +41,10 @@ func (s *System) addTerritory(t *Territory) {
 
 func (s *System) addPlanetTerritories(t *Territory) {
 	for _, p := range s.getPlanets() {
-		if p.Player == nil || p.Player.FactionId != t.Planet.Player.FactionId {
+		if p.Player == nil {
+			continue
+		}
+		if p.Player.FactionId != t.Planet.Player.FactionId {
 			p.addTerritory(t, TerritoryStatusContest)
 			continue
 		}
@@ -79,7 +86,7 @@ func (st *SystemTerritory) getTotalInfluence() uint16 {
 
 func (t *Territory) getSystemTerritories() []*SystemTerritory {
 	territories := make([]*SystemTerritory, 0)
-	if err := Database.Model(&territories).Where("territory_id = ?", t.Id).Select(); err != nil {
+	if err := Database.Model(&territories).Relation("System").Where("territory_id = ?", t.Id).Select(); err != nil {
 		panic(NewException("Could not retrieve system territories", err))
 	}
 	return territories
@@ -87,8 +94,31 @@ func (t *Territory) getSystemTerritories() []*SystemTerritory {
 
 func (st *SystemTerritory) getPlanetTerritories() []*PlanetTerritory {
 	territories := make([]*PlanetTerritory, 0)
-	if err := Database.Model(&territories).Where("territory_id = ?", st.TerritoryId).Select(); err != nil {
+	if err := Database.Model(&territories).Relation("Planet.Player").Where("Planet.system_id = ?", st.SystemId).Where("territory_id = ?", st.TerritoryId).Select(); err != nil {
 		panic(NewException("Could not retrieve system planet territories", err))
 	}
 	return territories
+}
+
+
+func (st *SystemTerritory) generateCoordinates() CoordinatesSlice {
+	radius := st.getRadius()
+	centerX := float64(st.System.X)
+	centerY := float64(st.System.Y)
+	coordinates := make(CoordinatesSlice, 0)
+
+	for i := float64(0); i < 6; i++ {
+		angle := float64(i * (float64(2) * math.Pi) / 6)
+		coords := &Coordinates{
+			X: centerX + (radius * math.Cos(angle)),
+			Y: centerY + (radius * math.Sin(angle)),
+		}
+		coordinates = append(coordinates, coords)
+	}
+	return coordinates
+	//t.convexHull()
+}
+
+func (st *SystemTerritory) getRadius() float64 {
+	return math.Sqrt(float64(st.getTotalInfluence() / 10) / math.Pi)
 }

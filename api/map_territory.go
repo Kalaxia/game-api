@@ -103,41 +103,28 @@ func (t *Territory) getTotalInfluence() uint16 {
 }
 
 func (t *Territory) expand() {
-	t.generateCoordinates()
-	t.checkForIncludedSystems()
-	
+	for {
+		t.Coordinates = make(CoordinatesSlice, 0)
+		for _, st := range t.getSystemTerritories() {
+			t.Coordinates = append(t.Coordinates, st.generateCoordinates()...)
+		}
+		if t.checkForIncludedSystems() == false {
+			break
+		}
+	}
 	t.update()
 }
 
-func (t *Territory) generateCoordinates() {
-	radius := t.getRadius()
-	centerX := float64(t.Planet.System.X)
-	centerY := float64(t.Planet.System.Y)
-	t.Coordinates = make(CoordinatesSlice, 0)
-
-	for i := float64(0); i < 6; i++ {
-		angle := float64(i * (float64(2) * math.Pi) / 6)
-		coords := &Coordinates{
-			X: centerX + (radius * math.Cos(angle)),
-			Y: centerY + (radius * math.Sin(angle)),
-		}
-		t.Coordinates = append(t.Coordinates, coords)
-	}
-	//t.convexHull()
-}
-
-func (t *Territory) checkForIncludedSystems() {
-	radius := t.getRadius()
-	centerX := float64(t.Planet.System.X)
-	centerY := float64(t.Planet.System.Y)
+func (t *Territory) checkForIncludedSystems() (hasNewSystem bool) {
+	minX, maxX, minY, maxY := t.getCoordLimits()
 
 	systems := make([]*System, 0)
 	if err := Database.
 		Model(&systems).
-		Where("x <= ?", centerX + radius).
-		Where("x >= ?", centerX - radius).
-		Where("y <= ?", centerY + radius).
-		Where("y >= ?", centerY - radius).
+		Where("x <= ?", maxX).
+		Where("x >= ?", minX).
+		Where("y <= ?", maxY).
+		Where("y >= ?", minY).
 		Where("id != ?", t.Planet.System.Id).
 		Where("map_id = ?", t.Planet.System.MapId).
 		Select(); err != nil {
@@ -145,9 +132,34 @@ func (t *Territory) checkForIncludedSystems() {
 	}
 	for _, s := range systems {
 		if t.isSystemIn(s) == true {
+			hasNewSystem = true
 			s.addTerritory(t)
 		}
 	}
+	return
+}
+
+func (t *Territory) getCoordLimits() (minX, maxX, minY, maxY float64) {
+	var minXInit, maxXInit, minYInit, maxYInit bool
+	for _, coords := range t.Coordinates {
+		if minXInit == false || coords.X < minX {
+			minXInit = true
+			minX = coords.X
+		}
+		if maxXInit == false || coords.X > maxX {
+			maxXInit = true
+			maxX = coords.X
+		}
+		if minYInit == false || coords.Y < minY {
+			minYInit = true
+			minY = coords.Y
+		}
+		if maxYInit == false || coords.Y > maxY {
+			maxYInit = true
+			maxY = coords.Y
+		}
+	}
+	return
 }
 
 func (t *Territory) isSystemIn(s *System) bool {
@@ -180,9 +192,6 @@ func (t *Territory) isSystemIn(s *System) bool {
     return inside
 }
 
-func (t *Territory) getRadius() float64 {
-	return math.Sqrt(float64(t.getTotalInfluence() / 10) / math.Pi)
-}
 
 // func (t *Territory) convexHull() {
 // 	sort.Sort(CoordinatesSlice(t.Coordinates));

@@ -24,12 +24,8 @@ func (p *Planet) addTerritory(t *Territory, status string) {
 		PlanetId: p.Id,
 		Planet: p,
 		Status: status,
-		MilitaryInfluence: p.calculateMilitaryInfluence(),
-		EconomicInfluence: p.calculateEconomicInfluence(),
-		PoliticalInfluence: p.calculatePoliticalInfluence(),
-		ReligiousInfluence: p.calculateReligiousInfluence(),
-		CulturalInfluence: p.calculateCulturalInfluence(),
 	}
+	pt.calculateInfluence()
 	if err := Database.Insert(pt); err != nil {
 		panic(NewException("Could not create planet territory", err))
 	}
@@ -38,6 +34,22 @@ func (p *Planet) addTerritory(t *Territory, status string) {
 		"id": p.Id,
 		"name": p.Name,
 	})
+}
+
+func (pt *PlanetTerritory) calculateInfluence() {
+	if pt.Planet.Player.FactionId == pt.Territory.Planet.Player.FactionId {
+		pt.MilitaryInfluence = pt.Planet.calculateMilitaryInfluence()
+		pt.EconomicInfluence = pt.Planet.calculateEconomicInfluence()
+		pt.PoliticalInfluence = pt.Planet.calculatePoliticalInfluence()
+		pt.ReligiousInfluence = pt.Planet.calculateReligiousInfluence()
+		pt.CulturalInfluence = pt.Planet.calculateCulturalInfluence()
+	} else {
+		pt.MilitaryInfluence = 0
+		pt.EconomicInfluence = 0
+		pt.PoliticalInfluence = 0
+		pt.ReligiousInfluence = 0
+		pt.CulturalInfluence = 0
+	}
 }
 
 func (p *Planet) calculateMilitaryInfluence() uint16 {
