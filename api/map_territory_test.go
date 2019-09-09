@@ -4,39 +4,58 @@ import(
 	"testing"
 )
 
-func TestConvexHull(t *testing.T) {
-	coords := CoordinatesSlice{
-		&Coordinates{
-			X: 47.03,
-			Y: 23.12,
-		},
-		&Coordinates{
-			X: 80,
-			Y: 70,
-		},
-		&Coordinates{
-			X: 40.16,
-			Y: 20,
-		},
-		&Coordinates{
-			X: 55.17,
-			Y: 37.03,
-		},
-		&Coordinates{
-			X: 96.23,
-			Y: 14.07,
-		},
-		&Coordinates{
-			X: 15,
-			Y: 20,
-		},
-	}
-	territory := &Territory{
-		Coordinates: coords,
-	}
-	territory.convexHull()
+func TestGetCoordLimits(t *testing.T) {
+	territory := getTerritoryMock()
+	minX, maxX, minY, maxY := territory.getCoordLimits()
 
-	if nbCoords := len(territory.Coordinates); nbCoords != 6 {
-		t.Errorf("Territory should have 6 Coordinates, not %d", nbCoords)
+	if minX != 4 {
+		t.Errorf("Minimum X coord should be 4, not %f", minX)
+	}
+	if maxX != 15 {
+		t.Errorf("Maximum X coord should be 15, not %f", maxX)
+	}
+	if minY != 8 {
+		t.Errorf("Minimum Y coord should be 8, not %f", minY)
+	}
+	if maxY != 16 {
+		t.Errorf("Maximum Y coord should be 16, not %f", maxY)
+	}
+}
+
+func TestIsSystemIn(t *testing.T) {
+	system := &System{
+		X: 12,
+		Y: 10,
+	}
+	territory := getTerritoryMock()
+	if !territory.isSystemIn(system) {
+		t.Errorf("The system should be included in the territory")
+	}
+	system.X = 40
+	if territory.isSystemIn(system) {
+		t.Errorf("The system should not be included in the territory")
+	}
+}
+
+func getTerritoryMock() *Territory {
+	return &Territory{
+		Coordinates: CoordinatesSlice{
+			&Coordinates{
+				X: 4,
+				Y: 8,
+			},
+			&Coordinates{
+				X: 8,
+				Y: 16,
+			},
+			&Coordinates{
+				X: 15,
+				Y: 12,
+			},
+			&Coordinates{
+				X: 13,
+				Y: 9,
+			},
+		},
 	}
 }

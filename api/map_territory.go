@@ -140,33 +140,10 @@ func (t *Territory) checkForIncludedSystems() (hasNewSystem bool) {
 }
 
 func (t *Territory) getCoordLimits() (minX, maxX, minY, maxY float64) {
-	var minXInit, maxXInit, minYInit, maxYInit bool
-	for _, coords := range t.Coordinates {
-		if minXInit == false || coords.X < minX {
-			minXInit = true
-			minX = coords.X
-		}
-		if maxXInit == false || coords.X > maxX {
-			maxXInit = true
-			maxX = coords.X
-		}
-		if minYInit == false || coords.Y < minY {
-			minYInit = true
-			minY = coords.Y
-		}
-		if maxYInit == false || coords.Y > maxY {
-			maxYInit = true
-			maxY = coords.Y
-		}
-	}
-	return
-}
-
-func (t *Territory) isSystemIn(s *System) bool {
-    minX := t.Coordinates[0].X
-    maxX := t.Coordinates[0].X
-    minY := t.Coordinates[0].Y
-    maxY := t.Coordinates[0].Y
+	minX = t.Coordinates[0].X
+    maxX = t.Coordinates[0].X
+    minY = t.Coordinates[0].Y
+    maxY = t.Coordinates[0].Y
 
     for _, p := range t.Coordinates {
         minX = math.Min(p.X, minX)
@@ -174,6 +151,11 @@ func (t *Territory) isSystemIn(s *System) bool {
         minY = math.Min(p.Y, minY)
         maxY = math.Max(p.Y, maxY)
 	}
+	return
+}
+
+func (t *Territory) isSystemIn(s *System) bool {
+    minX, maxX, minY, maxY := t.getCoordLimits()
 	systemX := float64(s.X)
 	systemY := float64(s.Y)
 
@@ -184,7 +166,7 @@ func (t *Territory) isSystemIn(s *System) bool {
     inside := false
     j := len(t.Coordinates) - 1
     for i := 0; i < len(t.Coordinates); i++ {
-        if (t.Coordinates[i].Y > systemY) != (t.Coordinates[j].Y > systemY) && systemX < (t.Coordinates[j].X-t.Coordinates[i].X)*(systemY-t.Coordinates[i].Y)/(t.Coordinates[j].Y-t.Coordinates[i].Y)+t.Coordinates[i].X {
+        if (t.Coordinates[i].Y > systemY) != (t.Coordinates[j].Y > systemY) && systemX < (t.Coordinates[j].X - t.Coordinates[i].X) * (systemY - t.Coordinates[i].Y) / (t.Coordinates[j].Y - t.Coordinates[i].Y) + t.Coordinates[i].X {
             inside = !inside
         }
         j = i
