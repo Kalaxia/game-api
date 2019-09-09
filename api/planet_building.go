@@ -16,6 +16,12 @@ const BuildingStatusConstructing = "constructing"
 const BuildingStatusOperational = "operational"
 const BuildingStatusDestroying = "destroying"
 
+const BuildingTypeTerritorialControl = "territorial-control"
+const BuildingTypeTrade = "trade"
+const BuildingTypeShipyard = "shipyard"
+const BuildingTypeTechno = "techno"
+const BuildingTypeResource = "resource"
+
 type(
 	Building struct {
 		TableName struct{} `json:"-" sql:"map__planet_buildings"`
@@ -238,8 +244,19 @@ func (b *Building) update() {
 func (b *Building) finishConstruction() {
     b.Status = BuildingStatusOperational
     b.ConstructionStateId = 0
+
     b.update()
     b.ConstructionState.delete()
+    b.apply()
+}
+
+func (b *Building) apply() {
+    switch (b.Type) {
+        case BuildingTypeTerritorialControl:
+            planet := getPlanet(b.PlanetId)
+            planet.createTerritory()
+            break;
+    }
 }
 
 func (c *BuildingCompartment) finishConstruction() {

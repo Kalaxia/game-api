@@ -12,10 +12,17 @@ type(
 	  Id uint16 `json:"-"`
 	  ServerId uint16 `json:"-"`
 	  Server *Server `json:"-"`
-	  Systems []System `json:"systems" sql:"-"`
+      Systems []System `json:"systems" sql:"-"`
+      Territories []Territory `json:"territories"`
 	  Size uint16 `json:"size"`
 	  SectorSize uint16 `json:"sector_size" sql:"-"`
-	}
+    }
+    
+    Coordinates struct {
+        X float64 `json:"x"`
+        Y float64 `json:"y"`
+    }
+    CoordinatesSlice []*Coordinates
 )  
 
 func GetMap(w http.ResponseWriter, r *http.Request) {
@@ -44,4 +51,19 @@ func getServerMap(serverId uint16) *Map {
     gameMap.Systems = gameMap.getSystems()
     gameMap.SectorSize = 10
     return gameMap
+}
+
+func (cs CoordinatesSlice) Len() int {
+	return len(cs)
+}
+
+func (cs CoordinatesSlice) Swap(i, j int) {
+	cs[i], cs[j] = cs[j], cs[i]
+}
+
+func (cs CoordinatesSlice) Less(i, j int) bool {
+	if cs[i].X != cs[j].X {
+		return cs[i].X < cs[j].X
+	}
+	return cs[i].Y < cs[j].Y
 }

@@ -37,7 +37,8 @@ type(
 		Relations []DiplomaticRelation `json:"relations"`
 		Buildings []Building `json:"buildings"`
 		NbBuildings uint8 `json:"nb_buildings" sql:"-"`
-		AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
+        AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
+        Territories []*PlanetTerritory `json:"territories"`
 	}
 	
 	PlanetResource struct {
@@ -88,7 +89,7 @@ func getPlanet(id uint16) *Planet {
         Relation("Relations.Player.Faction").
         Relation("Relations.Faction").
         Relation("Resources").
-        Relation("System").
+        Relation("System.Map").
         Relation("Storage").
         Where("planet.id = ?", id).
         Select(); err != nil {

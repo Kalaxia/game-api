@@ -1,0 +1,1 @@
+ALTER TABLE map__systems DROP faction_id;
