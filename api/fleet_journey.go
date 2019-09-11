@@ -337,6 +337,7 @@ func (step *FleetJourneyStep) beginNextStep() {
 
 func (j *FleetJourney) end() {
     fleet := j.getFleet()
+    fleet.Journey.CurrentStep = getStep(fleet.Journey.CurrentStepId)
     
     fleet.Journey = nil
     fleet.JourneyId = 0
