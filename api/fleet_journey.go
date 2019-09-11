@@ -108,22 +108,11 @@ func InitFleetJourneys() {
         journey.CurrentStep.JourneyId = journey.Id
         journey.CurrentStep.Journey = journey
         if journey.CurrentStep.TimeArrival.After(now) {
-            Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () { // TODO review this uint
+            Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () {
                 journey.CurrentStep.end()
-            }) //< Do I need to defer that to be safe ? (see comment below)
-        } else {// if the time is already passed we directly execute it
-            defer func () { go journey.CurrentStep.end() }() //< finishStep delete step in DB
-            // defer for concurency reason
-            //
-            // * In the case of go replacing defer
-            // * imagine that a journey has tow steps S0 and S1 which are both finished
-            // * S0 is the current step
-            // * finishStep(S0) is threated and call defer finishStep(S1) (see dunction finishStep and beginNextStep)
-            // * but the treatment of  finishStep(S0) can be faster than for the loop to arrive to S1
-            // * So that step.Journey.CurrentStep.Id == step.Id is true and go finishStep(S1) can be called
-            // * So S1 could be finished two times
-            //---------------------------------------------
-            // But we do go after because all steps are in diffrent journey and can be finished simultaniously
+            })
+        } else {
+            go journey.CurrentStep.end()
         }
     }
 }
@@ -146,7 +135,7 @@ func initJourneyData() {
     }
 }
 
-func GetJourney (w http.ResponseWriter, r *http.Request){
+func GetJourney(w http.ResponseWriter, r *http.Request){
 	player := context.Get(r, "player").(*Player)
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 	fleet := getFleet(uint16(fleetId))
@@ -196,55 +185,6 @@ func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
     data := DecodeJsonRequest(r)
     
     SendJsonResponse(w, 201, fleet.travel(data["steps"].([]interface{})))
-}
-
-func AddStepsToJourney(w http.ResponseWriter, r *http.Request){
-    player := context.Get(r, "player").(*Player)
-	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    fleet := getFleet(uint16(fleetId))
-    
-    if player.Id != fleet.Player.Id { // the player does not own the planet
-		panic(NewHttpException(http.StatusForbidden, "", nil))
-	}
-    
-    if !fleet.isOnJourney() {
-		panic(NewHttpException(400, "Fleet is not on journey", nil))
-	}
-    
-    data := DecodeJsonRequest(r)
-    
-    SendJsonResponse(w, 202, fleet.addJourneySteps(data["steps"].([]interface{})))
-}
-
-func RemoveFleetJourneyStep(w http.ResponseWriter, r *http.Request){
-    // Cancel a journey form a setp, it remove this step and evryone after this one
-    player := context.Get(r, "player").(*Player)
-    idFleet, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    fleet := getFleet(uint16(idFleet))
-    
-    if player.Id != fleet.Player.Id{
-        panic(NewHttpException(http.StatusForbidden, "", nil))
-    }
-    if !fleet.isOnJourney(){
-        panic(NewHttpException(400, "Fleet is not on journey", nil))
-    }
-    
-    stepId, _ := strconv.ParseUint(mux.Vars(r)["stepId"], 10, 16)
-    step := getStep(uint16(stepId))
-    
-    if fleet.JourneyId != step.JourneyId{
-        panic(NewHttpException(400, "This step is not linked to the fleet journey", nil))
-    }
-    if fleet.Journey.CurrentStepId == step.Id{
-        panic(NewHttpException(400, "current step cannot be canceled", nil))
-    }
-    if fleet.Journey.CurrentStep.StepNumber >= step.StepNumber{
-        panic(NewHttpException(400, "cannot remove step with smaler step number that the current one ", nil))
-    }
-    
-    fleet.Journey.removeStep(step)
-    SendJsonResponse(w,204,"Deleted");
-    
 }
 
 func (f *Fleet) travel(data []interface{}) *FleetJourney {
@@ -346,66 +286,9 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
     return steps;
 }
 
-func (f *Fleet) addJourneySteps(data []interface{}) []*FleetJourneyStep {
-    journey := f.Journey
-    if journey == nil || journey.CurrentStep == nil {
-        panic(NewHttpException(400, "Journey is already finished or does not exist", nil))
-    }
-    
-    previousSteps := journey.getSteps()
-    oldLastStep := previousSteps[0]
-    
-    for _, step := range previousSteps {
-        if step.StepNumber > oldLastStep.StepNumber { // we search for the higher step number this should be the last step
-            oldLastStep = step
-        }
-    }
-    if oldLastStep.NextStep != nil {
-        panic(NewHttpException(400, "The step with the higher step number is not the last step. Potential loop : abording", nil))
-    }
-    steps := f.createSteps(data, uint8(oldLastStep.StepNumber))
-    
-    journey.EndedAt = steps[len(steps)-1].TimeArrival
-    journey.update()
-    insertSteps(steps)
-    
-    oldLastStep.NextStep = steps[0]
-    oldLastStep.NextStepId = steps[0].Id
-    oldLastStep.update()
-    
-    return steps
-}
-
-func (j *FleetJourney) removeStep(step *FleetJourneyStep) {
-    if j.Id != step.JourneyId{
-        panic(NewHttpException(400, "This step is not linked to the fleet journey", nil))
-    }
-    if j.CurrentStepId == step.Id {
-        panic(NewHttpException(400, "current step cannot be canceled", nil))
-    }
-    if j.CurrentStep.StepNumber >= step.StepNumber{
-        panic(NewHttpException(400, "cannot remove step with smaler step number that the current one ", nil))
-    }
-    
-    for _, stepR := range j.getSteps() {
-        if stepR.NextStepId == step.Id{
-            stepR.NextStepId = 0
-            stepR.NextStep = nil
-            j.EndedAt = stepR.TimeArrival
-            stepR.update()
-            j.update()
-            break
-        }
-    }
-    step.deleteStepsRecursive()
-}
-
-
-/********************************************/
-// internal logic
-
 func (step *FleetJourneyStep) end() {
     defer CatchException(nil)
+    step = getStep(step.Id)
 
     if step.Id != step.Journey.CurrentStepId {
         return
@@ -439,17 +322,16 @@ func (s *FleetJourneyStep) processOrder() bool {
 }
 
 func (step *FleetJourneyStep) beginNextStep() {
-    nextStep := getStep(step.NextStep.Id) //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.*
-    step.Journey.CurrentStep = nextStep
-    step.Journey.CurrentStepId = nextStep.Id
+    step.Journey.CurrentStep = step.NextStep
+    step.Journey.CurrentStepId = step.NextStep.Id
     step.Journey.update()
     step.delete()
-    if nextStep.TimeArrival.After(time.Now()) {
-        Scheduler.AddTask(uint(time.Until(nextStep.TimeArrival).Seconds()), func () {
-            nextStep.end()
+    if step.NextStep.TimeArrival.After(time.Now()) {
+        Scheduler.AddTask(uint(time.Until(step.NextStep.TimeArrival).Seconds()), func () {
+            step.NextStep.end()
         })
     } else {
-        nextStep.end()
+        step.NextStep.end()
     }
 }
 
@@ -484,15 +366,6 @@ func insertSteps(steps []*FleetJourneyStep) {
         if err := Database.Insert(step); err != nil {
     		panic(NewHttpException(500, "Step could not be created", err))
         }
-    }
-}
-
-func (s *FleetJourneyStep) deleteStepsRecursive() {
-    if err := Database.Delete(s); err != nil {
-        panic(NewException("Journey step could not be deleted", err))
-    }
-    if s.NextStepId != 0 {
-        getStep(s.NextStepId).deleteStepsRecursive()
     }
 }
 
@@ -558,22 +431,6 @@ func getStep(stepId uint16) *FleetJourneyStep {
             panic(NewException("step not found in GetStep", err))
     }
     return step
-}
-
-func getStepsById(ids []uint16) []*FleetJourneyStep {
-    steps := make([]*FleetJourneyStep, 0)
-    if err := Database.
-        Model(&steps).
-        Relation("Journey.CurrentStep").
-        Relation("NextStep.PlanetFinal.System").
-        Relation("NextStep.PlanetStart.System").
-        Relation("PlanetFinal.System").
-        Relation("PlanetStart.System").
-        WhereIn("fleet_journey_step.id IN ?", ids).
-        Select(); err != nil {
-            panic(NewHttpException(404, "Fleets not found", err))
-    }
-    return steps
 }
 
 func (j *FleetJourney) getSteps() []*FleetJourneyStep {

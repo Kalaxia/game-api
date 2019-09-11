@@ -224,13 +224,6 @@ var routes = Routes{
 		true,
 	},
 	Route{
-		"Add Steps To Journey",
-		"PATCH",
-		"/api/fleets/{id}/journey",
-		api.AddStepsToJourney,
-		true,
-	},
-	Route{
 		"Get Journey",
 		"GET",
 		"/api/fleets/{id}/journey",
@@ -242,13 +235,6 @@ var routes = Routes{
 		"GET",
 		"/api/fleets/{id}/steps",
 		api.GetFleetSteps,
-		true,
-	},
-	Route{
-		"Remove Step And Following Form Journey Associated With Fleet",
-		"DELETE",
-		"/api/fleets/{id}/steps/{stepId}",
-		api.RemoveFleetJourneyStep,
 		true,
 	},
 	/*******************************/
