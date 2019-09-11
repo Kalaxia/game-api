@@ -247,11 +247,11 @@ func RemoveFleetJourneyStep(w http.ResponseWriter, r *http.Request){
     
 }
 
-func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
+func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey = &FleetJourney {
         CreatedAt : time.Now(),
     }
-	steps := createSteps(f, data, 0)
+	steps := f.createSteps(data, 0)
 	
     f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
 	
@@ -259,7 +259,8 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
 		panic(NewHttpException(500, "Journey could not be created", err))
     }
 	insertSteps(steps)
-	
+    
+    f.Journey.Steps = steps
     f.Journey.CurrentStep = steps[0]
     f.Journey.CurrentStepId = steps[0].Id
 	f.Journey.update()
@@ -276,15 +277,24 @@ func (f *Fleet) travel(data []interface{}) []*FleetJourneyStep {
     } else {
         defer f.Journey.CurrentStep.end() // if the time is already passed we directly execute it
     }
-    return steps
+    return f.Journey
 }
 
-func createSteps(fleet *Fleet, data []interface{}, firstNumber uint8) []*FleetJourneyStep {
+func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJourneyStep {
     steps := make([]*FleetJourneyStep, len(data))
 
-    previousPlanet := fleet.Location
-    previousX := float64(fleet.Location.System.X)
-    previousY := float64(fleet.Location.System.Y)
+    var previousPlanet *Planet
+    var previousX, previousY float64
+
+    if fleet.Location != nil {
+        previousPlanet = fleet.Location
+        previousX = float64(fleet.Location.System.X)
+        previousY = float64(fleet.Location.System.Y)
+    } else {
+        previousPlanet = nil
+        previousX = float64(fleet.MapPosX)
+        previousY = float64(fleet.MapPosY)
+    }
     previousTime := time.Now()
 
     for i, s := range data {
@@ -353,7 +363,7 @@ func (f *Fleet) addJourneySteps(data []interface{}) []*FleetJourneyStep {
     if oldLastStep.NextStep != nil {
         panic(NewHttpException(400, "The step with the higher step number is not the last step. Potential loop : abording", nil))
     }
-    steps := createSteps(f, data, uint8(oldLastStep.StepNumber))
+    steps := f.createSteps(data, uint8(oldLastStep.StepNumber))
     
     journey.EndedAt = steps[len(steps)-1].TimeArrival
     journey.update()
@@ -429,39 +439,17 @@ func (s *FleetJourneyStep) processOrder() bool {
 }
 
 func (step *FleetJourneyStep) beginNextStep() {
-    step.delete()
-    
-    var needToUpdateNextStep = false
-    var defaultTime time.Time // This varaible is not set so it give the default time for unset varaible
-    if step.NextStep.TimeStart == defaultTime { // TODO think of when we do this assignation
-        //step.NextStep.TimeStart = step.TimeArrival.Add( time.Duration(journeyTimeData.Cooldown.getTimeForStep(step.NextStep)) * time.Second )
-        //TODO implement cooldown ?
-        step.NextStep.TimeStart = step.TimeArrival
-        needToUpdateNextStep = true
-    }
-    if step.NextStep.TimeJump == defaultTime { // TODO think of when we do this assignation
-        step.NextStep.TimeJump = step.NextStep.TimeStart.Add( time.Duration(journeyTimeData.WarmTime.getTimeForStep(step.NextStep)) * time.Second )
-        needToUpdateNextStep = true
-    }
-    if step.NextStep.TimeArrival == defaultTime { // TODO think of when we do this assignation
-        step.NextStep.TimeArrival = step.NextStep.TimeJump.Add( time.Duration(journeyTimeData.TravelTime.getTimeForStep(step.NextStep)) * time.Second)
-        needToUpdateNextStep = true
-    }
-    if needToUpdateNextStep{
-        step.NextStep.update()
-    }
-    
     nextStep := getStep(step.NextStep.Id) //< Here I refresh the data because step.NextStep does not have step.NextStep.NextStep.*
+    step.Journey.CurrentStep = nextStep
+    step.Journey.CurrentStepId = nextStep.Id
+    step.Journey.update()
+    step.delete()
     if nextStep.TimeArrival.After(time.Now()) {
-        step.Journey.CurrentStep = nextStep
-        step.Journey.CurrentStepId = nextStep.Id
-        step.Journey.update()
         Scheduler.AddTask(uint(time.Until(nextStep.TimeArrival).Seconds()), func () {
             nextStep.end()
         })
     } else {
-        defer nextStep.end() // if the time is already passed we directly execute it
-        // here I defer It (and not use go ) because I need that the current step is deleted before this one is
+        nextStep.end()
     }
 }
 
