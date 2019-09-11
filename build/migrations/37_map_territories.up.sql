@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS map__territories(
     economic_influence INT NOT NULL,
     cultural_influence INT NOT NULL,
     religious_influence INT NOT NULL,
-    coordinates JSON[] NOT NULL
+    coordinates JSONB DEFAULT NULL
 );
 
 CREATE TABLE IF NOT EXISTS map__territory_histories(
