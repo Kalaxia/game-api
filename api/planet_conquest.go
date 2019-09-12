@@ -35,7 +35,7 @@ func (fleet *Fleet) attack(p *Planet) bool {
 		if !f.willEngage(fleet, p) {
 			continue
 		}
-		if combat := fleet.engage(&f); combat != nil && !combat.IsVictory {
+		if combat := fleet.engage(f); combat != nil && !combat.IsVictory {
 			return false
 		}
 	}

@@ -20,6 +20,12 @@ type(
         JourneyId uint16 `json:"-"`
         MapPosX float64 `json:"map_pos_x" sql:"map_pos_x"`
         MapPosY float64 `json:"map_pos_y" sql:"map_pos_y"`
+        ShipSummary []FleetShipSummary `json:"ship_summary,omitempty" sql:"-"`
+    }
+
+    FleetShipSummary struct {
+        Type string `json:"type"`
+        NbShips uint16 `json:"nb_ships"`
     }
 )
 
@@ -39,8 +45,10 @@ func CreateFleet(w http.ResponseWriter, r *http.Request) {
 
 func GetAllFleets(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
-	
-	SendJsonResponse(w, 200, player.getFleets())
+    
+    fleets := player.getFleets()
+
+	SendJsonResponse(w, 200, injectFleetsData(fleets))
 }
 
 func GetTravellingFleets(w http.ResponseWriter, r *http.Request) {
@@ -180,8 +188,8 @@ func getFleet(id uint16) *Fleet {
     return fleet
 }
 
-func getTravellingFleets() []Fleet {
-    fleets := make([]Fleet, 0)
+func getTravellingFleets() []*Fleet {
+    fleets := make([]*Fleet, 0)
     if err := Database.
         Model(&fleets).
         Relation("Player.Faction").
@@ -208,8 +216,8 @@ func (p *Player) createFleet(planet *Planet) *Fleet {
 	return fleet
 }
 
-func (p *Player) getFleets() []Fleet {
-	fleets := make([]Fleet, 0)
+func (p *Player) getFleets() []*Fleet {
+	fleets := make([]*Fleet, 0)
     if err := Database.
         Model(&fleets).
         Relation("Player").
@@ -223,8 +231,8 @@ func (p *Player) getFleets() []Fleet {
     return fleets
 }
 
-func (p *Planet) getComingFleets() []Fleet {
-    fleets := make([]Fleet, 0)
+func (p *Planet) getComingFleets() []*Fleet {
+    fleets := make([]*Fleet, 0)
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
@@ -252,8 +260,8 @@ func (p *Planet) getComingFleets() []Fleet {
     return fleets
 }
 
-func (p *Planet) getLeavingFleets() []Fleet {
-    fleets := make([]Fleet, 0)
+func (p *Planet) getLeavingFleets() []*Fleet {
+    fleets := make([]*Fleet, 0)
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
         Model(&steps).
@@ -283,8 +291,8 @@ func (p *Planet) getLeavingFleets() []Fleet {
     return fleets
 }
 
-func (p *Planet) getOrbitingFleets() []Fleet {
-    fleets := make([]Fleet, 0)
+func (p *Planet) getOrbitingFleets() []*Fleet {
+    fleets := make([]*Fleet, 0)
     if err := Database.
         Model(&fleets).
         Relation("Player.Faction").
@@ -297,8 +305,8 @@ func (p *Planet) getOrbitingFleets() []Fleet {
     return fleets
 }
 
-func (p *Planet) getFleets(player *Player) []Fleet {
-	fleets := make([]Fleet, 0)
+func (p *Planet) getFleets(player *Player) []*Fleet {
+	fleets := make([]*Fleet, 0)
     if err := Database.
         Model(&fleets).
         Relation("Player.Faction").
@@ -382,6 +390,21 @@ func (f *Fleet) getShipGroups() []ShipGroup {
             panic(NewHttpException(404, "fleet not found", err))
     }
     return ships
+}
+
+func injectFleetsData(fleets []*Fleet) []*Fleet {
+    for _, f := range fleets {
+        f.ShipSummary = f.getShipSummary()
+    }
+    return fleets
+}
+
+func (f *Fleet) getShipSummary() []FleetShipSummary {
+    summary := make([]FleetShipSummary, 0)
+    if err := Database.Model((*Ship)(nil)).Column("model.type").ColumnExpr("count(*) as nb_ships").Join("INNER JOIN ship__models as model ON model.id = ship.model_id").Group("model.type").Where("fleet_id = ?", f.Id).Select(&summary); err != nil {
+        panic(NewException("Could not retrieve fleet ship summary", err))
+    }
+    return summary
 }
 
 func (f *Fleet) delete() {
