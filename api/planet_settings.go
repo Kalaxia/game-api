@@ -24,7 +24,7 @@ func AffectPopulationPoints(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
 
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(id), player.Id)
+    planet := player.getPlanet(uint16(id))
 
     if player.Id != planet.Player.Id {
         panic(NewHttpException(http.StatusForbidden, "", nil))

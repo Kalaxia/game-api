@@ -51,7 +51,7 @@ type(
 func CreateShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
@@ -62,7 +62,7 @@ func CreateShips(w http.ResponseWriter, r *http.Request) {
 func GetCurrentlyConstructingShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
@@ -73,7 +73,7 @@ func GetCurrentlyConstructingShips(w http.ResponseWriter, r *http.Request) {
 func GetConstructingShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
@@ -84,7 +84,7 @@ func GetConstructingShips(w http.ResponseWriter, r *http.Request) {
 func GetHangarShips(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
@@ -95,7 +95,7 @@ func GetHangarShips(w http.ResponseWriter, r *http.Request) {
 func GetHangarShipGroups(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player != nil && planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))

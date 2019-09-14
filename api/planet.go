@@ -62,7 +62,7 @@ func GetPlanet(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
 
-    SendJsonResponse(w, 200, getPlayerPlanet(uint16(id), player.Id))
+    SendJsonResponse(w, 200, player.getPlanet(uint16(id)))
 }
 
 func (p *Planet) changeOwner(player *Player) {
@@ -126,7 +126,7 @@ func (p *Player) getPlanets() []Planet {
     return planets
 }
 
-func getPlayerPlanet(id uint16, playerId uint16) *Planet {
+func (p *Player) getPlanet(id uint16) *Planet {
     planet := &Planet{}
     if err := Database.
         Model(planet).
@@ -138,12 +138,11 @@ func getPlayerPlanet(id uint16, playerId uint16) *Planet {
         Relation("System").
         Relation("Storage").
         Where("planet.id = ?", id).
+        Where("Player.id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Planet not found", err))
     }
-    if planet.Player != nil && playerId == planet.Player.Id {
-        planet.getOwnerData()
-    }
+    planet.getOwnerData()
     return planet
 }
 

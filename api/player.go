@@ -140,7 +140,7 @@ func (p *Player) register(pseudo string, gender string, avatar string, factionId
     if faction == nil {
         panic(NewHttpException(404, "faction not found", nil))
     }
-    planet := getPlayerPlanet(planetId, uint16(p.Id))
+    planet := p.getPlanet(planetId)
     if planet == nil {
         panic(NewHttpException(404, "planet not found", nil))
     }

@@ -88,7 +88,7 @@ func CreateBuilding(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
 
     id, _ := strconv.ParseUint(vars["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(id), player.Id)
+    planet := player.getPlanet(uint16(id))
 
     if uint16(id) != planet.Id {
         panic(NewHttpException(403, "Forbidden", nil))
@@ -103,7 +103,7 @@ func CancelBuilding(w http.ResponseWriter, r *http.Request) {
 
     planetId, _ := strconv.ParseUint(vars["planet-id"], 10, 16)
     buildingId, _ := strconv.ParseUint(vars["building-id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if uint16(planetId) != planet.Id {
         panic(NewHttpException(403, "Forbidden", nil))
@@ -120,7 +120,7 @@ func CreateBuildingCompartment(w http.ResponseWriter, r *http.Request) {
 
     planetId, _ := strconv.ParseUint(vars["planet-id"], 10, 16)
     buildingId, _ := strconv.ParseUint(vars["building-id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     data := DecodeJsonRequest(r)
 

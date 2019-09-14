@@ -35,7 +35,7 @@ func CreateFleet(w http.ResponseWriter, r *http.Request) {
 	data := DecodeJsonRequest(r)
 	
 	planetId := data["planet_id"].(float64)
-	planet := getPlayerPlanet(uint16(planetId), player.Id)
+	planet := player.getPlanet(uint16(planetId))
 	
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
@@ -72,7 +72,7 @@ func GetFleet(w http.ResponseWriter, r *http.Request) {
 func GetComingFleets(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
     
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
@@ -83,7 +83,7 @@ func GetComingFleets(w http.ResponseWriter, r *http.Request) {
 func GetLeavingFleets(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
     
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
@@ -94,7 +94,7 @@ func GetLeavingFleets(w http.ResponseWriter, r *http.Request) {
 func GetPlanetFleets(w http.ResponseWriter, r *http.Request) {
 	player := context.Get(r, "player").(*Player)
 	planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-	planet := getPlayerPlanet(uint16(planetId), player.Id)
+	planet := player.getPlanet(uint16(planetId))
 	
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))

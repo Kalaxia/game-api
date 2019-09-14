@@ -59,7 +59,7 @@ type(
 func CreateOffer(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     planetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     if planet.Player.Id != player.Id {
         panic(NewHttpException(403, "You do not control this planet", nil))
@@ -96,7 +96,7 @@ func AcceptOffer(w http.ResponseWriter, r *http.Request) {
     nbLots := uint16(data["nb_lots"].(float64))
     planetId := data["planet_id"].(float64)
     player := context.Get(r, "player").(*Player)
-    planet := getPlayerPlanet(uint16(planetId), player.Id)
+    planet := player.getPlanet(uint16(planetId))
 
     planet.acceptOffer(uint32(offerId), nbLots)
 
