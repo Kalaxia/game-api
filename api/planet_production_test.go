@@ -1,61 +1,65 @@
 package api
 
 import(
-	"fmt"
 	"reflect"
 	"testing"
 )
 
-func TestProduceResources(t *testing.T) {
+func TestGetPlanetProducedResources(t *testing.T) {
 	InitDatabaseMock()
 	InitPlanetConstructions()
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
 	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	planet.Storage = getStorageMock()
-	building := &Building{
-		Planet: planet,
-		Type: "resource",
-		Name: "ore-mine",
+	planet.Buildings = []Building{
+		Building{
+			Planet: planet,
+			Type: "resource",
+			Name: "ore-mine",
+			Compartments: []*BuildingCompartment{
+				&BuildingCompartment{
+					Name: "ore-well",
+					Status: BuildingStatusOperational,
+				},
+			},
+		},
+		Building{
+			Planet: planet,
+			Type: "resource",
+			Name: "cristal-synthetiser",
+		},
 	}
-	building2 := Building{
-		Planet: planet,
-		Type: "resource",
-		Name: "cristal-synthetiser",
-	}
-	building.produceResources()
+	planetResources := planet.getProducedResources()
 
-	fmt.Println(planet.Storage.Resources)
-
-	if len := len(planet.Storage.Resources); len != 4 {
+	if len := len(planetResources); len != 3 {
 		t.Fatalf("Storage should contain 3 different resources, got %d", len)
 	}
-	if planet.Storage.Resources["red-ore"] != 200 {
-		t.Errorf("Storage should contain 200 red-ore")
+	if quantity := planetResources["red-ore"].BaseQuantity; quantity != 200 {
+		t.Errorf("Storage should contain 200 red-ore, not %d", quantity)
 	}
-	if planet.Storage.Resources["ore"] != 450 {
-		t.Errorf("Storage should contain 450 ore")
+	if percent := planetResources["red-ore"].Percent; percent != 10 {
+		t.Errorf("Produced red-ore should be improved by 10 percents, got %d", percent)
 	}
-	if planet.Storage.Resources["cristal"] != 2500 {
-		t.Errorf("Storage should contain 2500 cristal")
+	if quantity := planetResources["red-ore"].FinalQuantity; quantity != 220 {
+		t.Errorf("Finally produced red-ore should equal 220, not %d", quantity)
 	}
-
-	building2.produceResources()
-
-	if planet.Storage.Resources["cristal"] != 3100 {
-		t.Errorf("Storage should contain 3100 cristal")
+	if quantity := planetResources["ore"].BaseQuantity; quantity != 450 {
+		t.Errorf("Storage should contain 450 ore, not %d", quantity)
 	}
-}
-
-func TestGetProducedQuantity(t *testing.T) {
-	building := &Building{
-		Planet: getPlayerPlanetMock(getPlayerMock(getFactionMock())),
+	if percent := planetResources["ore"].Percent; percent != 10 {
+		t.Errorf("Produced ore should be improved by 10 percents, got %d", percent)
 	}
-
-	if quantity := building.getProducedQuantity("red-ore"); quantity != 200 {
-		t.Errorf("Produced ore quantity should equal 250, not %d", quantity)
+	if quantity := planetResources["ore"].FinalQuantity; quantity != 495 {
+		t.Errorf("Finally produced ore should equal 495, not %d", quantity)
 	}
-	if quantity := building.getProducedQuantity("emerald"); quantity != 0 {
-		t.Errorf("Produced emerald quantity should equal 0, not %d", quantity)
+	if quantity := planetResources["cristal"].BaseQuantity; quantity != 600 {
+		t.Errorf("Storage should contain 600 cristal, not %d", quantity)
+	}
+	if percent := planetResources["cristal"].Percent; percent != 0 {
+		t.Errorf("Produced cristal should not be affected, got %d", percent)
+	}
+	if quantity := planetResources["cristal"].FinalQuantity; quantity != 600 {
+		t.Errorf("Finally produced cristal should equal 495, not %d", quantity)
 	}
 }
 
