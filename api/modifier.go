@@ -10,6 +10,6 @@ type(
 	Modifier struct{
 		Type string `json:"type"`
 		Resource string `json:"resource"`
-		Percent uint8 `json:"percent"`
+		Percent int8 `json:"percent"`
 	}
 )
