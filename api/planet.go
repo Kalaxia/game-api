@@ -30,7 +30,7 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
         Resources []PlanetResource `json:"resources"`
-        ResourcesProduction map[string]*ResourceProduction `json:"resources_production,omitempty" sql:"-"`
+        ResourcesProduction map[string]*ResourceProduction `json:"resources_production" sql:"-"`
 		StorageId uint16 `json:"-"`
 		Storage *Storage `json:"storage"`
 		SettingsId uint16 `json:"-"`
