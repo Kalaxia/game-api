@@ -5,7 +5,17 @@ import(
     "sync"
 )
 
+const PlanetProductionResourceDensityCoeff = 10
+
 type(
+    ResourceProduction struct {
+        Name string `json:"name"`
+        Density uint8 `json:"density"`
+        BaseQuantity uint16 `json:"base_quantity"`
+        FinalQuantity uint16 `json:"final_quantity"`
+        Percent int8 `json:"percent"`
+    }
+
     PointsProduction struct {
 		TableName struct{} `json:"-" sql:"map__planet_point_productions"`
 
@@ -60,6 +70,9 @@ func (p *Planet) calculateProduction(wg *sync.WaitGroup) {
         b.Planet = p
         points = b.produce(points)
     }
+    for _, rp := range p.getProducedResources() {
+        p.Storage.storeResource(rp.Name, int16(rp.FinalQuantity))
+    }
     p.produceBuildingPoints()
     p.Storage.update()
 }
@@ -78,9 +91,6 @@ func (b *Building) produce(points map[string]uint8) map[string]uint8 {
         return points
     }
     switch (b.Type) {
-        case BuildingTypeResource: 
-            b.produceResources()
-            return points
         case BuildingTypeShipyard:
             return b.produceShips(points)
         default:
@@ -88,51 +98,19 @@ func (b *Building) produce(points map[string]uint8) map[string]uint8 {
     }
 }
 
-func (b *Building) produceResources() {
-    for _, resourceName := range buildingPlansData[b.Name].Resources {
-        if quantity := int16(b.getProducedQuantity(resourceName)); quantity > 0 {
-            b.Planet.Storage.storeResource(resourceName, quantity)
-        }
-    }
-}
-
-func (b *Building) getProducedQuantity(resourceName string) uint16 {
-    resource := b.Planet.getResource(resourceName)
-    if resource == nil {
-        return 0
-    }
-    modifiers := b.getResourceModifiers()
-    baseQuantity := uint16(resource.Density) * 10
-
-    if percent, ok := modifiers[resourceName]; ok {
-        if percent > 0 {
-            return baseQuantity + uint16(math.Floor(float64(baseQuantity) * (float64(percent) / 100)))
-        } else {
-            return baseQuantity - uint16(math.Floor(float64(baseQuantity) * math.Abs(float64(percent) / 100)))
-        }
-    }
-    return baseQuantity
-}
-
-func (b *Building) getResourceModifiers() map[string]uint8 {
-    resourceModifiers := make(map[string]uint8, 0)
+func (b *Building) getResourceModifiers() map[string]int8 {
+    resourceModifiers := make(map[string]int8, 0)
 
     for _, c := range b.Compartments {
         if c.Status != BuildingStatusOperational {
             continue
         }
         plan := b.getCompartmentPlan(c.Name)
-        for _, bonus := range plan.Bonuses {
-            if bonus.Type != "resource" {
+        for _, m := range plan.Modifiers {
+            if m.Type != "resource" {
                 continue
             }
-            resourceModifiers[bonus.Resource] = bonus.Percent
-        }
-        for _, malus := range plan.Maluses {
-            if malus.Type != "resource" {
-                continue
-            }
-            resourceModifiers[malus.Resource] = -malus.Percent
+            resourceModifiers[m.Resource] = m.Percent
         }
     }
     return resourceModifiers
@@ -230,4 +208,45 @@ func (b *Building) constructCompartments(points uint8) uint8 {
         points = c.ConstructionState.spendPoints(points, c.finishConstruction)
     }
     return points
+}
+
+func (p *Planet) getProducedResources() map[string]*ResourceProduction {
+    resourcesProduction := make(map[string]*ResourceProduction, len(p.Resources))
+
+    for _, r := range p.Resources {
+        resourcesProduction[r.Name] = &ResourceProduction{
+            Name: r.Name,
+            Density: r.Density,
+            BaseQuantity: 0,
+            FinalQuantity: 0,
+            Percent: 0,
+        }
+    }
+    for _, b := range p.Buildings {
+        if b.Type != BuildingTypeResource {
+            continue
+        }
+        resourcesProduction = b.getProducedResources(resourcesProduction)
+    }
+    for _, rp := range resourcesProduction {
+        rp.calculateFinalQuantity()
+    }
+    return resourcesProduction
+}
+
+func (b *Building) getProducedResources(resourcesProduction map[string]*ResourceProduction) map[string]*ResourceProduction {
+    modifiers := b.getResourceModifiers()
+    for _, resourceName := range buildingPlansData[b.Name].Resources {
+        if rp, ok := resourcesProduction[resourceName]; ok {
+            rp.BaseQuantity += uint16(rp.Density) * PlanetProductionResourceDensityCoeff
+            if percent, ok := modifiers[resourceName]; ok {
+                rp.Percent += percent
+            }
+        }
+    }
+    return resourcesProduction
+}
+
+func (rp *ResourceProduction) calculateFinalQuantity() {
+    rp.FinalQuantity = rp.BaseQuantity + uint16(math.Floor(float64(rp.BaseQuantity) * (float64(rp.Percent) / 100)))
 }

@@ -66,8 +66,7 @@ type(
     
     BuildingCompartmentPlan struct {
         Name string `json:"name"`
-        Bonuses []Modifier `json:"bonuses"`
-        Maluses []Modifier `json:"maluses"`
+        Modifiers []Modifier `json:"modifiers"`
         Price []Price `json:"price"`
     }
 )

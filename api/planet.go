@@ -29,7 +29,8 @@ type(
 		Orbit *SystemOrbit `json:"orbit"`
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
-		Resources []PlanetResource `json:"resources"`
+        Resources []PlanetResource `json:"resources"`
+        ResourcesProduction map[string]*ResourceProduction `json:"resources_production,omitempty" sql:"-"`
 		StorageId uint16 `json:"-"`
 		Storage *Storage `json:"storage"`
 		SettingsId uint16 `json:"-"`
@@ -48,7 +49,7 @@ type(
 		Density uint8 `json:"density"`
 		PlanetId uint16 `json:"-"`
 		Planet *Planet `json:"planet"`
-	}
+    }
 
 	PlanetData struct {
 	  Picto string
@@ -149,6 +150,7 @@ func (p *Player) getPlanet(id uint16) *Planet {
 func (p *Planet) getOwnerData() {
     p.Buildings, p.AvailableBuildings = p.getBuildings()
     p.NbBuildings = 7
+    p.ResourcesProduction = p.getProducedResources()
 }
 
 func (p *Planet) getResource(name string) *PlanetResource {
