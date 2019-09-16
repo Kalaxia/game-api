@@ -78,6 +78,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Delete notification",
+		"DELETE",
+		"/api/me/notifications/{id}",
+		api.DeleteNotification,
+		true,
+	},
+	Route{
 		"Get Current Player Ship Models",
 		"GET",
 		"/api/me/ship-models",
