@@ -104,7 +104,7 @@ type(
         Module *ShipModule `json:"-" sql:"-"`
     }
     ShipSlotPlan struct {
-        Position float64 `json:"position"`
+        Position uint8 `json:"position"`
         Shape string `json:"shape"`
         Size string `json:"size"`
     }
@@ -269,15 +269,28 @@ func (f *ShipFrame) extractSlotsData(data map[string]interface{}) []ShipSlot {
 
 func (f *ShipFrame) extractSlot(data map[string]interface{}) (slot ShipSlot) {
     slot.Position = uint8(data["position"].(float64))
+    
     if data["module"] == nil {
         return
     }
     if module, ok := modulesData[data["module"].(string)]; ok {
         slot.Module = &module
         slot.ModuleSlug = data["module"].(string)
+        if !f.isValidSlot(slot) {
+            panic(NewHttpException(400, "ships.invalid_slot", nil))
+        }
         return
     }
     panic(NewHttpException(400, "Invalid module", nil))
+}
+
+func (f *ShipFrame) isValidSlot(slot ShipSlot) bool {
+    for _, s := range f.Slots {
+        if s.Position == slot.Position {
+            return s.Shape == slot.Module.Shape && s.Size == slot.Module.Size
+        }
+    }
+    return false
 }
 
 func (sm *ShipModel) loadSlots() {

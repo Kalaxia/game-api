@@ -22,7 +22,7 @@ func TestCreateShipModel(t *testing.T) {
 			},
 			map[string]interface{}{
 				"position": float64(3),
-				"module": "mark-i-reactor",
+				"module": "ion-reactor",
 			},
 		},
 	})
@@ -36,9 +36,9 @@ func TestCreateShipModel(t *testing.T) {
 		t.Errorf("Ship model should have 3 slots, got %d", length)
 	}
 	if armor := shipModel.Stats["armor"]; armor != 60 {
-		t.Errorf("Ship model armor shoudl equal 60, got %d", armor)
+		t.Errorf("Ship model armor should equal 60, got %d", armor)
 	}
-	if speed := shipModel.Stats["speed"]; speed != 115 {
+	if speed := shipModel.Stats["speed"]; speed != 225 {
 		t.Errorf("Ship model speed should equal 115, got %d", speed)
 	}
 	if category := shipModel.Type; category != ShipTypeFighter {
@@ -161,6 +161,20 @@ func TestAddModuleStats(t *testing.T) {
 	}
 	if damage := stats["size"]; damage != 500 {
 		t.Errorf("Damage should equal 500, not %d", damage)
+	}
+}
+
+func TestIsValidSlot(t *testing.T) {
+	frame := getShipFrameMock()
+
+	if frame.isValidSlot(ShipSlot{
+		Position: 1,
+		Module: &ShipModule{
+			Shape: "square",
+			Size: "large",
+		},
+	}) {
+		t.Errorf("Ship slot should not be valid")
 	}
 }
 
