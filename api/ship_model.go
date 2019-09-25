@@ -132,6 +132,9 @@ func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
     frame := extractFrame(data)
     slots := frame.extractSlotsData(data)
     shipType, stats := frame.getShipModelInfo(slots)
+    if speed, hasPropulsor := stats["speed"]; !hasPropulsor || speed == 0 {
+        panic(NewHttpException(400, "ships.missing_propulsion", nil))
+    }
     shipModel := &ShipModel{
         Name: data["name"].(string),
         Type: shipType,

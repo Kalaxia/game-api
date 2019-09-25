@@ -46,6 +46,41 @@ func TestCreateShipModel(t *testing.T) {
 	}
 }
 
+func TestCreateShipModelWithoutPropulsor(t *testing.T) {
+	InitShipConfiguration()
+	defer func() {
+        if r := recover(); r != nil {
+			exception := r.(*HttpException)
+
+			if exception.Message != "ships.missing_propulsion" {
+				t.Errorf("Exception message should tell about the missing propulsor, not %s", exception.Message)
+			}
+        } else {
+			t.Errorf("Ship model creation should have thrown an exception")
+		}
+    }()
+
+	player := getPlayerMock(getFactionMock())
+	player.createShipModel(map[string]interface{}{
+		"name": "XFB-1",
+		"frame": "battle-runner",
+		"slots": []interface{} {
+			map[string]interface{}{
+				"position": float64(1),
+				"module": "laser-turret-meirrion",
+			},
+			map[string]interface{}{
+				"position": float64(2),
+				"module": "laser-turret-meirrion",
+			},
+			map[string]interface{}{
+				"position": float64(3),
+				"module": nil,
+			},
+		},
+	})
+}
+
 func TestExtractSlotsData(t *testing.T) {
 	InitShipConfiguration()
 	frame := getShipFrameMock()
