@@ -104,6 +104,7 @@ type(
         Module *ShipModule `json:"-" sql:"-"`
     }
     ShipSlotPlan struct {
+        Position float64 `json:"position"`
         Shape string `json:"shape"`
         Size string `json:"size"`
     }
@@ -128,20 +129,16 @@ func CreateShipModel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
-    var frame ShipFrame
-    var ok bool
-    if frame, ok = framesData[data["frame"].(string)]; !ok {
-        panic(NewHttpException(400, "The given ship frame does not exists", nil))
-    }
-    slots := getSlotsData(data)
-    shipType, stats := getShipModelInfo(frame, slots)
+    frame := extractFrame(data)
+    slots := frame.extractSlotsData(data)
+    shipType, stats := frame.getShipModelInfo(slots)
     shipModel := &ShipModel{
         Name: data["name"].(string),
         Type: shipType,
         PlayerId: p.Id,
         Player: p,
         FrameSlug: frame.Slug,
-        Frame: &frame,
+        Frame: frame,
         Slots: slots,
         Stats: stats,
     }
@@ -149,17 +146,29 @@ func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
     if err := Database.Insert(shipModel); err != nil {
       panic(NewHttpException(500, "Ship model could not be created", err))
     }
+    shipModel.createShipModelSlots()
+    p.addShipModel(shipModel)
+    return shipModel
+}
+
+func extractFrame(data map[string]interface{}) *ShipFrame {
+    if frame, ok := framesData[data["frame"].(string)]; ok {
+        return &frame
+    }
+    panic(NewHttpException(400, "The given ship frame does not exists", nil))
+}
+
+func (p *Player) addShipModel(sm *ShipModel) *ShipPlayerModel {
     playerShipModel := &ShipPlayerModel{
-        ModelId: shipModel.Id,
-        Model: shipModel,
+        ModelId: sm.Id,
+        Model: sm,
         PlayerId: p.Id,
         Player: p,
     }
     if err := Database.Insert(playerShipModel); err != nil {
       panic(NewHttpException(500, "Player ship model could not be created", err))
     }
-    shipModel.createShipModelSlots()
-    return shipModel
+    return playerShipModel
 }
 
 func (sm *ShipModel) createShipModelSlots() {
@@ -179,11 +188,7 @@ func (p *Player) getShipModels() []*ShipModel {
     }
     models := make([]*ShipModel, len(shipPlayerModels))
     for i, spm := range shipPlayerModels {
-        slots := make([]ShipSlot, 0)
-        if err := Database.Model(&slots).Where("model_id = ?", spm.Model.Id).Select(); err != nil {
-            panic(NewHttpException(500, "Could not retrieve ship slots", err))
-        }
-        spm.Model.Slots = slots
+        spm.Model.loadSlots()
         models[i] = spm.Model
     }
     return models
@@ -194,80 +199,93 @@ func (p *Player) getShipModel(modelId uint32) *ShipModel {
     if err := Database.Model(shipPlayerModel).Relation("Model").Where("Model.player_id = ?", p.Id).Where("Model.id = ?", modelId).Select(); err != nil {
         panic(NewHttpException(404, "Player ship model not found", err))
     }
-    slots := make([]ShipSlot, 0)
-    if err := Database.Model(&slots).Where("model_id = ?", shipPlayerModel.Model.Id).Select(); err != nil {
-        panic(NewHttpException(500, "Could not retrieve ship slots", err))
-    }
-    shipPlayerModel.Model.Slots = slots
+    shipPlayerModel.Model.loadSlots()
     return shipPlayerModel.Model
 }
 
-func getShipModelInfo(frame ShipFrame, slots []ShipSlot) (string, map[string]uint16) {
+func (frame *ShipFrame) getShipModelInfo(slots []ShipSlot) (string, map[string]uint16) {
     scores := make(map[string]uint8, 0)
     stats := make(map[string]uint16, 0)
-    for stat, value := range frame.Stats {
+    
+    frame.addStats(stats)
+    for _, slot := range slots {
+        if module, ok := modulesData[slot.ModuleSlug]; ok {
+            module.addScores(scores)
+            module.addStats(stats)
+        }
+    }
+    return getShipModelType(scores), stats
+}
+
+func (f *ShipFrame) addStats(stats map[string]uint16) {
+    for stat, value := range f.Stats {
         if storedStat, ok := stats[stat]; ok {
             stats[stat] = storedStat + value
         } else {
             stats[stat] = value
         }
     }
-    for _, slot := range slots {
-        var module ShipModule
-        var ok bool
-        if module, ok = modulesData[slot.ModuleSlug]; !ok {
-            continue
-        }
-        for score, amount := range module.Scores {
-            if storedScore, ok := scores[score]; ok {
-                scores[score] = storedScore + amount
-            } else {
-                scores[score] = amount
-            }
-        }
-        for stat, value := range module.ShipStats {
-            if storedStat, ok := stats[stat]; ok {
-                stats[stat] = storedStat + value
-            } else {
-                stats[stat] = value
-            }
-        }
-    }
-    return getShipModelType(scores), stats
 }
 
-func getShipModelType(scores map[string]uint8) string {
-    shipType := ""
-    var highestScore uint8
-    highestScore = 0
+func (m *ShipModule) addStats(stats map[string]uint16) {
+    for stat, value := range m.ShipStats {
+        if storedStat, ok := stats[stat]; ok {
+            stats[stat] = storedStat + value
+        } else {
+            stats[stat] = value
+        }
+    }
+}
+
+func (m *ShipModule) addScores(scores map[string]uint8) {
+    for score, amount := range m.Scores {
+        if storedScore, ok := scores[score]; ok {
+            scores[score] = storedScore + amount
+        } else {
+            scores[score] = amount
+        }
+    }
+}
+
+func getShipModelType(scores map[string]uint8) (shipType string) {
+    highestScore := uint8(0)
     for score, value := range scores {
         if value > highestScore {
             shipType = score
             highestScore = value
         }
     }
-    return shipType
+    return
 }
 
-func getSlotsData(data map[string]interface{}) []ShipSlot {
+func (f *ShipFrame) extractSlotsData(data map[string]interface{}) []ShipSlot {
     slotsData := data["slots"].([]interface{})
     slots := make([]ShipSlot, len(slotsData))
-    for i, slotData := range slotsData {
-        slot := slotData.(map[string]interface{})
-        slots[i] = ShipSlot{
-            Position: uint8(slot["position"].(float64)),
-        }
-        if slot["module"] != nil {
-            var module ShipModule
-            var ok bool
-            if module, ok = modulesData[slot["module"].(string)]; !ok {
-                panic(NewHttpException(400, "Invalid module", nil))
-            }
-            slots[i].Module = &module
-            slots[i].ModuleSlug = slot["module"].(string)
-        }
+    for i, s := range slotsData {
+        slots[i] = f.extractSlot(s.(map[string]interface{}))
     }
     return slots
+}
+
+func (f *ShipFrame) extractSlot(data map[string]interface{}) (slot ShipSlot) {
+    slot.Position = uint8(data["position"].(float64))
+    if data["module"] == nil {
+        return
+    }
+    if module, ok := modulesData[data["module"].(string)]; ok {
+        slot.Module = &module
+        slot.ModuleSlug = data["module"].(string)
+        return
+    }
+    panic(NewHttpException(400, "Invalid module", nil))
+}
+
+func (sm *ShipModel) loadSlots() {
+    slots := make([]ShipSlot, 0)
+    if err := Database.Model(&slots).Where("model_id = ?", sm.Id).Select(); err != nil {
+        panic(NewHttpException(500, "Could not retrieve ship slots", err))
+    }
+    sm.Slots = slots
 }
 
 func (sm *ShipModel) calculatePrices() {

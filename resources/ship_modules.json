@@ -45,7 +45,7 @@
             "bomber": 20,
             "freighter": 30
         },
-        "stats": {
+        "ship_stats": {
             "speed": 225
         },
         "price": [
@@ -82,7 +82,7 @@
             "bomber": 35,
             "freighter": 20
         },
-        "stats": {
+        "ship_stats": {
             "speed": 115
         },
         "price": [
@@ -155,7 +155,7 @@
             "corvette": 35,
             "frigate": 25
         },
-        "stats": {
+        "ship_stats": {
             "power": 75
         },
         "price": [
@@ -195,7 +195,7 @@
         "scores": {
             "freighter": 60
         },
-        "stats": {
+        "ship_stats": {
             "size": 500
         },
         "price": [
