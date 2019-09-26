@@ -18,6 +18,7 @@ services:
         container_name: kalaxia_api
         build: .
         image: kalaxia/api
+        restart: always
         env_file:
             - kalaxia.env
         networks:
