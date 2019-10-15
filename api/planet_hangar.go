@@ -1,9 +1,5 @@
 package api
 
-import(
-
-)
-
 type(
 	PlanetHangarGroup struct{
 		tableName struct{} `json:"-" pg:"map__planet_hangar_groups"`
@@ -45,7 +41,7 @@ func (p *Planet) getHangarGroup(sm *ShipModel) *PlanetHangarGroup {
 		Model: sm,
 	}
 	if err := Database.Model(hg).Where("location_id = ?", p.Id).Where("model_id = ?", sm.Id).Select(); err != nil {
-		panic(NewException("Could not retrieve planet hangar group", err))
+		return nil
 	}
 	return hg
 }

@@ -77,10 +77,10 @@ func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup
     return cg
 }
 
-func (p *Planet) getConstructingShips() []ShipConstructionGroup {
-    scg := make([]ShipConstructionGroup, 0)
+func (p *Planet) getConstructingShips() []*ShipConstructionGroup {
+    groups := make([]*ShipConstructionGroup, 0)
     if err := Database.
-        Model(&scg).
+        Model(&groups).
         Relation("ConstructionState").
         Relation("Model").
         Where("location_id = ?", p.Id).
@@ -88,17 +88,14 @@ func (p *Planet) getConstructingShips() []ShipConstructionGroup {
         Select(); err != nil {
             panic(NewHttpException(404, "No constructing ship found", err))
     }
-    return scg
+    for _, scg := range groups {
+        scg.Location = p
+        scg.LocationId = p.Id
+    }
+    return groups
 }
 
 func (cg *ShipConstructionGroup) finishConstruction() {
     cg.Location.addShips(cg.Model, cg.Quantity)
     cg.ConstructionState.delete()
-    cg.delete()
-}
-
-func (cg *ShipConstructionGroup) delete() {
-    if err := Database.Delete(cg); err != nil {
-        panic(NewException("Could not remove ship construction group", err))
-    }
 }

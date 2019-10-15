@@ -28,7 +28,7 @@ type(
 		DefenderId uint16 `json:"-"`
 		IsVictory bool `json:"is_victory" pg:",notnull,use_zero"`
 
-		Rounds []*FleetCombatRound `json:"rounds"`
+		Rounds []*FleetCombatRound `json:"rounds" pg:"-"`
 
 		AttackerShips map[string]uint16 `json:"attacker_ships" pg:",notnull,use_zero"`
 		DefenderShips map[string]uint16 `json:"defender_ships" pg:",notnull,use_zero"`

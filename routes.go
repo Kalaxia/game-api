@@ -246,6 +246,13 @@ var routes = Routes{
 	},
 	/*******************************/
 	Route{
+		"Get Hangar Groups",
+		"GET",
+		"/api/planets/{id}/ships",
+		api.GetHangarGroups,
+		true,
+	},
+	Route{
 		"Get Constructing Ships",
 		"GET",
 		"/api/planets/{id}/ships/constructing",
