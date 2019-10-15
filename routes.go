@@ -159,24 +159,24 @@ var routes = Routes{
 	/*******************************/
 	// Fleets
 	Route{
-		"Get Fleet Ships",
+		"Get Fleet Squadrons",
 		"GET",
-		"/api/fleets/{id}/ships",
-		api.GetFleetShips,
+		"/api/fleets/{id}/squadrons",
+		api.GetFleetSquadrons,
 		true,
 	},
 	Route{
-		"Get Fleet Ship Groups",
-		"GET",
-		"/api/fleets/{id}/ships/groups",
-		api.GetFleetShipGroups,
+		"Create Fleet Ships",
+		"POST",
+		"/api/fleets/{id}/squadrons",
+		api.CreateFleetSquadron,
 		true,
 	},
 	Route{
-		"Transfer Ships Between Fleet and Hangar",
+		"Transfer Ships Between Fleet Squadron and Hangar",
 		"PATCH",
-		"/api/fleets/{fleetId}/ships",
-		api.TransferShips,
+		"/api/fleets/{fleetId}/squadrons/{squadronId}",
+		api.AssignFleetSquadronShips,
 		true,
 	},
 	Route{ // data of the planet send in json
@@ -245,27 +245,6 @@ var routes = Routes{
 		true,
 	},
 	/*******************************/
-	Route{
-		"Get Hangar Ships",
-		"GET",
-		"/api/planets/{id}/ships",
-		api.GetHangarShips,
-		true,
-	},
-	Route{
-		"Get Hangar Ship Groups",
-		"GET",
-		"/api/planets/{id}/ships/groups",
-		api.GetHangarShipGroups,
-		true,
-	},
-	Route{
-		"Get Currently Constructing Ships",
-		"GET",
-		"/api/planets/{id}/ships/currently-constructing",
-		api.GetCurrentlyConstructingShips,
-		true,
-	},
 	Route{
 		"Get Constructing Ships",
 		"GET",
