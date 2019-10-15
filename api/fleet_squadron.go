@@ -12,7 +12,7 @@ const FleetSquadronMaxQuantity = 50
 
 type(
 	FleetSquadron struct {
-		tableName struct{} `json:"-" sql:"fleet__squadrons"`
+		tableName struct{} `json:"-" pg:"fleet__squadrons"`
 
 		Id uint32 `json:"id"`
 		FleetId uint16 `json:"-"`
@@ -20,9 +20,9 @@ type(
 		ShipModelId uint `json:"-"`
 		ShipModel *ShipModel `json:"ship_model"`
 		Quantity uint8 `json:"quantity"`
-		CombatInitiative uint16 `json:"combat_initiative" sql:"-" pg:",use_zero"`
-		CombatPosition *FleetGridPosition `json:"combat_position" sql:"type:jsonb" pq:",use_zero"`
-		Position *FleetGridPosition `json:"position" sql:"type:jsonb"`
+		CombatInitiative uint16 `json:"combat_initiative" pg:"-,use_zero"`
+		CombatPosition *FleetGridPosition `json:"combat_position" pq:"type:jsonb,use_zero"`
+		Position *FleetGridPosition `json:"position" pg:"type:jsonb"`
 	}
 
 	FleetGridPosition struct {

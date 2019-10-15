@@ -6,7 +6,7 @@ import(
 
 type(
 	PlanetHangarGroup struct{
-		tableName struct{} `json:"-" sql:"map__planet_hangar_groups"`
+		tableName struct{} `json:"-" pg:"map__planet_hangar_groups"`
 
 		LocationId uint16 `json:"-"`
 		Location *Planet `json:"location"`

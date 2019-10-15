@@ -9,7 +9,7 @@ import(
 
 type(
     Fleet struct {
-        TableName struct{} `json:"-" sql:"fleet__fleets"`
+        tableName struct{} `json:"-" pg:"fleet__fleets"`
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`
@@ -18,10 +18,10 @@ type(
         LocationId uint16 `json:"-"`
         Journey *FleetJourney `json:"journey"`
         JourneyId uint16 `json:"-"`
-        MapPosX float64 `json:"map_pos_x" sql:"map_pos_x"`
-        MapPosY float64 `json:"map_pos_y" sql:"map_pos_y"`
+        MapPosX float64 `json:"map_pos_x" pg:"map_pos_x"`
+        MapPosY float64 `json:"map_pos_y" pg:"map_pos_y"`
         Squadrons []*FleetSquadron `json:"squadrons" pg:",use_zero"`
-        ShipSummary []FleetShipSummary `json:"ship_summary,omitempty" sql:"-"`
+        ShipSummary []FleetShipSummary `json:"ship_summary,omitempty" pg:"-"`
     }
 
     FleetShipSummary struct {

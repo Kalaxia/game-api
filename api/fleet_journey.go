@@ -25,17 +25,17 @@ const JourneyStepTypePositionToPosition = "position_to_position"
 
 type(
     FleetJourney struct {
-        TableName struct{} `json:"-" sql:"fleet__journeys"`
+        tableName struct{} `json:"-" pg:"fleet__journeys"`
 
         Id uint16 `json:"id"`
         CreatedAt time.Time `json:"created_at"`
         EndedAt time.Time `json:"ended_at"`
         CurrentStep *FleetJourneyStep `json:"current_step"`
         CurrentStepId uint16 `json:"-"`
-        Steps []*FleetJourneyStep `json:"steps" sql:"-"`
+        Steps []*FleetJourneyStep `json:"steps" pg:"-"`
     }
     FleetJourneyStep struct {
-        TableName struct{} `json:"-" sql:"fleet__journeys_steps"`
+        tableName struct{} `json:"-" pg:"fleet__journeys_steps"`
         
         Id uint16 `json:"id"`
         Journey *FleetJourney `json:"-"`
@@ -58,7 +58,7 @@ type(
         TimeArrival time.Time `json:"time_arrival"`
         //
         StepNumber uint32 `json:"step_number"`
-        Order string `json:"order" sql:"mission_order"`
+        Order string `json:"order" pg:"mission_order"`
     }
     
     TimeDistanceLaw struct {

@@ -9,7 +9,7 @@ import(
 )
 
 type Faction struct {
-	TableName struct{} `json:"-" sql:"faction__factions"`
+	tableName struct{} `json:"-" pg:"faction__factions"`
 
 	Id uint16 `json:"id"`
 	Name string `json:"name"`
@@ -21,7 +21,7 @@ type Faction struct {
 	Server *Server `json:"-"`
 	Relations []*FactionRelation `json:"relations"`
 	Settings []*FactionSettings `json:"settings"`
-	Wallet int32 `json:"wallet" sql:",notnull" pg:",use_zero"`
+	Wallet int32 `json:"wallet" pg:",notnull,use_zero"`
 }
 
 func CalculateFactionsWages() {

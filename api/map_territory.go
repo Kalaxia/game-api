@@ -20,19 +20,19 @@ const(
 
 type(
 	Territory struct {
-		TableName struct{} `json:"-" sql:"map__territories"`
+		tableName struct{} `json:"-" pg:"map__territories"`
 
 		Id uint16 `json:"id"`
 		MapId uint16 `json:"-"`
 		Map *Map `json:"-"`
 		PlanetId uint16 `json:"-"`
 		Planet *Planet `json:"planet"`
-		Coordinates CoordinatesSlice `json:"coordinates" sql:"type:jsonb" pq:",use_zero"`
+		Coordinates CoordinatesSlice `json:"coordinates" pg:"type:jsonb" pq:",use_zero"`
 		History []*TerritoryHistory `json:"history"`
 	}
 
 	TerritoryHistory struct {
-		TableName struct{} `json:"-" sql:"map__territory_histories"`
+		tableName struct{} `json:"-" pg:"map__territory_histories"`
 
 		Id uint16 `json:"id"`
 		TerritoryId uint16 `json:"-"`

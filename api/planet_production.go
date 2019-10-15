@@ -17,10 +17,10 @@ type(
     }
 
     PointsProduction struct {
-		TableName struct{} `json:"-" sql:"map__planet_point_productions"`
+		tableName struct{} `json:"-" pg:"map__planet_point_productions"`
 
 		Id uint32 `json:"id"`
-		CurrentPoints uint8 `json:"current_points" sql:",notnull" pg:",use_zero"`
+		CurrentPoints uint8 `json:"current_points" pg:",notnull,use_zero"`
 		Points uint8 `json:"points"`
     }
 )

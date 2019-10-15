@@ -6,7 +6,7 @@ import (
 
 type(
 	SystemTerritory struct {
-		TableName struct{} `json:"-" sql:"map__system_territories"`
+		tableName struct{} `json:"-" pg:"map__system_territories"`
 
 		TerritoryId uint16 `json:"-"`
 		Territory *Territory `json:"territory"`

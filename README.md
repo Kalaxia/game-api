@@ -398,7 +398,7 @@ The package model is located under `./model/`. It regroup all the structure defi
 As an example look at the following structure.
 ```Go
 SystemOrbit struct {
-	TableName struct{} `json:"-" sql:"map__system_orbits"`
+	tableName struct{} `json:"-" pg:"map__system_orbits"`
 
 	Id uint16 `json:"id"`
 	Radius uint16 `json:"radius"`

@@ -20,7 +20,7 @@ const(
 
 type(
 	Notification struct {
-		TableName struct{} `json:"-" sql:"player__notifications"`
+		tableName struct{} `json:"-" pg:"player__notifications"`
 
 		Id uint32 `json:"id"`
 		Player *Player `json:"player"`

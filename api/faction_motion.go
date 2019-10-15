@@ -12,7 +12,7 @@ import(
 
 type(
 	FactionMotion struct {
-		TableName struct{} `json:"-" sql:"faction__motions"`
+		tableName struct{} `json:"-" pg:"faction__motions"`
 
 		Id uint32 `json:"id"`
 		FactionId uint16 `json:"-"`
@@ -20,14 +20,14 @@ type(
 		AuthorId uint16 `json:"-"`
 		Author *Player `json:"author"`
 		Type string `json:"type"`
-		IsApproved bool `json:"is_approved" sql:",notnull" pg:",use_zero"`
-		IsProcessed bool `json:"is_processed" sql:",notnull" pg:",use_zero"`
+		IsApproved bool `json:"is_approved" pg:",notnull,use_zero"`
+		IsProcessed bool `json:"is_processed" pg:",notnull,use_zero"`
 		Data map[string]interface{} `json:"data"`
 		CreatedAt time.Time `json:"created_at"`
 		EndedAt time.Time `json:"ended_at"`
 	}
 	FactionVote struct {
-		TableName struct{} `json:"-" sql:"faction__votes"`
+		tableName struct{} `json:"-" pg:"faction__votes"`
 		
 		Id uint32 `json:"id"`
 		MotionId uint32 `json:"-"`

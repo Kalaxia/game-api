@@ -19,31 +19,31 @@ const(
 
 type(
 	FleetCombat struct {
-		TableName struct{} `json:"-" sql:"fleet__combats"`
+		tableName struct{} `json:"-" pg:"fleet__combats"`
 
 		Id uint16 `json:"id"`
 		Attacker *Fleet `json:"attacker"`
 		AttackerId uint16 `json:"-"`
 		Defender *Fleet `json:"defender"`
 		DefenderId uint16 `json:"-"`
-		IsVictory bool `json:"is_victory" sql:",notnull" pg:",use_zero"`
+		IsVictory bool `json:"is_victory" pg:",notnull,use_zero"`
 
 		Rounds []*FleetCombatRound `json:"rounds"`
 
-		AttackerShips map[string]uint16 `json:"attacker_ships" sql:",notnull" pg:",use_zero"`
-		DefenderShips map[string]uint16 `json:"defender_ships" sql:",notnull" pg:",use_zero"`
+		AttackerShips map[string]uint16 `json:"attacker_ships" pg:",notnull,use_zero"`
+		DefenderShips map[string]uint16 `json:"defender_ships" pg:",notnull,use_zero"`
 
-		AttackerLosses map[string]uint16 `json:"attacker_losses" sql:",notnull" pg:",use_zero"`
-		DefenderLosses map[string]uint16 `json:"defender_losses" sql:",notnull" pg:",use_zero"`
+		AttackerLosses map[string]uint16 `json:"attacker_losses" pg:",notnull,use_zero"`
+		DefenderLosses map[string]uint16 `json:"defender_losses" pg:",notnull,use_zero"`
 
 		BeginAt time.Time `json:"begin_at"`
 		EndAt time.Time `json:"end_at"`
 
-		ShipModels map[uint][]*ShipSlot `json:"-" sql:"-"`
+		ShipModels map[uint][]*ShipSlot `json:"-" pg:"-"`
 	}
 
 	FleetCombatRound struct{
-		tableName struct{} `json:"-" sql:"fleet__combat_rounds"`
+		tableName struct{} `json:"-" pg:"fleet__combat_rounds"`
 
 		Id uint32 `json:"id"`
 		Combat *FleetCombat `json:"combat"`
@@ -53,7 +53,7 @@ type(
 	}
 
 	FleetCombatSquadron struct{
-		tableName struct{} `json:"-" sql:"fleet__combat_squadrons"`
+		tableName struct{} `json:"-" pg:"fleet__combat_squadrons"`
 
 		Id uint64 `json:"id"`
 		FleetId uint16 `json:"-"`
@@ -65,11 +65,11 @@ type(
 		Round *FleetCombatRound `json:"round"`
 		RoundId uint32 `json:"-"`
 		Quantity uint8 `json:"quantity"`
-		Position *FleetGridPosition `json:"position" sql:"type:jsonb"`
+		Position *FleetGridPosition `json:"position" pg:"type:jsonb"`
 	}
 
 	FleetSquadronAction struct{
-		tableName struct{} `json:"-" sql:"fleet__combat_squadron_actions"`
+		tableName struct{} `json:"-" pg:"fleet__combat_squadron_actions"`
 
 		Id uint64 `json:"id"`
 		Squadron *FleetCombatSquadron `json:"squadron"`

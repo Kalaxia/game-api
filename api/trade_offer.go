@@ -18,7 +18,7 @@ type(
     }
     Offer struct {
         Id uint32 `json:"id"`
-        Type string `json:"type" sql:"-"`
+        Type string `json:"type" pg:"-"`
         Operation string `json:"operation"`
         LocationId uint16 `json:"-"`
         Location *Planet `json:"location"`
@@ -28,7 +28,7 @@ type(
         AcceptedAt time.Time `json:"accepted_at"`
     }
     ResourceOffer struct {
-        TableName struct{} `json:"-" sql:"trade__resource_offers"`
+        tableName struct{} `json:"-" pg:"trade__resource_offers"`
 
         Offer
 
@@ -38,7 +38,7 @@ type(
         Price float32 `json:"price"`
     }
     ModelOffer struct {
-        TableName struct{} `json:"-" sql:"trade__model_offers"`
+        tableName struct{} `json:"-" pg:"trade__model_offers"`
 
         Offer
 
@@ -47,7 +47,7 @@ type(
         Price uint16 `json:"price"`
     }
     ShipOffer struct {
-        TableName struct{} `json:"-" sql:"trade__ship_offers"`
+        tableName struct{} `json:"-" pg:"trade__ship_offers"`
 
         ModelOffer
 
