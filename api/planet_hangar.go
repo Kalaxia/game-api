@@ -4,6 +4,7 @@ type(
 	PlanetHangarGroup struct{
 		tableName struct{} `json:"-" pg:"map__planet_hangar_groups"`
 
+		Id uint32 `json:"id"`
 		LocationId uint16 `json:"-"`
 		Location *Planet `json:"location"`
 		ModelId uint `json:"-"`

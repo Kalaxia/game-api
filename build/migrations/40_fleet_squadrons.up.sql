@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS fleet__combat_squadron_actions(
 );
 
 CREATE TABLE IF NOT EXISTS map__planet_hangar_groups(
+    id SERIAL PRIMARY KEY,
     location_id INT NOT NULL REFERENCES map__planets(id) ON DELETE CASCADE,
     model_id INT NOT NULL REFERENCES ship__models(id) ON DELETE CASCADE,
     quantity INT NOT NULL
