@@ -9,17 +9,15 @@ type(
 		Location *Planet `json:"location"`
 		ModelId uint `json:"-"`
 		Model *ShipModel `json:"model"`
-		Quantity uint16 `json:"quantity"`
+		Quantity uint16 `json:"quantity" pg:",use_zero"`
 	}
 )
 
-func (p *Planet) addShips(sm *ShipModel, quantity uint8) {
+func (p *Planet) findOrCreateHangarGroup(sm *ShipModel) *PlanetHangarGroup {
 	if hg := p.getHangarGroup(sm); hg != nil {
-		hg.Quantity += uint16(quantity)
-		hg.update()
-		return
+		return hg
 	}
-	p.createHangarGroup(sm, uint16(quantity))
+	return p.createHangarGroup(sm, 0)
 }
 
 func (p *Planet) createHangarGroup(sm *ShipModel, quantity uint16) *PlanetHangarGroup {
@@ -54,6 +52,21 @@ func (p *Planet) getHangarGroups() []PlanetHangarGroup {
 		panic(NewHttpException(404, "planet not found", err))
     }
     return groups
+}
+
+func (hg *PlanetHangarGroup) addShips(quantity int8) {
+	if quantity > 0 {
+		hg.Quantity += uint16(quantity)
+		hg.update()
+		return
+	}
+	q := uint16(-quantity)
+	if q >= hg.Quantity {
+		hg.delete()
+		return
+	}
+	hg.Quantity = hg.Quantity - q
+	hg.update()
 }
 
 func (hg *PlanetHangarGroup) update() {

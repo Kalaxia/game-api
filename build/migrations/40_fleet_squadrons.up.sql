@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS fleet__squadrons(
     ship_model_id INT NOT NULL REFERENCES ship__models(id) ON DELETE CASCADE,
     quantity INT NOT NULL,
     combat_initiative INT DEFAULT 0,
-    combat_position JSONB NOT NULL,
+    combat_position JSONB,
     position JSONB NOT NULL
 );
 

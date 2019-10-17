@@ -1,7 +1,6 @@
 package api
 
 import(
-	"math"
 	"net/http"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
@@ -19,7 +18,7 @@ type(
 		Fleet *Fleet `json:"fleet"`
 		ShipModelId uint `json:"-"`
 		ShipModel *ShipModel `json:"ship_model"`
-		Quantity uint8 `json:"quantity"`
+		Quantity uint8 `json:"quantity" pg:",use_zero"`
 		CombatInitiative uint16 `json:"combat_initiative" pg:"-,use_zero"`
 		CombatPosition *FleetGridPosition `json:"combat_position" pq:"type:jsonb,use_zero"`
 		Position *FleetGridPosition `json:"position" pg:"type:jsonb"`
@@ -61,12 +60,11 @@ func GetFleetSquadrons(w http.ResponseWriter, r *http.Request) {
 
 func AssignFleetSquadronShips(w http.ResponseWriter, r *http.Request) {
 	fleetId, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16)
-	squadronId, _ := strconv.ParseUint(mux.Vars(r)["fleetId"], 10, 16)
+	squadronId, _ := strconv.ParseUint(mux.Vars(r)["squadronId"], 10, 16)
 	data := DecodeJsonRequest(r)
 	fleet := getFleet(uint16(fleetId))
 	squadron := fleet.getSquadron(uint32(squadronId))
 	player := context.Get(r, "player").(*Player)
-	shipModel := player.getShipModel(uint32(data["ship_model_id"].(float64)))
 
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "fleets.access_denied", nil))
@@ -77,25 +75,30 @@ func AssignFleetSquadronShips(w http.ResponseWriter, r *http.Request) {
     if fleet.Location.Player.Id != player.Id {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_foreign_planet", nil))
 	}
-	squadron.assignShips(shipModel, uint8(data["quantity"].(float64)))
+	squadron.assignShips(uint8(data["quantity"].(float64)))
 	w.WriteHeader(204)
 	w.Write([]byte(""))
 }
 
 func (f *Fleet) createSquadron(data map[string]interface{}) *FleetSquadron {
 	sm := f.Player.getShipModel(uint32(data["ship_model_id"].(float64)))
+	position := data["position"].(map[string]interface{})
+	quantity := processSquadronQuantity(uint8(data["quantity"].(float64)))
 
 	squadron := &FleetSquadron{
 		FleetId: f.Id,
 		Fleet: f,
 		ShipModelId: sm.Id,
 		ShipModel: sm,
-		Quantity: processSquadronQuantity(uint8(data["quantity"].(float64))),
-		Position: f.processSquadronPosition(int8(data["x"].(float64)), int8(data["y"].(float64))),
+		Quantity: 0,
+		Position: f.processSquadronPosition(int8(position["x"].(float64)), int8(position["y"].(float64))),
 	}
 	if err := Database.Insert(squadron); err != nil {
 		panic(NewException("Could not create fleet squadron", err))
 	}
+	squadron.assignShips(quantity)
+	// avoid infinite loop at JSON serialization
+	squadron.Fleet = nil
 	f.Squadrons = append(f.Squadrons, squadron)
 	return squadron
 }
@@ -105,8 +108,11 @@ func (f *Fleet) hasSquadrons() bool {
 }
 
 func (f *Fleet) getSquadron(id uint32) *FleetSquadron {
-	squadron := &FleetSquadron{}
-	if err := Database.Model(squadron).Relation("ShipModel").Where("squadron.fleet_id = ?", f.Id).Where("squadron.id = ?", id).Select(); err != nil {
+	squadron := &FleetSquadron{
+		Fleet: f,
+		FleetId: f.Id,
+	}
+	if err := Database.Model(squadron).Relation("ShipModel").Where("fleet_squadron.fleet_id = ?", f.Id).Where("fleet_squadron.id = ?", id).Select(); err != nil {
 		panic(NewException("Could not retrieve fleet squadron", err))
 	}
 	return squadron
@@ -152,11 +158,6 @@ func (f *Fleet) processSquadronPosition(x, y int8) *FleetGridPosition {
 }
 
 func (f *Fleet) isValidSquadronPosition(position *FleetGridPosition) bool {
-	isXEven := position.X % 2 == 0
-	isYEven := position.Y % 2 == 0
-	if (isXEven && !isYEven) || (!isXEven && isYEven) {
-		return false
-	}
 	for _, s := range f.Squadrons {
 		if s.Position.X == position.X && s.Position.Y == position.Y {
 			return false
@@ -165,34 +166,24 @@ func (f *Fleet) isValidSquadronPosition(position *FleetGridPosition) bool {
 	return true
 }
 
-func (fs *FleetSquadron) assignShips(sm *ShipModel, quantity uint8) {
-	hangarGroup := fs.Fleet.Location.getHangarGroup(sm)
-	if hangarGroup == nil {
-		panic(NewHttpException(400, "fleet.errors.invalid_ship_type", nil))
-	}
-	
-	requestedQuantity := quantity - fs.Quantity
+func (fs *FleetSquadron) assignShips(quantity uint8) {
+	hangarGroup := fs.Fleet.Location.findOrCreateHangarGroup(fs.ShipModel)
 
-	if uint16(requestedQuantity) > hangarGroup.Quantity {
-		panic(NewHttpException(400, "fleet.errors.invalid_ship_number", nil))
+	requestedQuantity := int8(quantity) - int8(fs.Quantity)
+
+	if requestedQuantity > 0 && uint16(requestedQuantity) > hangarGroup.Quantity {
+		panic(NewHttpException(400, "fleet.errors.not_enough_ships", nil))
 	}
 	if quantity > FleetSquadronMaxQuantity {
-		panic(NewHttpException(400, "fleet.errors.invalid_ship_number", nil))
+		panic(NewHttpException(400, "fleet.errors.invalid_quantity", nil))
 	}
-	if requestedQuantity > 0 {
-		hangarGroup.Quantity -= uint16(requestedQuantity)
-		fs.Quantity += requestedQuantity
-	} else {
-		q := math.Abs(float64(requestedQuantity))
-		hangarGroup.Quantity += uint16(q)
-		fs.Quantity -= uint8(q)
+	hangarGroup.addShips(-requestedQuantity)
+	if quantity > 0 {
+		fs.Quantity = quantity
+		fs.update()
+		return
 	}
-	fs.update()
-	if hangarGroup.Quantity == 0 {
-		hangarGroup.delete()
-	} else {
-		hangarGroup.update()
-	}
+	fs.delete()
 }
 
 func (fs *FleetSquadron) update() {

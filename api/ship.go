@@ -96,6 +96,7 @@ func (p *Planet) getConstructingShips() []*ShipConstructionGroup {
 }
 
 func (cg *ShipConstructionGroup) finishConstruction() {
-    cg.Location.addShips(cg.Model, cg.Quantity)
+    hg := cg.Location.findOrCreateHangarGroup(cg.Model)
+    hg.addShips(int8(cg.Quantity))
     cg.ConstructionState.delete()
 }
