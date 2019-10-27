@@ -17,6 +17,15 @@ type(
 	  Size uint16 `json:"size"`
 	  SectorSize uint16 `json:"sector_size" pg:"-"`
     }
+
+    Place struct {
+        tableName struct{} `pg:"map__places"`
+
+        Id uint32 `json:"id"`
+		PlanetId uint16 `json:"-"`
+		Planet *Planet `json:"planet"`
+		Coordinates *Coordinates `json:"coordinates"`
+    }
     
     Coordinates struct {
         X float64 `json:"x"`
@@ -51,6 +60,33 @@ func getServerMap(serverId uint16) *Map {
     gameMap.Systems = gameMap.getSystems()
     gameMap.SectorSize = 10
     return gameMap
+}
+
+func NewPlace(p *Planet, x, y interface{}) *Place {
+    return &Place{
+        PlanetId: p.Id,
+        Planet: p,
+        Coordinates: &Coordinates{
+            X: x.(float64),
+            Y: y.(float64),
+        },
+    }
+}
+
+func NewPlanetPlace(p *Planet) *Place {
+    return &Place{
+        PlanetId: p.Id,
+        Planet: p,
+    }
+}
+
+func NewCoordinatesPlace(x, y interface{}) *Place {
+    return &Place{
+        Coordinates: &Coordinates{
+            X: x.(float64),
+            Y: y.(float64),
+        },
+    }
 }
 
 func (cs CoordinatesSlice) Len() int {
