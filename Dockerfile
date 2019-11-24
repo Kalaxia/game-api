@@ -20,6 +20,8 @@ RUN go build .
 
 FROM alpine
 
+RUN apk add make
+
 WORKDIR /go/src/kalaxia-game-api
 
 COPY --from=build-env /usr/local/bin/migrate /usr/local/bin/migrate
