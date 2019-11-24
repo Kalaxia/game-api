@@ -56,6 +56,9 @@ services:
         networks:
             - game
         volumes:
-            - "./volumes/data:/var/lib/postgresql/data"
+            - "postgres-data:/var/lib/postgresql/data"
         ports:
             - "5432"
+
+volumes:
+    postgres-data:
