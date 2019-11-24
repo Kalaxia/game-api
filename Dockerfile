@@ -16,18 +16,7 @@ RUN go mod download
 
 COPY . .
 
-RUN go build .
-
-FROM alpine
-
-RUN apk add make
-
-WORKDIR /go/src/kalaxia-game-api
-
-COPY --from=build-env /usr/local/bin/migrate /usr/local/bin/migrate
-COPY --from=build-env /go/src/kalaxia-game-api .
-COPY --from=build-env /go/src/kalaxia-game-api/kalaxia-game-api /usr/local/bin/kalaxia-game-api
-RUN mkdir -p /var/log/api
+RUN go build -o /usr/local/bin/kalaxia-game-api .
 
 EXPOSE 80
 
