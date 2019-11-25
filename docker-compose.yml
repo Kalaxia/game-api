@@ -57,5 +57,11 @@ services:
             - game
         volumes:
             - "./volumes/data:/var/lib/postgresql/data"
+            #  for windows hosts :
+            # - "postgres-data:/var/lib/postgresql/data"
         ports:
             - "5432"
+
+#  for windows hosts :
+#volumes:
+#    postgres-data:
