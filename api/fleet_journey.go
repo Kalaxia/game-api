@@ -190,9 +190,13 @@ func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
 
 func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey = &FleetJourney {
-        CreatedAt : time.Now(),
+        CreatedAt: time.Now(),
     }
 	steps := f.createSteps(data, 0)
+    f.Journey.StartPlace = steps[0].StartPlace
+    f.Journey.StartPlaceId = f.Journey.StartPlace.Id
+    f.Journey.EndPlace = steps[len(steps) - 1].EndPlace
+    f.Journey.EndPlaceId = f.Journey.EndPlace.Id
 	
     f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
 	
@@ -204,13 +208,11 @@ func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey.Steps = steps
     f.Journey.CurrentStep = steps[0]
     f.Journey.CurrentStepId = steps[0].Id
-    f.Journey.StartPlace = steps[0].StartPlace
-    f.Journey.EndPlace = steps[len(steps) - 1].EndPlace
 	f.Journey.update()
 	
     f.JourneyId = f.Journey.Id
-    f.Location = nil
-    f.LocationId = 0
+    f.Place = nil
+    f.PlaceId = 0
     f.update()
     
     if f.Journey.CurrentStep.TimeArrival.After(time.Now()) {
@@ -225,13 +227,7 @@ func (f *Fleet) travel(data []interface{}) *FleetJourney {
 
 func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJourneyStep {
     steps := make([]*FleetJourneyStep, len(data))
-    var previousPlace *Place
-    if fleet.Location != nil {
-        previousPlace = NewCoordinatesPlace(fleet.Location.System.X, fleet.Location.System.Y)
-    } else {
-        previousPlace = NewCoordinatesPlace(fleet.MapPosX, fleet.MapPosY)
-    }
-    previousPlace.Planet = fleet.Location
+    previousPlace := fleet.Place
     previousTime := time.Now()
 
     for i, s := range data {
@@ -240,6 +236,7 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
             Journey: fleet.Journey,
 
             StartPlace: previousPlace,
+            StartPlaceId: previousPlace.Id,
 
             StepNumber: uint32(firstNumber + 1 + uint8(i)),
         }
@@ -249,10 +246,11 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
         if planetId != 0 {
             planet := getPlanet(planetId)
 
-            step.EndPlace = NewPlace(planet, planet.System.X, planet.System.Y)
+            step.EndPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
         } else {
-            step.EndPlace = NewCoordinatesPlace(stepData["x"], stepData["y"])
+            step.EndPlace = NewCoordinatesPlace(stepData["x"].(float64), stepData["y"].(float64))
         }
+        step.EndPlaceId = step.EndPlace.Id
         previousPlace = step.EndPlace
         //TODO implement cooldown ?
         step.TimeStart = previousTime
@@ -324,15 +322,8 @@ func (j *FleetJourney) end() {
     
     fleet.Journey = nil
     fleet.JourneyId = 0
-    if j.CurrentStep.EndPlace.Planet != nil {
-        fleet.Location = j.CurrentStep.EndPlace.Planet
-        fleet.LocationId = j.CurrentStep.EndPlace.Planet.Id
-    } else {
-        fleet.MapPosX = j.CurrentStep.EndPlace.Coordinates.X
-        fleet.MapPosY = j.CurrentStep.EndPlace.Coordinates.Y
-        fleet.Location = nil
-        fleet.LocationId = 0
-    }
+    fleet.Place = j.CurrentStep.EndPlace
+    fleet.PlaceId = j.CurrentStep.EndPlaceId
     fleet.update()
 
     j.delete()
@@ -422,8 +413,8 @@ func (j *FleetJourney) getSteps() []*FleetJourneyStep {
     if err := Database.
         Model(&steps).
         Relation("Journey.CurrentStep").
-        Relation("NextStep.EndPlace.System").
-        Relation("NextStep.StartPlace.System").
+        Relation("NextStep.EndPlace.Planet.System").
+        Relation("NextStep.StartPlace.Planet.System").
         Relation("EndPlace.Planet.System").
         Relation("StartPlace.Planet.System").
         Where("fleet_journey_step.journey_id = ?", j.Id).
@@ -459,7 +450,7 @@ func (s *FleetJourneyStep) delete() {
 }
 
 func (f *Fleet) isOnPlanet() bool {
-    return f.Location != nil
+    return f.Place != nil && f.Place.Planet != nil
 }
 
 func (f *Fleet) isOnJourney() bool {

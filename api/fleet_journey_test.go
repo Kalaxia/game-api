@@ -38,7 +38,7 @@ func TestIsOnJourney(t *testing.T) {
 
 func TestIsOnPlanet(t *testing.T) {
 	travellingFleet := &Fleet{}
-	orbitingFleet := &Fleet{ Location: getPlayerPlanetMock(getPlayerMock(getFactionMock())) }
+	orbitingFleet := &Fleet{ Place: &Place{ Planet: getPlayerPlanetMock(getPlayerMock(getFactionMock())) } }
 
 	if travellingFleet.isOnPlanet() {
 		t.Errorf("Travelling fleet is not on planet")
@@ -51,28 +51,36 @@ func TestIsOnPlanet(t *testing.T) {
 func TestGetDistanceBetweenPlanets(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		PlanetStartId: 1,
-		PlanetStart: &Planet{
-			SystemId: 1,
-			System: &System {
-				X: 91,
-				Y: 16,
+		StartPlaceId: 1,
+		StartPlace: &Place{
+			PlanetId: 1,
+			Planet: &Planet{
+				Id: 1,
+				SystemId: 1,
+				System: &System {
+					X: 91,
+					Y: 16,
+				},
 			},
 		},
-		PlanetFinalId: 2,
-		PlanetFinal: &Planet{
-			SystemId: 2,
-			System: &System {
-				X: 75,
-				Y: 20,
+		EndPlaceId: 2,
+		EndPlace: &Place{
+			PlanetId: 2,
+			Planet: &Planet{
+				Id: 2,
+				SystemId: 2,
+				System: &System {
+					X: 75,
+					Y: 20,
+				},
 			},
 		},
 	}
 	if distance := s.getDistanceBetweenPlanets(); distance != 16.49242250247064234259 {
 		t.Errorf("Journey step from planet to planet should be 16.49242250247064234259, not %.20f", distance)
 	}
-	if s.getType() != JourneyStepTypePlanetToPlanet {
-		t.Errorf("Step is planet to planet")
+	if sType := s.getType(); sType != JourneyStepTypePlanetToPlanet {
+		t.Errorf("Step is planet to planet, not %s", sType)
 	}
 	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 32.98484500494128468517 {
 		t.Errorf("Time should be 32.98484500494128468517, not %.20f", time)
@@ -85,10 +93,16 @@ func TestGetDistanceBetweenPlanets(t *testing.T) {
 func TestGetDistanceBetweenOrbitAndPlanet(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		PlanetStartId: 1,
-		PlanetStart: &Planet{},
-		PlanetFinalId: 1,
-		PlanetFinal: &Planet{},
+		StartPlaceId: 1,
+		StartPlace: &Place {
+			PlanetId: 1,
+			Planet: &Planet{},
+		},
+		EndPlaceId: 2,
+		EndPlace: &Place{
+			PlanetId: 1,
+			Planet: &Planet{},
+		},
 	}
 	if distance := s.getDistanceBetweenOrbitAndPlanet(); distance != 0. {
 		t.Errorf("Distance should be 0, not %.20f", distance)
@@ -107,13 +121,19 @@ func TestGetDistanceBetweenOrbitAndPlanet(t *testing.T) {
 func TestGetDistanceInsideSystem(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		PlanetStartId: 1,
-		PlanetStart: &Planet{
-			SystemId: 1,
+		StartPlace: &Place{
+			PlanetId: 1,
+			Planet: &Planet{
+				Id: 1,
+				SystemId: 1,
+			},
 		},
-		PlanetFinalId: 2,
-		PlanetFinal: &Planet{
-			SystemId: 1,
+		EndPlace: &Place{
+			PlanetId: 2,
+			Planet: &Planet{
+				Id: 2,
+				SystemId: 1,
+			},
 		},
 	}
 	if distance := s.getDistanceInsideSystem(); distance != 0. {
@@ -133,14 +153,20 @@ func TestGetDistanceInsideSystem(t *testing.T) {
 func TestGetDistanceBetweenPlanetAndPosition(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		PlanetStart: &Planet{
-			System: &System {
-				X: 4,
-				Y: 16,
+		StartPlace: &Place{
+			Planet: &Planet{
+				System: &System {
+					X: 4,
+					Y: 16,
+				},
 			},
 		},
-		MapPosXFinal: 8,
-		MapPosYFinal: 20,
+		EndPlace: &Place{
+			Coordinates: &Coordinates{
+				X: 8,
+				Y: 20,
+			},
+		},
 	}
 	if distance := s.getDistanceBetweenPlanetAndPosition(); distance != 5.65685424949238058190 {
 		t.Errorf("Distance should be 5.65685424949238058190, not %.20f", distance)
@@ -159,12 +185,18 @@ func TestGetDistanceBetweenPlanetAndPosition(t *testing.T) {
 func TestGetDistanceBetweenPositionAndPlanet(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		MapPosXStart: 30,
-		MapPosYStart: 40,
-		PlanetFinal: &Planet{
-			System: &System{
-				X: 35,
-				Y: 45,
+		StartPlace: &Place{
+			Coordinates: &Coordinates{
+				X: 30,
+				Y: 40,
+			},
+		},
+		EndPlace: &Place{
+			Planet: &Planet{
+				System: &System{
+					X: 35,
+					Y: 45,
+				},
 			},
 		},
 	}
@@ -185,10 +217,18 @@ func TestGetDistanceBetweenPositionAndPlanet(t *testing.T) {
 func TestGetDistanceBetweenPositions(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
-		MapPosXStart: 20,
-		MapPosYStart: 82,
-		MapPosXFinal: 25,
-		MapPosYFinal: 84,
+		StartPlace: &Place{
+			Coordinates: &Coordinates{
+				X: 20,
+				Y: 82,
+			},
+		},
+		EndPlace: &Place{
+			Coordinates: &Coordinates{
+				X: 25,
+				Y: 84,
+			},
+		},
 	}
 	if distance := s.getDistanceBetweenPositions(); distance != 5.38516480713450373941 {
 		t.Errorf("Distance should be 5.38516480713450373941, not %.20f", distance)

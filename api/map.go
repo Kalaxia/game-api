@@ -62,30 +62,42 @@ func getServerMap(serverId uint16) *Map {
     return gameMap
 }
 
-func NewPlace(p *Planet, x, y interface{}) *Place {
-    return &Place{
+func NewPlace(p *Planet, x, y float64) *Place {
+    place := &Place{
         PlanetId: p.Id,
         Planet: p,
         Coordinates: &Coordinates{
-            X: x.(float64),
-            Y: y.(float64),
+            X: x,
+            Y: y,
         },
     }
+    place.create()
+    return place
 }
 
 func NewPlanetPlace(p *Planet) *Place {
-    return &Place{
+    place := &Place{
         PlanetId: p.Id,
         Planet: p,
     }
+    place.create()
+    return place
 }
 
-func NewCoordinatesPlace(x, y interface{}) *Place {
-    return &Place{
+func NewCoordinatesPlace(x, y float64) *Place {
+    place := &Place{
         Coordinates: &Coordinates{
-            X: x.(float64),
-            Y: y.(float64),
+            X: x,
+            Y: y,
         },
+    }
+    place.create()
+    return place
+}
+
+func (p *Place) create() {
+    if err := Database.Insert(p); err != nil {
+        panic(NewException("Could not create place", err))
     }
 }
 

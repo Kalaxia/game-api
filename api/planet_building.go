@@ -24,7 +24,7 @@ const BuildingTypeResource = "resource"
 
 type(
 	Building struct {
-		tableName struct{} `json:"-" pg:"map__planet_buildings"`
+		tableName struct{} `pg:"map__planet_buildings"`
 
 		Id uint32 `json:"id"`
 		Name string `json:"name"`
@@ -40,7 +40,7 @@ type(
 		
     }
     BuildingCompartment struct {
-        tableName struct{} `json:"-" pg:"map__planet_building_compartments"`
+        tableName struct{} `pg:"map__planet_building_compartments"`
 
         Id uint32 `json:"id"`
         Name string `json:"name"`

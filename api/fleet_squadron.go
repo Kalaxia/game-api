@@ -38,10 +38,10 @@ func CreateFleetSquadron(w http.ResponseWriter, r *http.Request) {
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "fleets.access_denied", nil))
 	}
-    if fleet.isOnJourney() {
+    if !fleet.isOnPlanet() {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_journey", nil))
     }
-    if fleet.Location.Player.Id != player.Id {
+    if fleet.Place.Planet.Player.Id != player.Id {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_foreign_planet", nil))
 	}
 	SendJsonResponse(w, 200, fleet.createSquadron(DecodeJsonRequest(r)))
@@ -69,10 +69,10 @@ func AssignFleetSquadronShips(w http.ResponseWriter, r *http.Request) {
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "fleets.access_denied", nil))
 	}
-    if fleet.isOnJourney() {
+    if !fleet.isOnPlanet() {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_journey", nil))
     }
-    if fleet.Location.Player.Id != player.Id {
+    if fleet.Place.Planet.Player.Id != player.Id {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_foreign_planet", nil))
 	}
 	squadron.assignShips(uint8(data["quantity"].(float64)))
@@ -127,12 +127,13 @@ func (f *Fleet) getSquadrons() []*FleetSquadron {
 }
 
 func (f *Fleet) deleteSquadron(s *FleetSquadron) {
+    s.delete()
     for i, squadron := range f.Squadrons {
         if s.Id == squadron.Id {
-            f.Squadrons = append(f.Squadrons[:i], f.Squadrons[i+1:]...)
+			f.Squadrons = append(f.Squadrons[:i], f.Squadrons[i+1:]...)
+			break
         }
     }
-    s.delete()
 }
 
 func processSquadronQuantity(quantity uint8) uint8 {
@@ -167,7 +168,7 @@ func (f *Fleet) isValidSquadronPosition(position *FleetGridPosition) bool {
 }
 
 func (fs *FleetSquadron) assignShips(quantity uint8) {
-	hangarGroup := fs.Fleet.Location.findOrCreateHangarGroup(fs.ShipModel)
+	hangarGroup := fs.Fleet.Place.Planet.findOrCreateHangarGroup(fs.ShipModel)
 
 	requestedQuantity := int8(quantity) - int8(fs.Quantity)
 

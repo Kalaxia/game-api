@@ -18,4 +18,10 @@ ALTER TABLE fleet__journeys_steps
     ADD start_place_id INT NOT NULL REFERENCES map__places(id),
     ADD end_place_id INT NOT NULL REFERENCES map__places(id);
 
+ALTER TABLE fleet__fleets
+    DROP location_id,
+    DROP map_pos_x,
+    DROP map_pos_y,
+    ADD place_id INT DEFAULT NULL REFERENCES map__places(id);
+
 ALTER TABLE fleet__combats ADD place_id INT NOT NULL REFERENCES map__places(id);
