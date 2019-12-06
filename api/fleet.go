@@ -77,7 +77,7 @@ func GetComingFleets(w http.ResponseWriter, r *http.Request) {
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
 	}
-	SendJsonResponse(w, 200, planet.getComingFleets())
+	SendJsonResponse(w, 200, planet.getComingFleets(player))
 }
 
 func GetLeavingFleets(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +88,7 @@ func GetLeavingFleets(w http.ResponseWriter, r *http.Request) {
 	if (player.Id != planet.Player.Id) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
 	}
-	SendJsonResponse(w, 200, planet.getLeavingFleets())
+	SendJsonResponse(w, 200, planet.getLeavingFleets(player))
 }
 
 func GetPlanetFleets(w http.ResponseWriter, r *http.Request) {
@@ -176,7 +176,7 @@ func (p *Player) getFleets() []*Fleet {
     return fleets
 }
 
-func (p *Planet) getComingFleets() []*Fleet {
+func (p *Planet) getComingFleets(player *Player) []*Fleet {
     fleets := make([]*Fleet, 0)
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
@@ -202,10 +202,16 @@ func (p *Planet) getComingFleets() []*Fleet {
         Select(); err != nil {
             panic(NewException("Could not retrieve coming fleets", err))
     }
+    for i, f := range fleets {
+        if f.PlayerId != player.Id {
+            continue
+        }
+        fleets[i] = getFleet(f.Id)
+    }
     return fleets
 }
 
-func (p *Planet) getLeavingFleets() []*Fleet {
+func (p *Planet) getLeavingFleets(player *Player) []*Fleet {
     fleets := make([]*Fleet, 0)
     steps := make([]FleetJourneyStep, 0)
     if err := Database.
@@ -232,6 +238,12 @@ func (p *Planet) getLeavingFleets() []*Fleet {
         Where("fleet.player_id = ?", p.Player.Id).
         Select(); err != nil {
             panic(NewException("Could not retrieve leaving fleets", err))
+    }
+    for i, f := range fleets {
+        if f.PlayerId != player.Id {
+            continue
+        }
+        fleets[i] = getFleet(f.Id)
     }
     return fleets
 }
