@@ -5,7 +5,7 @@ type Storage struct {
 
 	Id uint16 `json:"-"`
 	Capacity uint16 `json:"capacity"`
-	Resources map[string]uint16 `json:"resources"`
+	Resources map[string]uint16 `json:"resources" pg:",notnull,use_zero"`
 }
 
 func (s *Storage) hasResource(resource string, quantity uint16) bool {
