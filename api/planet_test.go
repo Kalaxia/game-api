@@ -33,6 +33,10 @@ func getPlayerPlanetMock(player *Player) *Planet {
 			BuildingPoints: 3,
 			ResearchPoints: 2,
 		},
+		System: &System{
+			X: 25,
+			Y: 47,
+		},
 		Resources: []PlanetResource{
 			PlanetResource{
 				Name: "cristal",

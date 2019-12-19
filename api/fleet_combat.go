@@ -16,19 +16,20 @@ const(
 	CombatActionTypeFire = "fire"
 )
 
-
 type(
 	FleetCombat struct {
-		tableName struct{} `json:"-" pg:"fleet__combats"`
+		tableName struct{} `pg:"fleet__combats"`
 
 		Id uint16 `json:"id"`
 		Attacker *Fleet `json:"attacker"`
 		AttackerId uint16 `json:"-"`
 		Defender *Fleet `json:"defender"`
 		DefenderId uint16 `json:"-"`
+		Place *Place `json:"place"`
+		PlaceId uint32 `json:"-"`
 		IsVictory bool `json:"is_victory" pg:",notnull,use_zero"`
 
-		Rounds []*FleetCombatRound `json:"rounds" pg:"-"`
+		Rounds []*FleetCombatRound `json:"rounds" pg:"fk:combat_id"`
 
 		AttackerShips map[string]uint16 `json:"attacker_ships" pg:",notnull,use_zero"`
 		DefenderShips map[string]uint16 `json:"defender_ships" pg:",notnull,use_zero"`
@@ -43,17 +44,16 @@ type(
 	}
 
 	FleetCombatRound struct{
-		tableName struct{} `json:"-" pg:"fleet__combat_rounds"`
+		tableName struct{} `pg:"fleet__combat_rounds"`
 
 		Id uint32 `json:"id"`
 		Combat *FleetCombat `json:"combat"`
 		CombatId uint16 `json:"-"`
-		Squadrons []*FleetCombatSquadron `json:"squadrons"`
-		Actions []*FleetSquadronAction `json:"actions"`
+		Squadrons []*FleetCombatSquadron `json:"squadrons" pg:"fk:round_id"`
 	}
 
 	FleetCombatSquadron struct{
-		tableName struct{} `json:"-" pg:"fleet__combat_squadrons"`
+		tableName struct{} `pg:"fleet__combat_squadrons"`
 
 		Id uint64 `json:"id"`
 		FleetId uint16 `json:"-"`
@@ -61,7 +61,8 @@ type(
 		Initiative uint16 `json:"-"`
 		ShipModelId uint `json:"-"`
 		ShipModel *ShipModel `json:"ship_model"`
-		Squadron *FleetSquadron `json:"-"`
+		Squadron *FleetSquadron `json:"-" pg:"-"`
+		Action *FleetSquadronAction `json:"action" pg:"fk:squadron_id"`
 		Round *FleetCombatRound `json:"round"`
 		RoundId uint32 `json:"-"`
 		Quantity uint8 `json:"quantity"`
@@ -69,7 +70,7 @@ type(
 	}
 
 	FleetSquadronAction struct{
-		tableName struct{} `json:"-" pg:"fleet__combat_squadron_actions"`
+		tableName struct{} `pg:"fleet__combat_squadron_actions"`
 
 		Id uint64 `json:"id"`
 		Squadron *FleetCombatSquadron `json:"squadron"`
@@ -99,11 +100,26 @@ func GetCombatReports(w http.ResponseWriter, r *http.Request) {
 	SendJsonResponse(w, 200, player.getCombatReports())
 }
 
+func GetCombatRound(w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*Player)
+    id, _ := strconv.ParseUint(mux.Vars(r)["combatId"], 10, 32)
+	roundId, _ := strconv.ParseUint(mux.Vars(r)["roundId"], 10, 32)
+
+	report := getCombatReport(uint16(id))
+
+	if report.Attacker.Player.Id != player.Id && report.Defender.Player.Id != player.Id {
+		panic(NewHttpException(403, "You do not own this combat report", nil))
+	}
+	SendJsonResponse(w, 200, report.getRound(uint32(roundId)))
+}
+
 func getCombatReport(id uint16) *FleetCombat {
 	report := &FleetCombat{}
 	if err := Database.
 		Model(report).
 		Relation("Rounds").
+		Relation("Place.Planet.Player.Faction").
+		Relation("Place.Planet.System").
 		Relation("Attacker.Player.Faction").
 		Relation("Defender.Player.Faction").
 		Where("fleet_combat.id = ?", id).
@@ -118,6 +134,7 @@ func (p *Player) getCombatReports() []FleetCombat {
 
 	if err := Database.
 		Model(&reports).
+		Relation("Rounds").
 		Relation("Attacker.Player.Faction").
 		Relation("Defender.Player.Faction").
 		Where("attacker__player.id = ?", p.Id).
@@ -137,23 +154,43 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 		return nil
 	}
 	combat := attacker.newCombat(defender)
-
+	wsMessage := &WsMessage{
+		Action: "combat_start",
+		Data: combat,
+	}
+	WsHub.sendTo(attacker.Player, wsMessage)
+	WsHub.sendTo(defender.Player, wsMessage)
 	for attacker.hasSquadrons() && defender.hasSquadrons() {
 		combat.fightRound(attacker, defender)
 	}
 	combat.IsVictory = attacker.hasSquadrons()
-	combat.AttackerLosses = attacker.formatCombatShips()
-	combat.DefenderLosses = defender.formatCombatShips()
-	combat.update()
+	combat.AttackerLosses = attacker.calculateLosses(combat.AttackerShips)
+	combat.DefenderLosses = defender.calculateLosses(combat.DefenderShips)
+	combat.EndAt = time.Now()
 
-	if combat.IsVictory {
-		attacker.notifyCombatEnding(combat, defender, "victory")
-		defender.notifyCombatEnding(combat, attacker, "defeat")
-	} else {
-		defender.notifyCombatEnding(combat, attacker, "victory")
-		attacker.notifyCombatEnding(combat, defender, "defeat")
-	}
+	combat.update()
+	combat.notifyEnding()
+
 	return combat
+}
+
+func (c *FleetCombat) notifyEnding() {
+	// We reload the report in a serializable format: the object used to process the combat has too many circular dependencies
+	report := getCombatReport(c.Id)
+	wsMessage := &WsMessage{
+		Action: "combat_end",
+		Data: report,
+	}
+	WsHub.sendTo(report.Attacker.Player, wsMessage)
+	WsHub.sendTo(report.Defender.Player, wsMessage)
+
+	if report.IsVictory {
+		report.Attacker.notifyCombatEnding(report, report.Defender, "victory")
+		report.Defender.notifyCombatEnding(report, report.Attacker, "defeat")
+	} else {
+		report.Defender.notifyCombatEnding(report, report.Attacker, "victory")
+		report.Attacker.notifyCombatEnding(report, report.Defender, "defeat")
+	}
 }
 
 func (f *Fleet) newCombat(opponent *Fleet) *FleetCombat {
@@ -162,6 +199,9 @@ func (f *Fleet) newCombat(opponent *Fleet) *FleetCombat {
 		AttackerId: f.Id,
 		Defender: opponent,
 		DefenderId: opponent.Id,
+
+		Place: opponent.Place,
+		PlaceId: opponent.PlaceId,
 
 		AttackerShips: f.formatCombatShips(),
 		DefenderShips: opponent.formatCombatShips(),
@@ -197,9 +237,28 @@ func (c *FleetCombat) fightRound(attacker *Fleet, defender *Fleet) {
 	round.initSquadrons(defender)
 	round.processInitiative()
 
-	for i := 0; i < CombatActionsPerTurn; i++ {
+	nbActions := len(round.Squadrons)
+	if nbActions > CombatActionsPerTurn {
+		nbActions = CombatActionsPerTurn
+	}
+
+	for i := 0; i < nbActions; i++ {
 		round.Squadrons[i].act()
 	}
+	// We reload the round data to avoid circular dependencies while serializing the data
+	wsMessage := &WsMessage{
+		Action: "combat_round",
+		Data: struct{
+			Combat *FleetCombat `json:"combat"`
+			Round *FleetCombatRound `json:"round"`
+		}{
+			Combat: getCombatReport(c.Id),
+			Round: c.getRound(round.Id),
+		},
+	}
+	WsHub.sendTo(attacker.Player, wsMessage)
+	WsHub.sendTo(defender.Player, wsMessage)
+	time.Sleep(time.Duration(1000 * nbActions) * time.Millisecond)
 }
 
 func (c *FleetCombat) newRound(attacker *Fleet, defender *Fleet) *FleetCombatRound {
@@ -213,8 +272,18 @@ func (c *FleetCombat) newRound(attacker *Fleet, defender *Fleet) *FleetCombatRou
 	return round
 }
 
+func (c *FleetCombat) getRound(roundId uint32) *FleetCombatRound {
+	round := &FleetCombatRound{}
+	if err := Database.Model(round).Relation("Squadrons.Action.Target").Relation("Squadrons.Fleet").Relation("Squadrons.ShipModel").Where("combat_id = ?", c.Id).Where("id = ?", roundId).Select(); err != nil {
+		panic(NewHttpException(404, "Could not retrieve combat round", err))
+	}
+	return round
+}
+
 func (r *FleetCombatRound) initSquadrons(f *Fleet) {
 	for _, s := range f.Squadrons {
+		s.Fleet = f
+		s.FleetId = f.Id
 		r.Squadrons = append(r.Squadrons, s.createCombatCopy(r))
 	}
 }
@@ -230,7 +299,11 @@ func (s *FleetSquadron) createCombatCopy(r *FleetCombatRound) *FleetCombatSquadr
 		ShipModel: s.ShipModel,
 		ShipModelId: s.ShipModelId,
 		Squadron: s,
-		Position: s.CombatPosition,
+	}
+	if s.CombatPosition != nil {
+		squadron.Position = s.CombatPosition
+	} else {
+		squadron.Position = s.Position
 	}
 	if err := Database.Insert(squadron); err != nil {
 		panic(NewException("Could not create combat squadron", err))
@@ -259,7 +332,9 @@ func (s *FleetCombatSquadron) act() {
 		Squadron: s,
 		SquadronId: s.Id,
 	}
-	action.pickTarget()
+	if hasTarget := action.pickTarget(); !hasTarget {
+		return
+	}
 	action.openFire()
 
 	if err := Database.Insert(action); err != nil {
@@ -268,16 +343,23 @@ func (s *FleetCombatSquadron) act() {
 	s.Squadron.CombatInitiative = 0
 }
 
-func (action *FleetSquadronAction) pickTarget() {
+func (action *FleetSquadronAction) pickTarget() bool {
 	possibleTargets := make([]*FleetCombatSquadron, 0)
 
 	for _, squadron := range action.Squadron.Round.Squadrons {
-		if squadron.FleetId != action.Squadron.FleetId {
+		if squadron.FleetId != action.Squadron.FleetId && squadron.Quantity > 0 {
 			possibleTargets = append(possibleTargets, squadron)
 		}
 	}
-	action.Target = possibleTargets[rand.Intn(len(possibleTargets) - 1)]
+	if len(possibleTargets) > 1 {
+		action.Target = possibleTargets[rand.Intn(len(possibleTargets) - 1)]
+	} else if len(possibleTargets) == 1 {
+		action.Target = possibleTargets[0]
+	} else {
+		return false
+	}
 	action.TargetId = action.Target.Id
+	return true
 }
 
 func (action *FleetSquadronAction) openFire() {
@@ -290,6 +372,7 @@ func (action *FleetSquadronAction) openFire() {
 	}
 	damage = damage * uint16(action.Squadron.Quantity)
 	action.Loss = action.Target.receiveDamage(damage)
+	action.Target.Quantity -= action.Loss
 
 	if action.Target.Quantity == 0 {
 		action.Target.delete()
@@ -308,7 +391,7 @@ func (s *FleetCombatSquadron) getSlots() []*ShipSlot {
 func (s *ShipSlot) shoot(target *FleetCombatSquadron) (damage uint16) {
 	for i := 0; uint16(i) < s.Module.Stats["nb_shots"]; i++ {
 		if s.doesHit(target) {
-			damage += s.Module.Stats["damage"]
+			damage += uint16(float64(s.Module.Stats["damage"]) * 0.15)
 		}
 	}
 	return
@@ -331,9 +414,16 @@ func (s *FleetCombatSquadron) receiveDamage(damage uint16) uint8 {
 		if armor >= damage {
 			break
 		}
-		takenDamage := math.Abs(float64(armor - damage))
-		if hitPoints <= takenDamage {
+		takenDamage := int32(damage) - int32(armor)
+		if takenDamage <= 0 {
+			break
+		}
+		if float64(takenDamage) > hitPoints {
+			takenDamage = int32(hitPoints)
 			loss++
+		}
+		if s.Quantity == loss {
+			break
 		}
 		damage -= uint16(takenDamage)
 	}
@@ -354,6 +444,20 @@ func (sm *ShipModel) getSlots() []*ShipSlot {
 		slot.Module = &module
 	}
 	return shipSlots
+}
+
+func (f *Fleet) calculateLosses(initialShips map[string]uint16) map[string]uint16 {
+	losses := make(map[string]uint16, 0)
+	currentShips := f.formatCombatShips()
+
+	for model, initialQuantity := range initialShips {
+		if _, ok := currentShips[model]; !ok {
+			losses[model] = initialQuantity
+		} else if loss := initialQuantity - currentShips[model]; loss > 0  {
+			losses[model] = loss
+		}
+	}
+	return losses
 }
 
 func (f *Fleet) formatCombatShips() map[string]uint16 {

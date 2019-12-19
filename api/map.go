@@ -75,15 +75,6 @@ func NewPlace(p *Planet, x, y float64) *Place {
     return place
 }
 
-func NewPlanetPlace(p *Planet) *Place {
-    place := &Place{
-        PlanetId: p.Id,
-        Planet: p,
-    }
-    place.create()
-    return place
-}
-
 func NewCoordinatesPlace(x, y float64) *Place {
     place := &Place{
         Coordinates: &Coordinates{

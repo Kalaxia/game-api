@@ -156,6 +156,14 @@ var routes = Routes{
 		api.GetCombatReports,
 		true,
 	},
+	// Combats
+	Route{
+		"Get Combat Report Round",
+		"GET",
+		"/api/combats/{combatId}/rounds/{roundId}",
+		api.GetCombatRound,
+		true,
+	},
 	/*******************************/
 	// Fleets
 	Route{
