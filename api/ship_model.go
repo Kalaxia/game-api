@@ -51,7 +51,7 @@ type(
 		Price []Price `json:"price"`
 	}
 	ShipModel struct {
-		TableName struct{} `json:"-" sql:"ship__models"`
+		tableName struct{} `json:"-" pg:"ship__models"`
 
 		Id uint `json:"id"`
 		Name string `json:"name"`
@@ -59,8 +59,8 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
 		FrameSlug string `json:"frame"`
-		Frame *ShipFrame `json:"-" sql:"-"`
-		Slots []ShipSlot `json:"slots" sql:"-"`
+		Frame *ShipFrame `json:"-" pg:"-"`
+		Slots []ShipSlot `json:"slots" pg:"-"`
 		Stats map[string]uint16 `json:"stats"`
 		Price []Price `json:"price"`
 	}
@@ -78,7 +78,7 @@ type(
 		Price []Price `json:"price"`
 	}
 	ShipPlayerModel struct {
-		TableName struct{} `json:"-" sql:"ship__player_models"`
+		tableName struct{} `json:"-" pg:"ship__player_models"`
 
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
@@ -86,7 +86,7 @@ type(
 		Model *ShipModel `json:"model"`
 	}
 	ShipPlayerModule struct {
-		TableName struct{} `json:"-" sql:"ship__player_modules"`
+		tableName struct{} `json:"-" pg:"ship__player_modules"`
 
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
@@ -94,14 +94,14 @@ type(
 		Module *ShipModule `json:"module"`
 	}
     ShipSlot struct {
-        TableName struct{} `json:"-" sql:"ship__slots"`
+        tableName struct{} `json:"-" pg:"ship__slots"`
 
         Id uint16 `json:"id"`
         ModelId uint `json:"-"`
         Model *ShipModel `json:"model"`
         Position uint8 `json:"position"`
         ModuleSlug string `json:"module"`
-        Module *ShipModule `json:"-" sql:"-"`
+        Module *ShipModule `json:"-" pg:"-"`
     }
     ShipSlotPlan struct {
         Position uint8 `json:"position"`

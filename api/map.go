@@ -7,15 +7,24 @@ import(
 
 type(
 	Map struct {
-	  TableName struct{} `json:"-" sql:"map__maps"`
+	  tableName struct{} `json:"-" pg:"map__maps"`
   
 	  Id uint16 `json:"-"`
 	  ServerId uint16 `json:"-"`
 	  Server *Server `json:"-"`
-      Systems []System `json:"systems" sql:"-"`
+      Systems []System `json:"systems" pg:"-"`
       Territories []Territory `json:"territories"`
 	  Size uint16 `json:"size"`
-	  SectorSize uint16 `json:"sector_size" sql:"-"`
+	  SectorSize uint16 `json:"sector_size" pg:"-"`
+    }
+
+    Place struct {
+        tableName struct{} `pg:"map__places"`
+
+        Id uint32 `json:"id"`
+		PlanetId uint16 `json:"-"`
+		Planet *Planet `json:"planet"`
+		Coordinates *Coordinates `json:"coordinates"`
     }
     
     Coordinates struct {
@@ -51,6 +60,36 @@ func getServerMap(serverId uint16) *Map {
     gameMap.Systems = gameMap.getSystems()
     gameMap.SectorSize = 10
     return gameMap
+}
+
+func NewPlace(p *Planet, x, y float64) *Place {
+    place := &Place{
+        PlanetId: p.Id,
+        Planet: p,
+        Coordinates: &Coordinates{
+            X: x,
+            Y: y,
+        },
+    }
+    place.create()
+    return place
+}
+
+func NewCoordinatesPlace(x, y float64) *Place {
+    place := &Place{
+        Coordinates: &Coordinates{
+            X: x,
+            Y: y,
+        },
+    }
+    place.create()
+    return place
+}
+
+func (p *Place) create() {
+    if err := Database.Insert(p); err != nil {
+        panic(NewException("Could not create place", err))
+    }
 }
 
 func (cs CoordinatesSlice) Len() int {

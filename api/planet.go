@@ -17,7 +17,7 @@ const PlanetTypeVolcanic = "volcanic"
 
 type(
 	Planet struct {
-		TableName struct{} `json:"-" sql:"map__planets"`
+		tableName struct{} `json:"-" pg:"map__planets"`
 	
 		Id uint16 `json:"id"`
 		Name string `json:"name"`
@@ -30,20 +30,20 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
         Resources []PlanetResource `json:"resources"`
-        ResourcesProduction map[string]*ResourceProduction `json:"resources_production" sql:"-"`
+        ResourcesProduction map[string]*ResourceProduction `json:"resources_production" pg:"-"`
 		StorageId uint16 `json:"-"`
 		Storage *Storage `json:"storage"`
 		SettingsId uint16 `json:"-"`
 		Settings *PlanetSettings `json:"settings"`
 		Relations []DiplomaticRelation `json:"relations"`
 		Buildings []Building `json:"buildings"`
-		NbBuildings uint8 `json:"nb_buildings" sql:"-"`
-        AvailableBuildings []BuildingPlan `json:"available_buildings" sql:"-"`
+		NbBuildings uint8 `json:"nb_buildings" pg:"-"`
+        AvailableBuildings []BuildingPlan `json:"available_buildings" pg:"-"`
         Territories []*PlanetTerritory `json:"territories"`
 	}
 	
 	PlanetResource struct {
-		TableName struct{} `json:"-" sql:"map__planet_resources"`
+		tableName struct{} `json:"-" pg:"map__planet_resources"`
 	
 		Name string `json:"name"`
 		Density uint8 `json:"density"`

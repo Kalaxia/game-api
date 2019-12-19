@@ -8,7 +8,7 @@ const(
 
 type(
   DiplomaticRelation struct {
-    TableName struct{} `json:"-" sql:"diplomacy__relations"`
+    tableName struct{} `json:"-" pg:"diplomacy__relations"`
 
     Planet *Planet `json:"planet"`
     PlanetId uint16 `json:"-"`
@@ -19,7 +19,7 @@ type(
     Score int `json:"score"`
   }
   FactionRelation struct {
-      TableName struct{} `json:"-" sql:"diplomacy__factions"`
+      tableName struct{} `json:"-" pg:"diplomacy__factions"`
 
       Faction *Faction `json:"-"`
       FactionId uint16 `json:"-"`

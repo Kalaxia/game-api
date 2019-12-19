@@ -6,12 +6,12 @@ import(
 
 type(
 	FactionSettings struct {
-		TableName struct{} `json:"-" sql:"faction__settings"`
+		tableName struct{} `json:"-" pg:"faction__settings"`
 
 		Id uint16 `json:"-"`
 		Faction *Faction `json:"faction"`
 		FactionId uint16 `json:"-"`
-		IsPublic bool `json:"is_public" sql:",notnull" pg:",use_zero"`
+		IsPublic bool `json:"is_public" pg:",notnull,use_zero"`
 		Name string `json:"name"`
 		Value int `json:"value"`
 		UpdatedAt time.Time `json:"updated_at"`

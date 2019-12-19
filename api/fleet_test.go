@@ -20,7 +20,7 @@ func TestCreateFleet(t *testing.T) {
 	if fleet.Player != player {
 		t.Errorf("Fleet should be assigned to the given player")
 	}
-	if fleet.Location != planet {
+	if fleet.Place.Planet != planet {
 		t.Errorf("Fleet should be located on the given planet")
 	}
 	if fleet.Journey != nil {

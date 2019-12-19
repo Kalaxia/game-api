@@ -16,15 +16,15 @@ const(
 type(
     Player struct {
         Id uint16 `json:"id"`
-        Username string `json:"-" sql:"type:varchar(180);not null;unique"`
-        Pseudo string `json:"pseudo" sql:"type:varchar(180);not null;unique"`
+        Username string `json:"-" pg:",notnull,unique"`
+        Pseudo string `json:"pseudo" pg:",notnull,unique"`
         Gender string `json:"gender"`
         Avatar string `json:"avatar"`
         ServerId uint16 `json:"-"`
         Server *Server `json:"-"`
         FactionId uint16 `json:"-"`
         Faction *Faction `json:"faction"`
-        IsActive bool `json:"is_active" sql:",notnull" pg:",use_zero"`
+        IsActive bool `json:"is_active" pg:",notnull,use_zero"`
         Wallet uint32 `json:"wallet"`
         Notifications Notifications `json:"notifications"`
         CurrentPlanet *Planet `json:"current_planet"`
@@ -36,7 +36,7 @@ type(
     Players []Player
 
     PlayerTechnology struct {
-        TableName struct{} `json:"-" sql:"player__technologies"`
+        tableName struct{} `json:"-" pg:"player__technologies"`
 
         Technology *Technology `json:"technology"`
         ResearchState *PointsProduction `json:"research_state"`
