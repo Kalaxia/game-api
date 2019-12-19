@@ -81,6 +81,7 @@ func AssignFleetSquadronShips(w http.ResponseWriter, r *http.Request) {
 }
 
 func (f *Fleet) createSquadron(data map[string]interface{}) *FleetSquadron {
+	f.Squadrons = f.getSquadrons()
 	sm := f.Player.getShipModel(uint32(data["ship_model_id"].(float64)))
 	position := data["position"].(map[string]interface{})
 	quantity := processSquadronQuantity(uint8(data["quantity"].(float64)))
