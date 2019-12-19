@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS map__places(
     id SERIAL PRIMARY KEY,
-    planet_id INT NOT NULL REFERENCES map__planets(id),
+    planet_id INT DEFAULT NULL REFERENCES map__planets(id),
     coordinates JSONB 
 );
 

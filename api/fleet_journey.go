@@ -290,16 +290,23 @@ func (step *FleetJourneyStep) end() {
     }
 }
 
-func (s *FleetJourneyStep) processOrder() bool {
+func (s *FleetJourneyStep) processOrder() (continueJourney bool) {
     switch (s.Order) {
         case FleetOrderPass:
-            return true
+            continueJourney = true
+            break
         case FleetOrderConquer:
             fleet := s.Journey.getFleet()
-            return fleet.conquerPlanet(getPlanet(s.EndPlace.Planet.Id))
+            continueJourney = fleet.conquerPlanet(getPlanet(s.EndPlace.Planet.Id))
+            if !continueJourney {
+                fleet.delete()
+            }
+            break;
         default:
-            return false
+            continueJourney = true
+            break
     }
+    return
 }
 
 func (step *FleetJourneyStep) beginNextStep() {

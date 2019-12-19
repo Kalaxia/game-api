@@ -5,6 +5,7 @@ import(
     "github.com/gorilla/context"
     "net/http"
     "strconv"
+    "time"
 )
 
 type(
@@ -20,6 +21,8 @@ type(
         JourneyId uint16 `json:"-"`
         Squadrons []*FleetSquadron `json:"squadrons" pg:",use_zero"`
         ShipSummary []FleetShipSummary `json:"ship_summary,omitempty" pg:"-"`
+        CreatedAt time.Time `json:"created_at"`
+        DeletedAt time.Time `json:"deleted_at"`
     }
 
     FleetShipSummary struct {
@@ -109,7 +112,13 @@ func DeleteFleet(w http.ResponseWriter, r *http.Request){
 	
 	if fleet.Player.Id != player.Id {
         panic(NewHttpException(http.StatusForbidden, "", nil))
-	}
+    }
+    if (fleet.Journey != nil){
+        panic(NewHttpException(400, "Cannot delete moving fleet", nil))
+    }
+    if (len(fleet.getSquadrons()) != 0){
+        panic(NewHttpException(400, "Cannot delete fleet with remaining ships", nil))
+    }
 	fleet.delete()
 	
 	w.WriteHeader(204)
@@ -137,8 +146,8 @@ func getTravellingFleets() []*Fleet {
     if err := Database.
         Model(&fleets).
         Relation("Player.Faction").
-        Relation("Journey.CurrentStep.StartPlace.Planet").
-        Relation("Journey.CurrentStep.EndPlace.Planet").
+        Relation("Journey.CurrentStep.StartPlace.Planet.System").
+        Relation("Journey.CurrentStep.EndPlace.Planet.System").
         Where("fleet.journey_id IS NOT NULL").
         Select(); err != nil {
             panic(NewHttpException(404, "Could not retrieve travelling fleets", err))
@@ -147,13 +156,14 @@ func getTravellingFleets() []*Fleet {
 }
 
 func (p *Player) createFleet(planet *Planet) *Fleet {
-    place := NewPlanetPlace(planet)
+    place := NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
 	fleet := &Fleet{
         Player : p,
         PlayerId : p.Id,
         Place: place,
         PlaceId: place.Id,
-		Journey : nil,
+        Journey : nil,
+        CreatedAt: time.Now(),
 	}
 	if err := Database.Insert(fleet); err != nil {
 		panic(NewHttpException(500, "Fleet could not be created", err))
@@ -169,6 +179,7 @@ func (p *Player) getFleets() []*Fleet {
         Relation("Place.Planet").
         Relation("Journey.CurrentStep.StartPlace.Planet").
         Relation("Journey.CurrentStep.EndPlace.Planet").
+        Where("fleet.deleted_at IS NULL").
         Where("fleet.player_id = ?", p.Id).
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
@@ -256,6 +267,7 @@ func (p *Planet) getOrbitingFleets() []*Fleet {
         Relation("Player.Faction").
         Relation("Journey").
         Where("place__planet.id = ?", p.Id).
+        Where("fleet.deleted_at IS NULL").
         Where("fleet.journey_id IS NULL").
         Select(); err != nil {
             return fleets
@@ -270,6 +282,7 @@ func (p *Planet) getFleets(player *Player) []*Fleet {
         Relation("Player.Faction").
         Relation("Place.Planet").
         Relation("Journey").
+        Where("fleet.deleted_at IS NULL").
         Where("fleet.player_id = ?", player.Id).
 		Where("place__planet.id = ?", p.Id).
         Select(); err != nil {
@@ -294,15 +307,8 @@ func (p *Planet) getFleets(player *Player) []*Fleet {
 // }
 
 func (f *Fleet) delete() {
-    if (f.Journey != nil){
-        panic(NewHttpException(400, "Cannot delete moving fleet", nil))
-    }
-    if (len(f.getSquadrons()) != 0){
-        panic(NewHttpException(400, "Cannot delete fleet with remaining ships", nil))
-    }
-    if err := Database.Delete(f); err != nil {
-        panic(NewHttpException(500, "Fleet could not be deleted", err))
-    }
+    f.DeletedAt = time.Now()
+    f.update()
 }
 
 func (f *Fleet) update(){
