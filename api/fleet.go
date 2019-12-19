@@ -10,7 +10,7 @@ import(
 
 type(
     Fleet struct {
-        tableName struct{} `json:"-" pg:"fleet__fleets"`
+        tableName struct{} `pg:"fleet__fleets"`
 
         Id uint16 `json:"id"`
         Player *Player `json:"player"`

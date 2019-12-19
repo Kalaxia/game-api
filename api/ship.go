@@ -9,7 +9,7 @@ import(
 
 type(
     ShipConstructionGroup struct {
-        tableName struct{} `json:"-" pg:"ship__construction_groups"`
+        tableName struct{} `pg:"ship__construction_groups"`
 
         Id uint32 `json:"id"`
         LocationId uint16 `json:"-"`

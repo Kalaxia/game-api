@@ -25,7 +25,7 @@ const JourneyStepTypePositionToPosition = "position_to_position"
 
 type(
     FleetJourney struct {
-        tableName struct{} `json:"-" pg:"fleet__journeys"`
+        tableName struct{} `pg:"fleet__journeys"`
 
         Id uint16 `json:"id"`
         CreatedAt time.Time `json:"created_at"`
@@ -41,7 +41,7 @@ type(
         Steps []*FleetJourneyStep `json:"steps" pg:"-"`
     }
     FleetJourneyStep struct {
-        tableName struct{} `json:"-" pg:"fleet__journeys_steps"`
+        tableName struct{} `pg:"fleet__journeys_steps"`
         
         Id uint16 `json:"id"`
         Journey *FleetJourney `json:"-"`

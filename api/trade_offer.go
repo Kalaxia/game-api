@@ -28,7 +28,7 @@ type(
         AcceptedAt time.Time `json:"accepted_at"`
     }
     ResourceOffer struct {
-        tableName struct{} `json:"-" pg:"trade__resource_offers"`
+        tableName struct{} `pg:"trade__resource_offers"`
 
         Offer
 
@@ -38,7 +38,7 @@ type(
         Price float32 `json:"price"`
     }
     ModelOffer struct {
-        tableName struct{} `json:"-" pg:"trade__model_offers"`
+        tableName struct{} `pg:"trade__model_offers"`
 
         Offer
 
@@ -47,7 +47,7 @@ type(
         Price uint16 `json:"price"`
     }
     ShipOffer struct {
-        tableName struct{} `json:"-" pg:"trade__ship_offers"`
+        tableName struct{} `pg:"trade__ship_offers"`
 
         ModelOffer
 

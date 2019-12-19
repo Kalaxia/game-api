@@ -51,7 +51,7 @@ type(
 		Price []Price `json:"price"`
 	}
 	ShipModel struct {
-		tableName struct{} `json:"-" pg:"ship__models"`
+		tableName struct{} `pg:"ship__models"`
 
 		Id uint `json:"id"`
 		Name string `json:"name"`
@@ -78,7 +78,7 @@ type(
 		Price []Price `json:"price"`
 	}
 	ShipPlayerModel struct {
-		tableName struct{} `json:"-" pg:"ship__player_models"`
+		tableName struct{} `pg:"ship__player_models"`
 
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
@@ -86,7 +86,7 @@ type(
 		Model *ShipModel `json:"model"`
 	}
 	ShipPlayerModule struct {
-		tableName struct{} `json:"-" pg:"ship__player_modules"`
+		tableName struct{} `pg:"ship__player_modules"`
 
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
@@ -94,7 +94,7 @@ type(
 		Module *ShipModule `json:"module"`
 	}
     ShipSlot struct {
-        tableName struct{} `json:"-" pg:"ship__slots"`
+        tableName struct{} `pg:"ship__slots"`
 
         Id uint16 `json:"id"`
         ModelId uint `json:"-"`

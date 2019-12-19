@@ -1,7 +1,7 @@
 package api
 
 type Storage struct {
-	tableName struct{} `json:"-" pg:"map__planet_storage"`
+	tableName struct{} `pg:"map__planet_storage"`
 
 	Id uint16 `json:"-"`
 	Capacity uint16 `json:"capacity"`

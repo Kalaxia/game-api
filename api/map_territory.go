@@ -20,7 +20,7 @@ const(
 
 type(
 	Territory struct {
-		tableName struct{} `json:"-" pg:"map__territories"`
+		tableName struct{} `pg:"map__territories"`
 
 		Id uint16 `json:"id"`
 		MapId uint16 `json:"-"`
@@ -32,7 +32,7 @@ type(
 	}
 
 	TerritoryHistory struct {
-		tableName struct{} `json:"-" pg:"map__territory_histories"`
+		tableName struct{} `pg:"map__territory_histories"`
 
 		Id uint16 `json:"id"`
 		TerritoryId uint16 `json:"-"`

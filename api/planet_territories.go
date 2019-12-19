@@ -2,7 +2,7 @@ package api
 
 type(
 	PlanetTerritory struct {
-		tableName struct{} `json:"-" pg:"map__planet_territories"`
+		tableName struct{} `pg:"map__planet_territories"`
 
 		TerritoryId uint16 `json:"-"`
 		Territory *Territory `json:"territory"`

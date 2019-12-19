@@ -9,7 +9,7 @@ import(
 )
 
 type Faction struct {
-	tableName struct{} `json:"-" pg:"faction__factions"`
+	tableName struct{} `pg:"faction__factions"`
 
 	Id uint16 `json:"id"`
 	Name string `json:"name"`

@@ -7,7 +7,7 @@ import(
 
 type(
 	Map struct {
-	  tableName struct{} `json:"-" pg:"map__maps"`
+	  tableName struct{} `pg:"map__maps"`
   
 	  Id uint16 `json:"-"`
 	  ServerId uint16 `json:"-"`

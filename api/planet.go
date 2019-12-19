@@ -17,7 +17,7 @@ const PlanetTypeVolcanic = "volcanic"
 
 type(
 	Planet struct {
-		tableName struct{} `json:"-" pg:"map__planets"`
+		tableName struct{} `pg:"map__planets"`
 	
 		Id uint16 `json:"id"`
 		Name string `json:"name"`
@@ -43,7 +43,7 @@ type(
 	}
 	
 	PlanetResource struct {
-		tableName struct{} `json:"-" pg:"map__planet_resources"`
+		tableName struct{} `pg:"map__planet_resources"`
 	
 		Name string `json:"name"`
 		Density uint8 `json:"density"`

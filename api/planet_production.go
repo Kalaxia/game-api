@@ -17,7 +17,7 @@ type(
     }
 
     PointsProduction struct {
-		tableName struct{} `json:"-" pg:"map__planet_point_productions"`
+		tableName struct{} `pg:"map__planet_point_productions"`
 
 		Id uint32 `json:"id"`
 		CurrentPoints uint8 `json:"current_points" pg:",notnull,use_zero"`

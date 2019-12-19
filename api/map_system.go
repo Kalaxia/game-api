@@ -10,7 +10,7 @@ import(
 
 type(
   System struct {
-    tableName struct{} `json:"-" pg:"map__systems"`
+    tableName struct{} `pg:"map__systems"`
 
     Id uint16 `json:"id"`
     MapId uint16 `json:"-"`
@@ -24,7 +24,7 @@ type(
     Orbits []SystemOrbit `json:"orbits"`
   }
   SystemOrbit struct {
-    tableName struct{} `json:"-" pg:"map__system_orbits"`
+    tableName struct{} `pg:"map__system_orbits"`
 
     Id uint16 `json:"id"`
     Radius uint16 `json:"radius"`

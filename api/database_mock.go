@@ -2,7 +2,7 @@ package api
 
 import(
 	"reflect"
-	"github.com/go-pg/pg"
+	"github.com/go-pg/pg/v9"
 )
 
 type TestDatabase struct {

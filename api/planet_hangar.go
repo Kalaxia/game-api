@@ -2,7 +2,7 @@ package api
 
 type(
 	PlanetHangarGroup struct{
-		tableName struct{} `json:"-" pg:"map__planet_hangar_groups"`
+		tableName struct{} `pg:"map__planet_hangar_groups"`
 
 		Id uint32 `json:"id"`
 		LocationId uint16 `json:"-"`

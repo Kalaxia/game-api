@@ -6,7 +6,7 @@ import(
 
 type(
 	FactionSettings struct {
-		tableName struct{} `json:"-" pg:"faction__settings"`
+		tableName struct{} `pg:"faction__settings"`
 
 		Id uint16 `json:"-"`
 		Faction *Faction `json:"faction"`

@@ -36,7 +36,7 @@ type(
     Players []Player
 
     PlayerTechnology struct {
-        tableName struct{} `json:"-" pg:"player__technologies"`
+        tableName struct{} `pg:"player__technologies"`
 
         Technology *Technology `json:"technology"`
         ResearchState *PointsProduction `json:"research_state"`

@@ -11,7 +11,7 @@ const FleetSquadronMaxQuantity = 50
 
 type(
 	FleetSquadron struct {
-		tableName struct{} `json:"-" pg:"fleet__squadrons"`
+		tableName struct{} `pg:"fleet__squadrons"`
 
 		Id uint32 `json:"id"`
 		FleetId uint16 `json:"-"`

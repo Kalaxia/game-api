@@ -12,7 +12,7 @@ import(
 
 type(
 	FactionMotion struct {
-		tableName struct{} `json:"-" pg:"faction__motions"`
+		tableName struct{} `pg:"faction__motions"`
 
 		Id uint32 `json:"id"`
 		FactionId uint16 `json:"-"`
@@ -27,7 +27,7 @@ type(
 		EndedAt time.Time `json:"ended_at"`
 	}
 	FactionVote struct {
-		tableName struct{} `json:"-" pg:"faction__votes"`
+		tableName struct{} `pg:"faction__votes"`
 		
 		Id uint32 `json:"id"`
 		MotionId uint32 `json:"-"`

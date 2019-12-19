@@ -10,7 +10,7 @@ import (
 
 type(
 	PlanetSettings struct {
-		tableName struct{} `json:"-" pg:"map__planet_settings"`
+		tableName struct{} `pg:"map__planet_settings"`
   
 		Id uint16 `json:"-"`
 		ServicesPoints uint8 `json:"services_points" pg:",notnull,use_zero"`
