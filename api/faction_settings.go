@@ -13,7 +13,7 @@ type(
 		FactionId uint16 `json:"-"`
 		IsPublic bool `json:"is_public" pg:",notnull,use_zero"`
 		Name string `json:"name"`
-		Value int `json:"value"`
+		Value int `json:"value" pg:",notnull,use_zero"`
 		UpdatedAt time.Time `json:"updated_at"`
 	}
 )
