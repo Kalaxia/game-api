@@ -62,8 +62,11 @@ type(
 func GetPlanet(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-
-    SendJsonResponse(w, 200, player.getPlanet(uint16(id)))
+    planet := getPlanet(uint16(id))
+    if planet.PlayerId == player.Id {
+        planet = player.getPlanet(planet.Id)
+    }
+    SendJsonResponse(w, 200, planet)
 }
 
 func (p *Planet) changeOwner(player *Player) {
