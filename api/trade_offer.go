@@ -198,9 +198,10 @@ func (p *Planet) createOffer(data map[string]interface{}) OfferInterface {
 }
 
 func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer {
+    quantity := data["quantity"].(float64)
     offer := &ResourceOffer{
         Resource: data["resource"].(string),
-        Quantity: uint16(data["quantity"].(float64)),
+        Quantity: uint16(quantity),
         LotQuantity: uint16(data["lot_quantity"].(float64)),
         Price: float32(data["price"].(float64)),
     }
@@ -209,6 +210,9 @@ func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer
     offer.LocationId = p.Id
     offer.Location = p
     offer.CreatedAt = time.Now()
+    if quantity < 100 {
+        panic(NewHttpException(400, "trade.offers.invalid_quantity", nil))
+    }
     if offer.Price < 1 {
         panic(NewHttpException(400, "trade.offers.invalid_price", nil))
     }
