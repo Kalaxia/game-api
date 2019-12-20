@@ -62,6 +62,14 @@ services:
         ports:
             - "5432"
 
+    redis:
+        container_name: kalaxia_redis
+        image: redis:buster
+        env_file:
+            - kalaxia.env
+        networks:
+            - game
+
 #  for windows hosts :
 #volumes:
 #    postgres-data:

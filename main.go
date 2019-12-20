@@ -18,6 +18,7 @@ func main() {
 
 func initConfigurations() {
 	api.InitDatabase()
+	api.InitRedisClient()
 	api.InitRsaVault()
 	api.InitShipConfiguration()
 	api.InitPlanetConstructions()
