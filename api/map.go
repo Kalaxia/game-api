@@ -39,6 +39,14 @@ func GetMap(w http.ResponseWriter, r *http.Request) {
     SendJsonResponse(w, 200, getServerMap(player.ServerId))
 }
 
+func getAllMaps() []*Map {
+    maps := make([]*Map, 0)
+    if err := Database.Model(&maps).Select(); err != nil {
+        panic(NewException("Maps could not be retrieved", err))
+    }
+    return maps
+}
+
 func (s *Server) generateMap(factions []*Faction, size uint16) *Map {
     gameMap := &Map{
         Server: s,

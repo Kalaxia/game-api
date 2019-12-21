@@ -23,6 +23,7 @@ func initConfigurations() {
 	api.InitShipConfiguration()
 	api.InitPlanetConstructions()
 	api.InitFactionMotions()
+	api.InitTerritoriesCache()
 }
 
 func initScheduledTasks() {

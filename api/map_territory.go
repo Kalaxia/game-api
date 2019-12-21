@@ -1,10 +1,11 @@
 package api
 
 import(
+	"encoding/json"
 	"net/http"
 	"github.com/gorilla/context"
-	"math"
 	"time"
+	"strconv"
 )
 
 const(
@@ -27,7 +28,6 @@ type(
 		Map *Map `json:"-"`
 		PlanetId uint16 `json:"-"`
 		Planet *Planet `json:"planet"`
-		Coordinates CoordinatesSlice `json:"coordinates" pg:"type:jsonb" pq:",use_zero"`
 		History []*TerritoryHistory `json:"history"`
 	}
 
@@ -43,13 +43,29 @@ type(
 		Data map[string]interface{} `json:"data" pg:",use_zero"`
 		HappenedAt time.Time `json:"happened_at"`
 	}
+
+	TerritoryCacheItem struct {
+		Hash string `json:"-"`
+		Id uint16 `json:"id"`
+		Planet *Planet `json:"planet"`
+		Systems []*SystemTerritoryCacheItem `json:"systems"`
+		UpdatedAt time.Time `json:"updated_at"`
+	}
 )
 
 func GetMapTerritories(w http.ResponseWriter, r *http.Request) {
     player := context.Get(r, "player").(*Player)
 	starmap := getServerMap(player.ServerId)
 	
-	SendJsonResponse(w, 200, starmap.getTerritories())
+	SendJsonResponse(w, 200, starmap.getTerritoriesCache())
+}
+
+func InitTerritoriesCache() {
+	for _, m := range getAllMaps() {
+		for _, t := range m.getTerritories() {
+			t.generateCache().store(m.Id)
+		}
+	}
 }
 
 func (m *Map) getTerritories() []*Territory {
@@ -60,13 +76,20 @@ func (m *Map) getTerritories() []*Territory {
 	return territories
 }
 
+func (m *Map) getTerritoriesCache() map[string]string {
+	result, err := RedisClient.HGetAll("map_" + strconv.FormatUint(uint64(m.Id), 10) +  "_territories").Result()
+	if err != nil {
+		panic(NewException("Could not retrieve territories cache", err))
+	}
+	return result
+}
+
 func (p *Planet) createTerritory() *Territory {
 	t := &Territory{
 		MapId: p.System.MapId,
 		Map: p.System.Map,
 		PlanetId: p.Id,
 		Planet: p,
-		Coordinates: make(CoordinatesSlice, 0),
 	}
 	if err := Database.Insert(t); err != nil {
 		panic(NewException("Could not create territory", err))
@@ -94,116 +117,42 @@ func (t *Territory) addHistory(p *Player, action string, data map[string]interfa
 	return th
 }
 
-func (t *Territory) getTotalInfluence() uint16 {
-	influence := uint16(0)
-	for _, st := range t.getSystemTerritories() {
-		influence += st.getTotalInfluence()
-	}
-	return influence
-}
-
 func (t *Territory) expand() {
-	for {
-		t.Coordinates = make(CoordinatesSlice, 0)
+	hasNew := true
+	for hasNew == true {
 		for _, st := range t.getSystemTerritories() {
-			t.Coordinates = append(t.Coordinates, st.generateCoordinates()...)
-		}
-		if t.checkForIncludedSystems() == false {
-			break
+			hasNew = hasNew && st.checkForIncludedSystems()
 		}
 	}
 	t.update()
+	t.generateCache().store(t.MapId)
 }
-
-func (t *Territory) checkForIncludedSystems() (hasNewSystem bool) {
-	minX, maxX, minY, maxY := t.getCoordLimits()
-
-	systems := make([]*System, 0)
-	if err := Database.
-		Model(&systems).
-		Where("x <= ?", maxX).
-		Where("x >= ?", minX).
-		Where("y <= ?", maxY).
-		Where("y >= ?", minY).
-		Where("id != ?", t.Planet.System.Id).
-		Where("map_id = ?", t.Planet.System.MapId).
-		Select(); err != nil {
-		panic(NewException("Could not retrieve included systems", err))
-	}
-	for _, s := range systems {
-		if t.isSystemIn(s) == true {
-			hasNewSystem = true
-			s.addTerritory(t)
-		}
-	}
-	return
-}
-
-func (t *Territory) getCoordLimits() (minX, maxX, minY, maxY float64) {
-	minX = t.Coordinates[0].X
-    maxX = t.Coordinates[0].X
-    minY = t.Coordinates[0].Y
-    maxY = t.Coordinates[0].Y
-
-    for _, p := range t.Coordinates {
-        minX = math.Min(p.X, minX)
-        maxX = math.Max(p.X, maxX)
-        minY = math.Min(p.Y, minY)
-        maxY = math.Max(p.Y, maxY)
-	}
-	return
-}
-
-func (t *Territory) isSystemIn(s *System) bool {
-    minX, maxX, minY, maxY := t.getCoordLimits()
-	systemX := float64(s.X)
-	systemY := float64(s.Y)
-
-    if systemX < minX || systemX > maxX || systemY < minY || systemY > maxY {
-        return false
-    }
-
-    inside := false
-    j := len(t.Coordinates) - 1
-    for i := 0; i < len(t.Coordinates); i++ {
-        if (t.Coordinates[i].Y > systemY) != (t.Coordinates[j].Y > systemY) && systemX < (t.Coordinates[j].X - t.Coordinates[i].X) * (systemY - t.Coordinates[i].Y) / (t.Coordinates[j].Y - t.Coordinates[i].Y) + t.Coordinates[i].X {
-            inside = !inside
-        }
-        j = i
-    }
-    return inside
-}
-
-
-// func (t *Territory) convexHull() {
-// 	sort.Sort(CoordinatesSlice(t.Coordinates));
-
-// 	n := len(t.Coordinates);
-// 	hull := CoordinatesSlice{}
-
-// 	for i := 0; i < 2 * n; i++ {
-// 		var j int
-// 		if i < n {
-// 			j = i
-// 		} else {
-// 			j = 2 * n - 1 - i
-// 		}
-// 		for len(hull) >= 2 && t.removeMiddle(hull[len(hull) - 2], hull[len(hull) - 1], t.Coordinates[j]) {
-// 			hull = hull[1:]
-// 		}
-// 		hull = append(hull, t.Coordinates[j]);
-// 	}
-// 	t.Coordinates = hull[1:]
-// }
-
-// func (t *Territory) removeMiddle(a, b, c *Coordinates) bool {
-// 	cross := (a.X - b.X) * (c.Y - b.Y) - (a.Y - b.Y) * (c.X - b.X);
-// 	dot := (a.X - b.X) * (c.X - b.X) + (a.Y - b.Y) * (c.Y - b.Y);
-// 	return cross < 0 || cross == 0 && dot <= 0;
-// }
 
 func (t *Territory) update() {
 	if err := Database.Update(t); err != nil {
 		panic(NewException("Could not update territory", err))
 	}
+}
+
+func (tci *TerritoryCacheItem) store(mapId uint16) {
+	data, err := json.Marshal(tci)
+	if err != nil {
+		panic(NewException("Could not store territory cache", err))
+	}
+	RedisClient.HSet("map_" + strconv.FormatUint(uint64(mapId), 10)+ "_territories", tci.Hash, data)
+}
+
+func (t *Territory) generateCache() *TerritoryCacheItem {
+	systemTerritories := t.getSystemTerritories() 
+	tci := &TerritoryCacheItem{
+		Hash: "territory-" + strconv.FormatUint(uint64(t.Id), 10),
+		Id: t.Id,
+		Planet: t.Planet,
+		Systems: make([]*SystemTerritoryCacheItem, len(systemTerritories)),
+		UpdatedAt: time.Now(),
+	}
+	for i, st := range systemTerritories {
+		tci.Systems[i] = st.generateCache()
+	}
+	return tci
 }
