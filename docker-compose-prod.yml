@@ -56,3 +56,11 @@ services:
             - "./volumes/data:/var/lib/postgresql/data"
         ports:
             - "5432"
+
+    redis:
+        container_name: kalaxia_redis
+        image: redis:buster
+        env_file:
+            - kalaxia.env
+        networks:
+            - game
