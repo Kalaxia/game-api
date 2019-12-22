@@ -28,10 +28,10 @@ func (p *Player) calculateWage(wg *sync.WaitGroup) {
     defer wg.Done()
     defer CatchException(nil)
     baseWage := int32(50)
-    serviceWageRatio := float64(0.5)
+    serviceWageRatio := float64(2.5)
     wage := int32(0)
     for _, planet := range p.getPlanets() {
-      wage += baseWage +  int32( math.Ceil( float64(planet.Settings.ServicesPoints) * serviceWageRatio))
+      wage += baseWage + int32( math.Ceil( float64(planet.Settings.ServicesPoints) * serviceWageRatio))
     }
     p.updateWallet(wage)
     p.update()
