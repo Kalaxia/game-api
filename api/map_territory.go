@@ -62,6 +62,7 @@ func GetMapTerritories(w http.ResponseWriter, r *http.Request) {
 
 func InitTerritoriesCache() {
 	for _, m := range getAllMaps() {
+		RedisClient.Del("map_" + strconv.FormatUint(uint64(m.Id), 10) + "_territories")
 		for _, t := range m.getTerritories() {
 			t.generateCache().store(m.Id)
 		}

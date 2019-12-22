@@ -109,16 +109,16 @@ func (st *SystemTerritory) checkForIncludedSystems() (hasNewSystem bool) {
 	systems := make([]*System, 0)
 	if err := Database.
 		Model(&systems).
-		Relation("Territories").
-		Where("x <= ?", maxX).
-		Where("x >= ?", minX).
-		Where("y <= ?", maxY).
-		Where("y >= ?", minY).
-		Where("id != ?", st.System.Id).
-		Where("map_id = ?", st.System.MapId).
+		Join("LEFT JOIN map__system_territories AS st ON st.system_id = system.id").
+		Where("system.x <= ?", maxX).
+		Where("system.x >= ?", minX).
+		Where("system.y <= ?", maxY).
+		Where("system.y >= ?", minY).
+		Where("system.id != ?", st.System.Id).
+		Where("system.map_id = ?", st.System.MapId).
 		WhereGroup(func(q *orm.Query) (*orm.Query, error) {
-			return q.WhereOr("Territories.territory_id != ?", st.TerritoryId).
-				WhereOr("Territories.territory_id IS NULL"), nil
+			return q.WhereOr("st.territory_id != ?", st.TerritoryId).
+				WhereOr("st.territory_id IS NULL"), nil
 		}).
 		Select(); err != nil {
 		panic(NewException("Could not retrieve included systems", err))
