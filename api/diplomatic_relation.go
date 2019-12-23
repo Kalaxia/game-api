@@ -18,6 +18,7 @@ type(
     PlayerId uint16 `json:"-"`
     Score int `json:"score"`
   }
+
   FactionRelation struct {
       tableName struct{} `pg:"diplomacy__factions"`
 
@@ -27,6 +28,7 @@ type(
       OtherFactionId uint16 `json:"-"`
 
       State string `json:"state"`
+      TradeTax uint8 `json:"trade_tax"`
   }
 )
 

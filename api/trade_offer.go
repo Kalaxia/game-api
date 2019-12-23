@@ -11,12 +11,13 @@ import(
 
 type(
     OfferInterface interface {
-        getTotalPrice() float32
         cancel()
         update()
         delete()
     }
     Offer struct {
+        tableName struct{} `pg:"trade__offers"`
+
         Id uint32 `json:"id"`
         Type string `json:"type" pg:"-"`
         Operation string `json:"operation"`
@@ -24,35 +25,30 @@ type(
         Location *Planet `json:"location"`
         DestinationId uint16 `json:"-"`
         Destination *Planet `json:"destination"`
+        Price uint16 `json:"price"`
         CreatedAt time.Time `json:"created_at"`
         AcceptedAt time.Time `json:"accepted_at"`
     }
     ResourceOffer struct {
-        tableName struct{} `pg:"trade__resource_offers"`
-
-        Offer
+        Offer `pg:",inherit"`
 
         Resource string `json:"resource"`
         Quantity uint16 `json:"quantity"`
         LotQuantity uint16 `json:"lot_quantity"`
-        Price float32 `json:"price"`
     }
     ModelOffer struct {
-        tableName struct{} `pg:"trade__model_offers"`
-
-        Offer
+        Offer `pg:",inherit"`
 
         ModelId uint `json:"-"`
         Model *ShipModel `json:"model"`
-        Price uint16 `json:"price"`
     }
     ShipOffer struct {
-        tableName struct{} `pg:"trade__ship_offers"`
-
-        ModelOffer
+        Offer `pg:",inherit"`
 
         Quantity uint16 `json:"quantity"`
         LotQuantity uint16 `json:"lot_quantity"`
+        ModelId uint `json:"-"`
+        Model *ShipModel `json:"model"`
     }
 )
 
@@ -93,12 +89,15 @@ func GetOffer(w http.ResponseWriter, r *http.Request) {
 func AcceptOffer(w http.ResponseWriter, r *http.Request) {
     data := DecodeJsonRequest(r)
     offerId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
-    nbLots := uint16(data["nb_lots"].(float64))
     planetId := data["planet_id"].(float64)
     player := context.Get(r, "player").(*Player)
     planet := player.getPlanet(uint16(planetId))
 
-    planet.acceptOffer(uint32(offerId), nbLots)
+    offer := getOffer(uint32(offerId))
+    if offer == nil {
+        panic(NewHttpException(404, "Offer not found", nil))
+    }
+    offer.accept(planet, data)
 
     w.WriteHeader(204)
     w.Write([]byte(""))
@@ -109,10 +108,9 @@ func getOffer(id uint32) *ResourceOffer {
     offer := &ResourceOffer{}
     if err := Database.Model(offer).Relation("Location.Player.Faction").
         Relation("Location.System").
-        Relation("Location.Storage").Where("resource_offer.id = ?", id).Select(); err != nil {
+        Relation("Location.Storage").Where("offer.id = ?", id).Select(); err != nil {
         panic(NewHttpException(404, "Offer not found", err))
     }
-    offer.Type = "resources"
     return offer
 }
 //
@@ -135,51 +133,23 @@ func getOffer(id uint32) *ResourceOffer {
 func (o *ResourceOffer) cancel() {
     o.Location.Storage.storeResource(o.Resource, int16(o.Quantity))
     o.Location.Storage.update()
+    o.Offer.cancel()
+}
+
+func (o *Offer) cancel() {
     o.delete()
 
     WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
 }
 
-func (o *ShipOffer) cancel() {
-    o.delete()
-
-    WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
-}
-
-func (o ModelOffer) cancel() {
-    o.delete()
-    
-    WsHub.sendBroadcast(&WsMessage{ Action: "cancelTradeOffer", Data: o })
-}
-
-func searchOffers(data map[string]interface{}) []OfferInterface {
-    offers := make([]OfferInterface, 0)
+func searchOffers(data map[string]interface{}) []*ResourceOffer {
+    offers := make([]*ResourceOffer, 0)
 
     operation := data["operation"].(string)
 
-    resourceOffers := make([]*ResourceOffer, 0)
-    if err := Database.Model(&resourceOffers).Relation("Location.Player.Faction").Relation("Location.System").Where("operation = ?", operation).Select(); err != nil {
+    if err := Database.Model(&offers).Relation("Location.Player.Faction").Relation("Location.System").Where("operation = ?", operation).Select(); err != nil {
         panic(NewHttpException(500, "Resource offers could not be retrieved", err))
     }
-    // shipOffers := make([]*model.ShipOffer, 0)
-    // if err := Database.Model(&shipOffers).Where("operation = ?", operation).Select(); err != nil {
-    //     panic(NewHttpException(500, "Ship offers could not be retrieved", err))
-    // }
-    // modelOffers := make([]*model.ModelOffer, 0)
-    // if err := Database.Model(&modelOffers).Where("operation = ?", operation).Select(); err != nil {
-    //     panic(NewHttpException(500, "Model offers could not be retrieved", err))
-    // }
-
-    for _, offer := range resourceOffers {
-        offers = append(offers, offer)
-    }
-    // for _, offer := range shipOffers {
-    //     offers = append(offers, offer)
-    // }
-    // for _, offer := range modelOffers {
-    //     offers = append(offers, offer)
-    // }
-
     return offers
 }
 
@@ -197,19 +167,25 @@ func (p *Planet) createOffer(data map[string]interface{}) OfferInterface {
     return offer
 }
 
+func (p *Planet) newOffer(data map[string]interface{}) Offer {
+    return Offer{
+        Type: data["good_type"].(string),
+        Operation: data["operation"].(string),
+        Price: uint16(data["price"].(float64)),
+        LocationId: p.Id,
+        Location: p,
+        CreatedAt: time.Now(),
+    }
+}
+
 func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer {
     quantity := data["quantity"].(float64)
     offer := &ResourceOffer{
+        Offer: p.newOffer(data),
         Resource: data["resource"].(string),
         Quantity: uint16(quantity),
         LotQuantity: uint16(data["lot_quantity"].(float64)),
-        Price: float32(data["price"].(float64)),
     }
-    offer.Type = "resources"
-    offer.Operation = data["operation"].(string)
-    offer.LocationId = p.Id
-    offer.Location = p
-    offer.CreatedAt = time.Now()
     if quantity < 100 {
         panic(NewHttpException(400, "trade.offers.invalid_quantity", nil))
     }
@@ -233,16 +209,12 @@ func (p *Planet) createShipOffer(data map[string]interface{}) *ShipOffer {
     shipModel := p.Player.getShipModel(data["model"].(uint32))
 
     offer := &ShipOffer{
+        Offer: p.newOffer(data),
         Quantity: data["quantity"].(uint16),
         LotQuantity: data["lot_quantity"].(uint16),
+        Model: shipModel,
+        ModelId: shipModel.Id,
     }
-    offer.Operation = data["operation"].(string)
-    offer.LocationId = p.Id
-    offer.Location = p
-    offer.CreatedAt = time.Now()
-    offer.Price = data["price"].(uint16)
-    offer.Model = shipModel
-    offer.ModelId = shipModel.Id
     if err := Database.Insert(offer); err != nil {
         panic(NewHttpException(500, "Ship offer could not be created", err))
     }
@@ -253,114 +225,82 @@ func (p *Planet) createModelOffer(data map[string]interface{}) *ModelOffer {
     shipModel := p.Player.getShipModel(data["model"].(uint32))
 
     offer := &ModelOffer{
-        Price: data["price"].(uint16),
+        Offer: p.newOffer(data),
         ModelId: shipModel.Id,
         Model: shipModel,
     }
-    offer.Operation = data["operation"].(string)
-    offer.LocationId = p.Id
-    offer.Location = p
-    offer.CreatedAt = time.Now()
     if err := Database.Insert(offer); err != nil {
         panic(NewHttpException(500, "Ship model offer could not be created", err))
     }
     return offer
 }
 
-func (p *Planet) acceptOffer(offerId uint32, nbLots uint16) {
-    offer := getOffer(offerId)
-    if offer == nil {
-        panic(NewHttpException(404, "Offer not found", nil))
-    }
-    if offer.Location.Player.Id == p.Player.Id {
+func (o *Offer) checkProposal(p *Planet, data map[string]interface{}) {
+    if o.Location.Player.Id == p.Player.Id {
         panic(NewHttpException(400, "You can't accept your own offers", nil))
     }
+}
 
-    quantity := nbLots * offer.LotQuantity
-    price := int32(math.Ceil(float64(offer.Price) * float64(quantity)))
-
-    if quantity % offer.LotQuantity > 0 {
-        panic(NewHttpException(400, "There can be no extra resource out of lots", nil))
-    }
-    if quantity > offer.Quantity {
-        panic(NewHttpException(400, "You can't demand more lots than available", nil))
-    }
-    if !p.Player.updateWallet(-price) {
+func (o *Offer) performTransaction(p *Player, price int32) {
+    if !p.updateWallet(-price) {
         panic(NewHttpException(400, "Not enough money", nil))
     }
-    offer.Location.Player.updateWallet(price)
-    p.Player.update()
-    offer.Location.Player.update()
+    o.Location.Player.updateWallet(price)
+    p.update()
+    o.Location.Player.update()
+}
 
-    p.Storage.storeResource(offer.Resource, int16(quantity))
+func (o *Offer) accept(p *Planet, data map[string]interface{}) {
+    panic(NewException("This code should not be executed", nil))
+}
+
+func (o *ResourceOffer) accept(p *Planet, data map[string]interface{}) {
+    o.Offer.checkProposal(p, data)
+
+    nbLots := uint16(data["nb_lots"].(float64))
+    quantity := nbLots * o.LotQuantity
+    price := int32(math.Ceil(float64(o.Price) * float64(quantity)))
+    if quantity % o.LotQuantity > 0 {
+        panic(NewHttpException(400, "There can be no extra resource out of lots", nil))
+    }
+    if quantity > o.Quantity {
+        panic(NewHttpException(400, "You can't demand more lots than available", nil))
+    }
+    o.Quantity -= quantity
+    o.performTransaction(p.Player, price)
+    p.Storage.storeResource(o.Resource, int16(quantity))
     p.Storage.update()
+    o.notifyAcceptation()
+    if o.Quantity == 0 {
+        o.delete()
+        return
+	} 
+    o.update()
+}
 
-    offer.Quantity -= quantity
-    WsHub.sendTo(offer.Location.Player, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
-        "wallet": offer.Location.Player.Wallet,
+func (o *Offer) notifyAcceptation() {
+    WsHub.sendTo(o.Location.Player, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
+        "wallet": o.Location.Player.Wallet,
     }})
-    offer.Location.Player.notify(
+    o.Location.Player.notify(
         NotificationTypeTrade,
         "notifications.trade.accepted_offer",
         map[string]interface{}{
-            "offer": offer,
-            "player": p.Player,
-            "quantity": quantity,
-            "price": price,
+            "offer": o,
+            "player": o.Location.Player,
         },
     )
-    WsHub.sendBroadcast(&WsMessage{ Action: "updateTradeOffer", Data: offer })
-    if offer.Quantity == 0 {
-        offer.delete()
-        return
-	} 
-    offer.update()
+    WsHub.sendBroadcast(&WsMessage{ Action: "updateTradeOffer", Data: o })
 }
 
-func (o *ResourceOffer) update() {
+func (o *Offer) update() {
     if err := Database.Update(o); err != nil {
         panic(NewHttpException(500, "Offer could not be accepted", err))
     }
 }
 
-func (o *ShipOffer) update() {
-    if err := Database.Update(o); err != nil {
-        panic(NewHttpException(500, "Offer could not be accepted", err))
-    }
-}
-
-func (o *ModelOffer) update() {
-    if err := Database.Update(o); err != nil {
-        panic(NewHttpException(500, "Offer could not be accepted", err))
-    }
-}
-
-func (o *ResourceOffer) delete() {
+func (o *Offer) delete() {
 	if err := Database.Delete(o); err != nil {
 		panic(NewHttpException(500, "Offer could not be deleted", err))
 	}
-}
-
-func (o *ShipOffer) delete() {
-	if err := Database.Delete(o); err != nil {
-		panic(NewHttpException(500, "Offer could not be deleted", err))
-	}
-}
-
-func (o *ModelOffer) delete() {
-	if err := Database.Delete(o); err != nil {
-		panic(NewHttpException(500, "Offer could not be deleted", err))
-	}
-}
-
-func (o *ResourceOffer) getTotalPrice() float32 {
-    return o.Price
-}
-
-func (o *ShipOffer) getTotalPrice() float32 {
-    return float32(o.Price)
-}
-
-func (o *ModelOffer) getTotalPrice() float32 {
-    return float32(o.Price)
 }
