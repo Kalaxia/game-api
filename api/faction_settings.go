@@ -21,8 +21,10 @@ type(
 const(
 	FactionRegimeDemocracy = "democracy"
 	FactionSettingsRegime = "regime"
-	FactionSettingsPlanetTaxes = "planet_taxes"
 	FactionSettingsMotionDuration = "motion_duration"
+	FactionSettingsPlanetTaxes = "planet_taxes"
+	FactionSettingsPurchaseTaxes = "purchase_taxes"
+	FactionSettingsSalesTaxes = "sales_taxes"
 )
 
 func (f *Faction) getSettings(name string) *FactionSettings {

@@ -1,0 +1,1 @@
+ALTER TABLE diplomacy__factions ADD purchase_trade_tax SMALLINT DEFAULT 10 NOT NULL, ADD sales_trade_tax SMALLINT DEFAULT 5 NOT NULL;

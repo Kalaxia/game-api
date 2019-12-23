@@ -9,6 +9,11 @@ import(
     "time"
 )
 
+const(
+    TradeOfferOperationSell = "sell"
+    TradeOfferOperationBuy = "buy"
+)
+
 type(
     OfferInterface interface {
         cancel()
@@ -154,6 +159,9 @@ func searchOffers(data map[string]interface{}) []*ResourceOffer {
 }
 
 func (p *Planet) createOffer(data map[string]interface{}) OfferInterface {
+    if operation := data["operation"].(string); operation != TradeOfferOperationBuy && operation != TradeOfferOperationSell {
+        panic(NewHttpException(400, "trade.offers.invalid_operation", nil))
+    }
     var offer OfferInterface
     switch goodType := data["good_type"].(string); goodType {
         case "resources":
@@ -242,12 +250,68 @@ func (o *Offer) checkProposal(p *Planet, data map[string]interface{}) {
 }
 
 func (o *Offer) performTransaction(p *Player, price int32) {
-    if !p.updateWallet(-price) {
+    finalPrice, gain, purchaseTaxes, salesTaxes := o.processTaxes(p, price)
+    if !p.updateWallet(-finalPrice) {
         panic(NewHttpException(400, "Not enough money", nil))
     }
-    o.Location.Player.updateWallet(price)
+    o.Location.Player.updateWallet(gain)
     p.update()
     o.Location.Player.update()
+    o.performFactionTransaction(p, purchaseTaxes, salesTaxes)
+}
+
+func (o *Offer) performFactionTransaction(p *Player, purchaseTaxes, salesTaxes int32) {
+    if o.Operation == TradeOfferOperationBuy {
+        o.Location.Player.Faction.Wallet += purchaseTaxes
+        p.Faction.Wallet += salesTaxes
+    } else {
+        p.Faction.Wallet += purchaseTaxes
+        o.Location.Player.Faction.Wallet += salesTaxes
+    }
+    p.Faction.update()
+    o.Location.Player.Faction.update()
+}
+
+func (o *Offer) processTaxes(p *Player, price int32) (finalPrice, gain, purchaseTaxes, salesTaxes int32) {
+    if p.Faction.Id != o.Location.Player.Faction.Id {
+        finalPrice, gain, purchaseTaxes, salesTaxes = o.processInterfactionTaxes(p, price)
+    } else {
+        finalPrice, gain, purchaseTaxes, salesTaxes = o.processIntrafactionTaxes(p, price)
+    }
+    return
+}
+
+func (o *Offer) processInterfactionTaxes(p *Player, price int32) (int32, int32, int32, int32) {
+    var purchaseTaxesPercent, salesTaxesPercent uint8
+
+    offerFactionRelationship := o.Location.Player.Faction.getFactionRelation(p.Faction)
+    proposerFactionRelationship := p.Faction.getFactionRelation(o.Location.Player.Faction)
+
+    if o.Operation == TradeOfferOperationBuy {
+        purchaseTaxesPercent = offerFactionRelationship.PurchaseTradeTax
+        salesTaxesPercent = proposerFactionRelationship.SalesTradeTax
+    } else {
+        purchaseTaxesPercent = proposerFactionRelationship.PurchaseTradeTax
+        salesTaxesPercent = offerFactionRelationship.SalesTradeTax
+    }
+    return applyTaxes(price, purchaseTaxesPercent, salesTaxesPercent)
+}
+
+func (o *Offer) processIntrafactionTaxes(p *Player, price int32) (int32, int32, int32, int32) {
+    purchaseTaxesPercent := uint8(p.Faction.getSettings(FactionSettingsPurchaseTaxes).Value)
+    salesTaxesPercent := uint8(p.Faction.getSettings(FactionSettingsSalesTaxes).Value)
+
+    return applyTaxes(price, purchaseTaxesPercent, salesTaxesPercent)
+}
+
+func applyTaxes(price int32, purchaseTaxesPercent, salesTaxesPercent uint8) (finalPrice, gain, purchaseTaxes, salesTaxes int32) {
+    purchaseTaxes = int32(math.Ceil(float64(price) * (float64(purchaseTaxesPercent) / 100)))
+    salesTaxes = int32(math.Ceil(float64(price) * (float64(salesTaxesPercent) / 100)))
+
+    finalPrice = price + purchaseTaxes
+    gain = price - salesTaxes
+
+    return
 }
 
 func (o *Offer) accept(p *Planet, data map[string]interface{}) {

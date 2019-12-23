@@ -28,7 +28,8 @@ type(
       OtherFactionId uint16 `json:"-"`
 
       State string `json:"state"`
-      TradeTax uint8 `json:"trade_tax"`
+      PurchaseTradeTax uint8 `json:"purchase_trade_tax"`
+      SalesTradeTax uint8 `json:"sales_trade_tax"`
   }
 )
 
@@ -77,4 +78,12 @@ func (p *Planet) createPlayerRelation(player *Player, score int) {
     if err := Database.Insert(relation); err != nil {
         panic(NewException("Planet relation could not be created", err))
     }
+}
+
+func (f *Faction) getFactionRelation(otherFaction *Faction) *FactionRelation {
+    relation := &FactionRelation{}
+    if err := Database.Model(relation).Where("faction_id = ?", f.Id).Where("other_faction_id = ?", otherFaction.Id).Select(); err != nil {
+        panic(NewException("Faction relation could not be retrieved", err))
+    }
+    return relation
 }
