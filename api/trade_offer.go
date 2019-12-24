@@ -334,7 +334,7 @@ func (o *ResourceOffer) accept(p *Planet, data map[string]interface{}) {
     o.performTransaction(p.Player, price)
     p.Storage.storeResource(o.Resource, int16(quantity))
     p.Storage.update()
-    o.notifyAcceptation()
+    o.notifyAcceptation(p.Player, quantity, price)
     if o.Quantity == 0 {
         o.delete()
         return
@@ -342,18 +342,24 @@ func (o *ResourceOffer) accept(p *Planet, data map[string]interface{}) {
     o.update()
 }
 
-func (o *Offer) notifyAcceptation() {
-    WsHub.sendTo(o.Location.Player, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
-        "wallet": o.Location.Player.Wallet,
-    }})
+func (o *ResourceOffer) notifyAcceptation(p *Player, quantity uint16, price int32) {
+    o.Offer.notifyAcceptation()
     o.Location.Player.notify(
         NotificationTypeTrade,
         "notifications.trade.accepted_offer",
         map[string]interface{}{
             "offer": o,
-            "player": o.Location.Player,
+            "player": p,
+            "quantity": quantity,
+            "price": price,
         },
     )
+}
+
+func (o *Offer) notifyAcceptation() {
+    WsHub.sendTo(o.Location.Player, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
+        "wallet": o.Location.Player.Wallet,
+    }})
     WsHub.sendBroadcast(&WsMessage{ Action: "updateTradeOffer", Data: o })
 }
 
