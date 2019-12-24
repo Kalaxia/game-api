@@ -156,6 +156,8 @@ func createFactionsRelations(factions []*Faction) {
 				OtherFactionId: otherFaction.Id,
 				OtherFaction: otherFaction,
 				State: RelationNeutral,
+				PurchaseTradeTax: 10,
+				SalesTradeTax: 5,
 			}
 			if err := Database.Insert(relation); err != nil {
 				panic(NewException("Faction relation could not be created", err))

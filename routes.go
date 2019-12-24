@@ -306,7 +306,7 @@ var routes = Routes{
 	Route{
 		"Search offers",
 		"POST",
-		"/api/offers",
+		"/api/offers/search",
 		api.SearchOffers,
 		true,
 	},

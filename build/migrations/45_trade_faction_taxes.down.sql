@@ -1,0 +1,1 @@
+ALTER TABLE diplomacy__factions DROP purchase_trade_tax, DROP sales_trade_tax;

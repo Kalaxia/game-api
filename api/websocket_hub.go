@@ -5,24 +5,31 @@ import(
 	"encoding/json"
 )
 
-var WsHub *Hub
+var WsHub HubInterface
 // Hub maintains the set of active clients and broadcasts messages to the
 // clients.
-type Hub struct {
-	// Registered clients.
-	clients map[*Client]bool
+type(
+	HubInterface interface {
+		sendTo(player *Player, message *WsMessage)
+		sendBroadcast(message *WsMessage)
+		Run()
+	}
+	Hub struct {
+		// Registered clients.
+		clients map[*Client]bool
 
-	players map[string]*Client
+		players map[string]*Client
 
-	// Inbound messages from the clients.
-	broadcast chan []byte
+		// Inbound messages from the clients.
+		broadcast chan []byte
 
-	// Register requests from the clients.
-	register chan *Client
+		// Register requests from the clients.
+		register chan *Client
 
-	// Unregister requests from clients.
-	unregister chan *Client
-}
+		// Unregister requests from clients.
+		unregister chan *Client
+	}
+)
 
 func NewWsHub() *Hub {
 	return &Hub{
