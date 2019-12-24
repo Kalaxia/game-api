@@ -155,7 +155,7 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	client := &Client{hub: WsHub, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: WsHub.(*Hub), conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in
