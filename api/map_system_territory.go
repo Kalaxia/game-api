@@ -66,12 +66,28 @@ func (s *System) getNewTerritoryStatus(t *Territory) string {
 			return TerritoryStatusContest
 		}
 	}
-	for _, p := range s.getPlanets() {
-		if p.Player != nil && p.Player.FactionId != t.Planet.Player.FactionId {
-			return TerritoryStatusContest
+	if !s.hasRivalPlanets(t) && s.hasFriendlyPlanets(t) {
+		return TerritoryStatusPledge
+	}
+	return TerritoryStatusContest
+}
+
+func (s *System) hasRivalPlanets(t *Territory) bool {
+	for _, p := range s.Planets {
+		if p.Player != nil && p.Player.Faction.Id != t.Planet.Player.Faction.Id {
+			return true
 		}
 	}
-	return TerritoryStatusPledge
+	return false
+}
+
+func (s *System) hasFriendlyPlanets(t *Territory) bool {
+	for _, p := range s.Planets {
+		if p.Player != nil && p.Player.Faction.Id == t.Planet.Player.Faction.Id {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *System) checkTerritories() {
@@ -102,7 +118,7 @@ func (s *System) checkTerritories() {
 
 func (s *System) getTerritories() []*SystemTerritory {
 	territories := make([]*SystemTerritory, 0)
-	if err := Database.Model(&territories).Relation("Territory.Planet.Player.Faction").Where("system_territory.system_id = ?", s.Id).Select(); err != nil {
+	if err := Database.Model(&territories).Relation("Territory.Planet.Player.Faction").Relation("Territory.Planet.System").Where("system_territory.system_id = ?", s.Id).Select(); err != nil {
 		panic(NewException("Could not retrieve system territories", err))
 	}
 	return territories
@@ -177,21 +193,12 @@ func (st *SystemTerritory) isSystemIn(s *System) bool {
 }
 
 func (st *SystemTerritory) canAnnex(s *System) bool {
-	return st.isSystemIn(s) && !st.hasSystem(s) && st.hasFriendlyPlanets(s)
+	return st.isSystemIn(s) && !st.hasSystem(s)
 }
 
 func (st *SystemTerritory) hasSystem(s *System) bool {
 	for _, t := range s.Territories {
 		if t.TerritoryId == st.TerritoryId {
-			return true
-		}
-	}
-	return false
-}
-
-func (st *SystemTerritory) hasFriendlyPlanets(s *System) bool {
-	for _, p := range s.Planets {
-		if p.Player != nil && p.Player.Faction.Id == st.Territory.Planet.Player.Faction.Id {
 			return true
 		}
 	}

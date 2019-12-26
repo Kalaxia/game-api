@@ -334,12 +334,25 @@ func (o *ResourceOffer) accept(p *Planet, data map[string]interface{}) {
     o.performTransaction(p.Player, price)
     p.Storage.storeResource(o.Resource, int16(quantity))
     p.Storage.update()
+    o.addInfluence(p, price)
     o.notifyAcceptation(p.Player, quantity, price)
     if o.Quantity == 0 {
         o.delete()
         return
 	} 
     o.update()
+}
+
+func (o *Offer) addInfluence(p *Planet, price int32) {
+    baseInfluence := math.Ceil(float64(price) / 200)
+    modifier := func(pt *PlanetTerritory, influence uint16) {
+        pt.EconomicInfluence += influence
+    }
+
+    o.Location.addInfluence(o.Location.Player, uint16(baseInfluence), modifier)
+    o.Location.addInfluence(p.Player, uint16(math.Ceil(baseInfluence * 0.25)), modifier)
+    p.addInfluence(o.Location.Player, uint16(math.Ceil(baseInfluence * 0.75)), modifier)
+    p.addInfluence(p.Player, uint16(math.Ceil(baseInfluence / 2)), modifier)
 }
 
 func (o *ResourceOffer) notifyAcceptation(p *Player, quantity uint16, price int32) {
