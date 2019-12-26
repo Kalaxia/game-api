@@ -4,6 +4,7 @@ func (f *Fleet) conquerPlanet(p *Planet) bool {
 	if isVictorious := f.attack(p); !isVictorious {
 		return false
 	}
+	p.System.checkTerritories()
 	p.notifyConquest(f)
 	p.changeOwner(f.Player)
 	return true

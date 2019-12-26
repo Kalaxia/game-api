@@ -75,6 +75,39 @@ func (s *System) getNewTerritoryStatus(t *Territory) string {
 	return TerritoryStatusPledge
 }
 
+func (s *System) checkTerritories() {
+	s.Territories = s.getTerritories()
+	if len(s.Territories) == 0 {
+		return
+	}
+	var dominantTerritory *SystemTerritory
+	dominantInfluence := uint16(0)
+
+	for _, st := range s.Territories {
+		st.Status = TerritoryStatusContest
+		if influence := st.getTotalInfluence(); influence > dominantInfluence {
+			dominantInfluence = influence
+			dominantTerritory = st
+		}
+	}
+	dominantTerritory.Status = TerritoryStatusPledge
+	s.Faction = dominantTerritory.Territory.Planet.Player.Faction
+	s.FactionId = s.Faction.Id
+
+	for _, st := range s.Territories {
+		st.update()
+	}
+	s.update()
+}
+
+func (s *System) getTerritories() []*SystemTerritory {
+	territories := make([]*SystemTerritory, 0)
+	if err := Database.Model(&territories).Relation("Territory.Planet.Player.Faction").Where("system_id = ?", s.Id).Select(); err != nil {
+		panic(NewException("Could not retrieve system territories", err))
+	}
+	return territories
+}
+
 func (st *SystemTerritory) getTotalInfluence() uint16 {
 	influence := uint16(0)
 	for _, pt := range st.getPlanetTerritories() {
@@ -115,7 +148,6 @@ func (st *SystemTerritory) checkForIncludedSystems() (hasNewSystem bool) {
 		Where("system.y <= ?", maxY).
 		Where("system.y >= ?", minY).
 		Where("system.id != ?", st.System.Id).
-		Where("system.map_id = ?", st.System.MapId).
 		WhereGroup(func(q *orm.Query) (*orm.Query, error) {
 			return q.WhereOr("st.territory_id != ?", st.TerritoryId).
 				WhereOr("st.territory_id IS NULL"), nil
@@ -168,4 +200,10 @@ func (st *SystemTerritory) generateCache() *SystemTerritoryCacheItem {
 		stci.ReligiousInfluence += pt.ReligiousInfluence
 	}
 	return stci
+}
+
+func (st *SystemTerritory) update() {
+	if err := Database.Update(st); err != nil {
+		panic(NewException("Could not update system territory", err))
+	}
 }
