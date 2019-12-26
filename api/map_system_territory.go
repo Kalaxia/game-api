@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/go-pg/pg/v9/orm"
 	"math"
 )
 
@@ -9,9 +8,9 @@ type(
 	SystemTerritory struct {
 		tableName struct{} `pg:"map__system_territories"`
 
-		TerritoryId uint16 `json:"-"`
+		TerritoryId uint16 `json:"-" pg:",pk"`
 		Territory *Territory `json:"territory"`
-		SystemId uint16 `json:"-"`
+		SystemId uint16 `json:"-", pg:",pk"`
 		System *System `json:"system"`
 		Status string `json:"status"`
 	}
@@ -68,7 +67,7 @@ func (s *System) getNewTerritoryStatus(t *Territory) string {
 		}
 	}
 	for _, p := range s.getPlanets() {
-		if p.Player != nil && p.Player.Faction.Id != t.Planet.Player.Faction.Id {
+		if p.Player != nil && p.Player.FactionId != t.Planet.Player.FactionId {
 			return TerritoryStatusContest
 		}
 	}
@@ -93,16 +92,17 @@ func (s *System) checkTerritories() {
 	dominantTerritory.Status = TerritoryStatusPledge
 	s.Faction = dominantTerritory.Territory.Planet.Player.Faction
 	s.FactionId = s.Faction.Id
+	s.update()
 
 	for _, st := range s.Territories {
 		st.update()
+		st.Territory.expand()
 	}
-	s.update()
 }
 
 func (s *System) getTerritories() []*SystemTerritory {
 	territories := make([]*SystemTerritory, 0)
-	if err := Database.Model(&territories).Relation("Territory.Planet.Player.Faction").Where("system_id = ?", s.Id).Select(); err != nil {
+	if err := Database.Model(&territories).Relation("Territory.Planet.Player.Faction").Where("system_territory.system_id = ?", s.Id).Select(); err != nil {
 		panic(NewException("Could not retrieve system territories", err))
 	}
 	return territories
@@ -142,21 +142,18 @@ func (st *SystemTerritory) checkForIncludedSystems() (hasNewSystem bool) {
 	systems := make([]*System, 0)
 	if err := Database.
 		Model(&systems).
-		Join("LEFT JOIN map__system_territories AS st ON st.system_id = system.id").
+		Relation("Territories").
+		Relation("Planets.Player.Faction").
 		Where("system.x <= ?", maxX).
 		Where("system.x >= ?", minX).
 		Where("system.y <= ?", maxY).
 		Where("system.y >= ?", minY).
 		Where("system.id != ?", st.System.Id).
-		WhereGroup(func(q *orm.Query) (*orm.Query, error) {
-			return q.WhereOr("st.territory_id != ?", st.TerritoryId).
-				WhereOr("st.territory_id IS NULL"), nil
-		}).
 		Select(); err != nil {
 		panic(NewException("Could not retrieve included systems", err))
 	}
 	for _, s := range systems {
-		if st.isSystemIn(s) == true {
+		if st.canAnnex(s) {
 			hasNewSystem = true
 			s.addTerritory(st.Territory)
 		}
@@ -177,6 +174,28 @@ func (st *SystemTerritory) getCoordLimits() (minX, maxX, minY, maxY float64) {
 
 func (st *SystemTerritory) isSystemIn(s *System) bool {
 	return st.getRadius() >= getDistance(float64(st.System.X), float64(s.X), float64(st.System.Y), float64(s.Y))
+}
+
+func (st *SystemTerritory) canAnnex(s *System) bool {
+	return st.isSystemIn(s) && !st.hasSystem(s) && st.hasFriendlyPlanets(s)
+}
+
+func (st *SystemTerritory) hasSystem(s *System) bool {
+	for _, t := range s.Territories {
+		if t.TerritoryId == st.TerritoryId {
+			return true
+		}
+	}
+	return false
+}
+
+func (st *SystemTerritory) hasFriendlyPlanets(s *System) bool {
+	for _, p := range s.Planets {
+		if p.Player != nil && p.Player.Faction.Id == st.Territory.Planet.Player.Faction.Id {
+			return true
+		}
+	}
+	return false
 }
 
 func (st *SystemTerritory) generateCache() *SystemTerritoryCacheItem {

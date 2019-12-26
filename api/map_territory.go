@@ -122,6 +122,7 @@ func (t *Territory) expand() {
 	hasNew := true
 	for hasNew == true {
 		for _, st := range t.getSystemTerritories() {
+			st.Territory = t
 			hasNew = hasNew && st.checkForIncludedSystems()
 		}
 	}

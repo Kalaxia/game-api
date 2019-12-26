@@ -18,7 +18,7 @@ type(
     FactionId uint16 `json:"-"`
     Faction *Faction `json:"faction"`
     Territories []*SystemTerritory `json:"-" pg:"fk:system_id"`
-    Planets []Planet `json:"planets"`
+    Planets []Planet `json:"planets" pg:"fk:system_id"`
     X uint16 `json:"coord_x"`
     Y uint16 `json:"coord_y"`
     Orbits []SystemOrbit `json:"orbits"`
