@@ -149,11 +149,13 @@ func (t *Territory) generateCache() *TerritoryCacheItem {
 		Hash: "territory-" + strconv.FormatUint(uint64(t.Id), 10),
 		Id: t.Id,
 		Planet: t.Planet,
-		Systems: make([]*SystemTerritoryCacheItem, len(systemTerritories)),
+		Systems: make([]*SystemTerritoryCacheItem, 0),
 		UpdatedAt: time.Now(),
 	}
-	for i, st := range systemTerritories {
-		tci.Systems[i] = st.generateCache()
+	for _, st := range systemTerritories {
+		if st.Status == TerritoryStatusPledge {
+			tci.Systems = append(tci.Systems, st.generateCache())
+		}
 	}
 	return tci
 }
