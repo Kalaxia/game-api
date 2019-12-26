@@ -18,14 +18,23 @@ type(
 )
 
 func (p *Planet) addTerritory(t *Territory) {
+	status := p.getNewTerritoryStatus(t)
+	defaultInfluence := uint16(0)
+	if status == TerritoryStatusPledge {
+		defaultInfluence = 5
+	}
 	pt := &PlanetTerritory{
 		TerritoryId: t.Id,
 		Territory: t,
 		PlanetId: p.Id,
 		Planet: p,
-		Status: p.getNewTerritoryStatus(t),
+		Status: status,
+		MilitaryInfluence: defaultInfluence,
+		EconomicInfluence: defaultInfluence,
+		PoliticalInfluence: defaultInfluence,
+		ReligiousInfluence: defaultInfluence,
+		CulturalInfluence: defaultInfluence,
 	}
-	pt.calculateInfluence()
 	if err := Database.Insert(pt); err != nil {
 		panic(NewException("Could not create planet territory", err))
 	}
@@ -46,40 +55,4 @@ func (p *Planet) getNewTerritoryStatus(t *Territory) string {
 		}
 	}
 	return TerritoryStatusPledge
-}
-
-func (pt *PlanetTerritory) calculateInfluence() {
-	if pt.Planet.Player.FactionId == pt.Territory.Planet.Player.FactionId {
-		pt.MilitaryInfluence = pt.Planet.calculateMilitaryInfluence()
-		pt.EconomicInfluence = pt.Planet.calculateEconomicInfluence()
-		pt.PoliticalInfluence = pt.Planet.calculatePoliticalInfluence()
-		pt.ReligiousInfluence = pt.Planet.calculateReligiousInfluence()
-		pt.CulturalInfluence = pt.Planet.calculateCulturalInfluence()
-	} else {
-		pt.MilitaryInfluence = 0
-		pt.EconomicInfluence = 0
-		pt.PoliticalInfluence = 0
-		pt.ReligiousInfluence = 0
-		pt.CulturalInfluence = 0
-	}
-}
-
-func (p *Planet) calculateMilitaryInfluence() uint16 {
-	return 5
-}
-
-func (p *Planet) calculateEconomicInfluence() uint16 {
-	return 5
-}
-
-func (p *Planet) calculatePoliticalInfluence() uint16 {
-	return 5
-}
-
-func (p *Planet) calculateReligiousInfluence() uint16 {
-	return 5
-}
-
-func (p *Planet) calculateCulturalInfluence() uint16 {
-	return 5
 }
