@@ -7,9 +7,9 @@ import (
 )
 
 func main() {
+	initWebsocketHub()
 	initConfigurations()
 	initScheduledTasks()
-	initWebsocketHub()
 
 	router := NewRouter()
 	router.HandleFunc("/ws", api.ServeWs)
