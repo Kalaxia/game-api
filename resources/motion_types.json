@@ -1,4 +1,10 @@
 [
+    "war_declaration",
+    "peace_treaty_sending",
+    "peace_treaty_response",
+    "alliance_proposal_sending",
+    "alliance_proposal_response",
+    "alliance_break",
     "planet_taxes",
     "regime"
 ]
