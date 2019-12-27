@@ -96,6 +96,14 @@ func (f *Faction) validateWarDeclaration(data map[string]interface{}) {
     }
 }
 
+func (f *Faction) validatePeaceTreatySending(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+
+    if !f.isInWarWith(target) {
+        panic(NewHttpException(400, "faction.motions.types.peace_treaty_sending.not_in_war", nil))
+    }
+}
+
 func (f *Faction) declareWar(data map[string]interface{}) {
     target := getFaction(uint16(data["id"].(float64)))
 
@@ -112,6 +120,40 @@ func (f *Faction) declareWar(data map[string]interface{}) {
 		"enemy": target,
 	})
 	target.notify(NotificationTypeFaction, "faction.war.war_alert", map[string]interface{}{
+		"enemy": f,
+	})
+
+    relationship.update()
+    targetRelationship.update()
+}
+
+func (f *Faction) sendPeaceTreaty(author *Player, data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+    relationship := f.getRelationWith(target)
+    // If the peace has already been settled by the other faction
+    if relationship.State != RelationHostile {
+        return
+    }
+    target.createMotion(author, MotionTypePeaceTreatyResponse, map[string]interface{}{
+        "faction": f,
+    })
+}
+
+func (f *Faction) acceptPeaceTreaty(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+    relationship := f.getRelationWith(target)
+    // If the peace has already been settled by the other faction
+    if relationship.State != RelationHostile {
+        return
+    }
+    relationship.State = RelationNeutral
+    targetRelationship := target.getRelationWith(f)
+    targetRelationship.State = RelationNeutral
+
+	f.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
+		"enemy": target,
+	})
+	target.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
 		"enemy": f,
 	})
 

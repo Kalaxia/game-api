@@ -339,15 +339,17 @@ func scheduleInProgressMotions() {
 }
 
 func (m *FactionMotion) validate() {
+	// Unsupported cases are de-facto valdiated
 	switch (m.Type) {
 		case MotionTypePlanetTaxes:
 			m.Faction.validatePlanetTaxesMotion(int(m.Data["taxes"].(float64)))
 			break
+		case MotionTypePeaceTreatySending:
+			m.Faction.validatePeaceTreatySending(m.Data["faction"].(map[string]interface{}))
+			break
 		case MotionTypeWarDeclaration:
 			m.Faction.validateWarDeclaration(m.Data["faction"].(map[string]interface{}))
 			break
-		default:
-			panic(NewHttpException(400, "faction.motions.invalid_type", nil))
 	}
 }
 
@@ -355,6 +357,12 @@ func (m *FactionMotion) apply() {
 	switch (m.Type) {
 		case MotionTypePlanetTaxes:
 			m.Faction.updatePlanetTaxes(int(m.Data["taxes"].(float64)))
+			break
+		case MotionTypePeaceTreatySending:
+			m.Faction.sendPeaceTreaty(m.Author, m.Data["faction"].(map[string]interface{}))
+			break
+		case MotionTypePeaceTreatyResponse:
+			m.Faction.acceptPeaceTreaty(m.Data["faction"].(map[string]interface{}))
 			break
 		case MotionTypeWarDeclaration:
 			m.Faction.declareWar(m.Data["faction"].(map[string]interface{}))
