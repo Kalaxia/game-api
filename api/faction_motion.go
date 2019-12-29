@@ -225,11 +225,6 @@ func (m *FactionMotion) vote(author *Player, option uint8) *FactionVote {
 }
 
 func isMotionTypeValid(mType string) bool {
-	m := &FactionMotion{}
-	if err := Database.Model(m).Where("type = ?", mType).Where("is_processed = ?", false).Select(); err == nil {
-		panic(NewHttpException(403, "faction.motions.currently_voting", nil))
-	}
-
 	for _, t := range factionMotionsData {
 		if mType == t {
 			return true

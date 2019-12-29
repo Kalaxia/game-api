@@ -219,6 +219,11 @@ func (f *Faction) notify(nType string, content string, data map[string]interface
 }
 
 func (f *Faction) validatePlanetTaxesMotion(taxes int) {
+	m := &FactionMotion{}
+	if err := Database.Model(m).Where("type = ?", MotionTypePlanetTaxes).Where("is_processed = ?", false).Select(); err == nil {
+		panic(NewHttpException(403, "faction.motions.currently_voting", nil))
+	}
+
 	settings := f.getSettings(FactionSettingsPlanetTaxes)
 
 	if settings.Value == taxes {
