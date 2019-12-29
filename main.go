@@ -8,8 +8,8 @@ import (
 
 func main() {
 	initWebsocketHub()
-	initConfigurations()
 	initScheduledTasks()
+	initConfigurations()
 
 	router := NewRouter()
 	router.HandleFunc("/ws", api.ServeWs)
@@ -23,6 +23,7 @@ func initConfigurations() {
 	api.InitShipConfiguration()
 	api.InitPlanetConstructions()
 	api.InitFactionMotions()
+	api.InitFleetJourneys()
 	api.InitTerritoriesCache()
 }
 
@@ -33,8 +34,6 @@ func initScheduledTasks() {
 	api.Scheduler.AddHourlyTask(func () { api.CalculatePlanetsProductions() })
 
 	api.Scheduler.AddDailyTask(func () { api.CalculateFactionsWages() })
-	
-	api.InitFleetJourneys()
 }
 
 func initWebsocketHub() {
