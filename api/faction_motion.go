@@ -42,6 +42,12 @@ type(
 var factionMotionsData []string
 
 const(
+	MotionTypeAllianceBreak = "alliance_break"
+	MotionTypeAllianceProposalSending = "alliance_proposal_sending"
+	MotionTypeAllianceProposalResponse = "alliance_proposal_response"
+	MotionTypePeaceTreatySending = "peace_treaty_sending"
+	MotionTypePeaceTreatyResponse = "peace_treaty_response"
+	MotionTypeWarDeclaration = "war_declaration"
 	MotionTypePlanetTaxes = "planet_taxes"
 	MotionTypeRegime = "regime"
 	VoteOptionYes = 1
@@ -219,11 +225,6 @@ func (m *FactionMotion) vote(author *Player, option uint8) *FactionVote {
 }
 
 func isMotionTypeValid(mType string) bool {
-	m := &FactionMotion{}
-	if err := Database.Model(m).Where("type = ?", mType).Where("is_processed = ?", false).Select(); err == nil {
-		panic(NewHttpException(403, "faction.motions.currently_voting", nil))
-	}
-
 	for _, t := range factionMotionsData {
 		if mType == t {
 			return true
@@ -318,7 +319,7 @@ func (f *Faction) getPreviousMotions() []*FactionMotion {
 func scheduleInProgressMotions() {
 	motions := make([]*FactionMotion, 0)
 	
-	if err := Database.Model(&motions).Relation("Author").Relation("Faction").Where("is_processed = ?", false).Select(); err != nil {
+	if err := Database.Model(&motions).Relation("Author").Relation("Faction.Relations.OtherFaction").Where("is_processed = ?", false).Select(); err != nil {
 		panic(NewException("Faction motions could not be retrieved", err))
 	}
 	for _, m := range motions {
@@ -333,12 +334,17 @@ func scheduleInProgressMotions() {
 }
 
 func (m *FactionMotion) validate() {
+	// Unsupported cases are de-facto valdiated
 	switch (m.Type) {
 		case MotionTypePlanetTaxes:
 			m.Faction.validatePlanetTaxesMotion(int(m.Data["taxes"].(float64)))
 			break
-		default:
-			panic(NewHttpException(400, "faction.motions.invalid_type", nil))
+		case MotionTypePeaceTreatySending:
+			m.Faction.validatePeaceTreatySending(m.Data["faction"].(map[string]interface{}))
+			break
+		case MotionTypeWarDeclaration:
+			m.Faction.validateWarDeclaration(m.Data["faction"].(map[string]interface{}))
+			break
 	}
 }
 
@@ -347,6 +353,14 @@ func (m *FactionMotion) apply() {
 		case MotionTypePlanetTaxes:
 			m.Faction.updatePlanetTaxes(int(m.Data["taxes"].(float64)))
 			break
+		case MotionTypePeaceTreatySending:
+			m.Faction.sendPeaceTreaty(m.Author, m.Data["faction"].(map[string]interface{}))
+			break
+		case MotionTypePeaceTreatyResponse:
+			m.Faction.acceptPeaceTreaty(m.Data["faction"].(map[string]interface{}))
+			break
+		case MotionTypeWarDeclaration:
+			m.Faction.declareWar(m.Data["faction"].(map[string]interface{}))
 		default:
 			panic(NewException("Unknown motion type", nil))
 	}

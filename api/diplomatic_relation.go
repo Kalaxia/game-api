@@ -23,9 +23,9 @@ type(
       tableName struct{} `pg:"diplomacy__factions"`
 
       Faction *Faction `json:"-"`
-      FactionId uint16 `json:"-"`
+      FactionId uint16 `json:"-" pg:",pk"`
       OtherFaction *Faction `json:"faction"`
-      OtherFactionId uint16 `json:"-"`
+      OtherFactionId uint16 `json:"-" pg:",pk"`
 
       State string `json:"state"`
       PurchaseTradeTax uint8 `json:"purchase_trade_tax"`
@@ -86,4 +86,86 @@ func (f *Faction) getFactionRelation(otherFaction *Faction) *FactionRelation {
         panic(NewException("Faction relation could not be retrieved", err))
     }
     return relation
+}
+
+func (f *Faction) validateWarDeclaration(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+
+    if f.isInWarWith(target) {
+        panic(NewHttpException(400, "faction.motions.types.war_declaration.already_in_war", nil))
+    }
+}
+
+func (f *Faction) validatePeaceTreatySending(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+
+    if !f.isInWarWith(target) {
+        panic(NewHttpException(400, "faction.motions.types.peace_treaty_sending.not_in_war", nil))
+    }
+}
+
+func (f *Faction) declareWar(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+
+    relationship := f.getRelationWith(target)
+    // If the war has already been declared by the other faction
+    if relationship.State == RelationHostile {
+        return
+    }
+    relationship.State = RelationHostile
+    targetRelationship := target.getRelationWith(f)
+    targetRelationship.State = RelationHostile
+
+    f.createWar(target)
+
+    relationship.update()
+    targetRelationship.update()
+}
+
+func (f *Faction) sendPeaceTreaty(author *Player, data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+    relationship := f.getRelationWith(target)
+    // If the peace has already been settled by the other faction
+    if relationship.State != RelationHostile {
+        return
+    }
+    target.createMotion(author, MotionTypePeaceTreatyResponse, map[string]interface{}{
+        "faction": f,
+    })
+}
+
+func (f *Faction) acceptPeaceTreaty(data map[string]interface{}) {
+    target := getFaction(uint16(data["id"].(float64)))
+    relationship := f.getRelationWith(target)
+    // If the peace has already been settled by the other faction
+    if relationship.State != RelationHostile {
+        return
+    }
+    relationship.State = RelationNeutral
+    targetRelationship := target.getRelationWith(f)
+    targetRelationship.State = RelationNeutral
+
+    f.endWar(target)
+
+    relationship.update()
+    targetRelationship.update()
+}
+
+func (f *Faction) getRelationWith(target *Faction) *FactionRelation {
+    for _, r := range f.Relations {
+        if r.OtherFactionId == target.Id {
+            return r
+        }
+    }
+    panic(NewException("Faction relation not found", nil))
+}
+
+func (f *Faction) isInWarWith(target *Faction) bool {
+    return f.getRelationWith(target).State == RelationHostile
+}
+
+func (fr *FactionRelation) update() {
+    if err := Database.Update(fr); err != nil {
+        panic(NewException("Could not update faction relation", err))
+    }
 }

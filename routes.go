@@ -452,4 +452,32 @@ var routes = Routes{
 		api.GetFactionVotes,
 		true,
 	},
+	Route{
+		"Get Faction Wars",
+		"GET",
+		"/api/factions/{id}/wars",
+		api.GetFactionWars,
+		true,
+	},
+	Route{
+		"Get Faction War",
+		"GET",
+		"/api/factions/{faction_id}/wars/{war_id}",
+		api.GetFactionWar,
+		true,
+	},
+	Route{
+		"Get Faction Casus Belli",
+		"GET",
+		"/api/factions/{faction_id}/casus_belli/unanswered",
+		api.GetFactionUnansweredCasusBelli,
+		true,
+	},
+	Route{
+		"Get Faction Casus Belli",
+		"GET",
+		"/api/factions/{faction_id}/casus_belli/{casus_belli_id}",
+		api.GetFactionCasusBelli,
+		true,
+	},
 }

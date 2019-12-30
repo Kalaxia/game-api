@@ -170,6 +170,7 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 
 	combat.update()
 	combat.notifyEnding()
+	combat.processConsequences()
 
 	return combat
 }
@@ -190,6 +191,17 @@ func (c *FleetCombat) notifyEnding() {
 	} else {
 		report.Defender.notifyCombatEnding(report, report.Attacker, "victory")
 		report.Attacker.notifyCombatEnding(report, report.Defender, "defeat")
+	}
+}
+
+func (c *FleetCombat) processConsequences() {
+	attackerFaction := getFaction(c.Attacker.Player.FactionId)
+	defenderFaction := getFaction(c.Defender.Player.FactionId)
+
+	if !attackerFaction.isInWarWith(defenderFaction) {
+		attackerFaction.createCasusBelli(defenderFaction, c.Attacker.Player, CasusBelliTypeCombat, map[string]interface{}{
+			"combat": getCombatReport(c.Id),
+		})
 	}
 }
 
