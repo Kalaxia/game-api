@@ -4,10 +4,22 @@ func (f *Fleet) conquerPlanet(p *Planet) bool {
 	if isVictorious := f.attack(p); !isVictorious {
 		return false
 	}
+	p.checkForCasusBelli(f.Player)
 	p.System.checkTerritories()
 	p.notifyConquest(f)
 	p.changeOwner(f.Player)
 	return true
+}
+
+func (p *Planet) checkForCasusBelli(attacker *Player) {
+	attackerFaction := getFaction(attacker.FactionId)
+	defenderFaction := getFaction(p.Player.FactionId)
+
+	if !attackerFaction.isInWarWith(defenderFaction) {
+		attackerFaction.createCasusBelli(defenderFaction, attacker, CasusBelliTypeConquest, map[string]interface{}{
+			"planet": p,
+		})
+	}
 }
 
 func (p *Planet) notifyConquest(f *Fleet) {

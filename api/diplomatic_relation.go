@@ -116,12 +116,7 @@ func (f *Faction) declareWar(data map[string]interface{}) {
     targetRelationship := target.getRelationWith(f)
     targetRelationship.State = RelationHostile
 
-	f.notify(NotificationTypeFaction, "faction.war.war_declared", map[string]interface{}{
-		"enemy": target,
-	})
-	target.notify(NotificationTypeFaction, "faction.war.war_alert", map[string]interface{}{
-		"enemy": f,
-	})
+    f.createWar(target)
 
     relationship.update()
     targetRelationship.update()
@@ -150,12 +145,7 @@ func (f *Faction) acceptPeaceTreaty(data map[string]interface{}) {
     targetRelationship := target.getRelationWith(f)
     targetRelationship.State = RelationNeutral
 
-	f.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
-		"enemy": target,
-	})
-	target.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
-		"enemy": f,
-	})
+    f.endWar(target)
 
     relationship.update()
     targetRelationship.update()
