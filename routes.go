@@ -480,4 +480,19 @@ var routes = Routes{
 		api.GetFactionCasusBelli,
 		true,
 	},
+	/********** RANKINGS *********/
+	Route{
+		"Get Territorial Ranking",
+		"GET",
+		"/api/rankings/territorial",
+		api.GetTerritorialRanking,
+		true,
+	},
+	Route{
+		"Get Financial Ranking",
+		"GET",
+		"/api/rankings/financial",
+		api.GetFinancialRanking,
+		true,
+	},
 }
