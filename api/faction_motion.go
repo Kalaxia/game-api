@@ -194,7 +194,7 @@ func (f *Faction) createMotion(author *Player, mType string, data map[string]int
 	if err := Database.Insert(motion); err != nil {
 		panic(NewException("Could not create faction motion", err))
 	}
-	Scheduler.AddTask(uint(time.Until(motion.EndedAt)), func() {
+	Scheduler.AddTask(motion.EndedAt, func() {
 		motion.processResults()
 	})
 	f.notify(NotificationTypeFaction, "faction.motions.new_motion", map[string]interface{}{
@@ -327,7 +327,7 @@ func scheduleInProgressMotions() {
 			go m.processResults()
 			continue
 		}
-		Scheduler.AddTask(uint(time.Until(m.EndedAt)), func() {
+		Scheduler.AddTask(m.EndedAt, func() {
 			m.processResults()
 		})
 	}

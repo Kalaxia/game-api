@@ -109,7 +109,7 @@ func InitFleetJourneys() {
         journey.CurrentStep.JourneyId = journey.Id
         journey.CurrentStep.Journey = journey
         if journey.CurrentStep.TimeArrival.After(now) {
-            Scheduler.AddTask(uint(time.Until(journey.CurrentStep.TimeArrival).Seconds()), func () {
+            Scheduler.AddTask(journey.CurrentStep.TimeArrival, func () {
                 journey.CurrentStep.end()
             })
         } else {
@@ -216,7 +216,7 @@ func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.update()
     
     if f.Journey.CurrentStep.TimeArrival.After(time.Now()) {
-        Scheduler.AddTask(uint(time.Until(f.Journey.CurrentStep.TimeArrival).Seconds()), func () {
+        Scheduler.AddTask(f.Journey.CurrentStep.TimeArrival, func () {
             f.Journey.CurrentStep.end()
         })
     } else {
@@ -315,7 +315,7 @@ func (step *FleetJourneyStep) beginNextStep() {
     step.Journey.update()
     step.delete()
     if step.NextStep.TimeArrival.After(time.Now()) {
-        Scheduler.AddTask(uint(time.Until(step.NextStep.TimeArrival).Seconds()), func () {
+        Scheduler.AddTask(step.NextStep.TimeArrival, func () {
             step.NextStep.end()
         })
     } else {

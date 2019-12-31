@@ -1,6 +1,7 @@
 package api
 
 import(
+    "fmt"
     "time"
 )
 
@@ -23,12 +24,14 @@ func InitScheduler() {
     }
 }
 
-func (s *Scheduling) AddTask(seconds uint, callback func()) {
+func (s *Scheduling) AddTask(date time.Time, callback func()) {
     id := getNewIdForTask()
+    fmt.Println(time.Until(date))
     task := Task{
         Id: id,
-        Timer: time.AfterFunc(time.Second * time.Duration(seconds), func() {
+        Timer: time.AfterFunc(time.Until(date), func() {
             defer CatchException(nil)
+            fmt.Println(id)
             callback()
             s.RemoveTask(id)
         }),
@@ -40,7 +43,8 @@ func (s *Scheduling) AddDailyTask(callback func()) {
     now := time.Now()
     nextDay := time.Date(now.Year(), now.Month(), now.Day() + 1, 0, 0, 0, 0, time.UTC)
 
-    s.AddTask(uint(time.Until(nextDay).Seconds() + 1), func() {
+    s.AddTask(nextDay, func() {
+        fmt.Println("that")
         callback()
         s.AddDailyTask(callback)
     })
@@ -50,7 +54,8 @@ func (s *Scheduling) AddHourlyTask(callback func()) {
     now := time.Now()
     nextHour := time.Date(now.Year(), now.Month(), now.Day(), now.Hour() + 1, 0, 0, 0, time.UTC)
 
-    s.AddTask(uint(time.Until(nextHour).Seconds() + 1), func() {
+    s.AddTask(nextHour, func() {
+        fmt.Println("this")
         callback()
         s.AddHourlyTask(callback)
     })
