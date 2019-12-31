@@ -15,9 +15,14 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
+COPY docker-entrypoint.sh /entrypoint.sh
 
+RUN chmod a+x /entrypoint.sh \
+    && chown root:root /entrypoint.sh
 RUN go build -o /usr/local/bin/kalaxia-game-api .
 
 EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 CMD ["kalaxia-game-api"]
