@@ -59,5 +59,6 @@ func (fleet *Fleet) attack(p *Planet) bool {
 }
 
 func (f *Fleet) willEngage(fleet *Fleet, p *Planet) bool {
-	return p.Player.Faction.Id == f.Player.Faction.Id && f.Player.Faction.Id != fleet.Player.Faction.Id
+	// The fleets will engage on a empty planet or to defend an ally planet (TODO ally relationship)
+	return (p.Player == nil || p.Player.Faction.Id == f.Player.Faction.Id) && f.Player.Faction.Id != fleet.Player.Faction.Id
 }
