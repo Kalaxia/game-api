@@ -184,6 +184,9 @@ func (p *Player) getFleets() []*Fleet {
         Select(); err != nil {
             panic(NewHttpException(404, "Fleets not found", err))
     }
+    for _, f := range fleets {
+        f.injectData()
+    }
     return fleets
 }
 
@@ -218,6 +221,7 @@ func (p *Planet) getComingFleets(player *Player) []*Fleet {
             continue
         }
         fleets[i] = getFleet(f.Id)
+        fleets[i].injectData()
     }
     return fleets
 }
@@ -255,6 +259,7 @@ func (p *Planet) getLeavingFleets(player *Player) []*Fleet {
             continue
         }
         fleets[i] = getFleet(f.Id)
+        fleets[i].injectData()
     }
     return fleets
 }
@@ -288,23 +293,23 @@ func (p *Planet) getFleets(player *Player) []*Fleet {
         Select(); err != nil {
             return fleets
     }
+    for _, f := range fleets {
+        f.injectData()
+    }
     return fleets
 }
 
-// func injectFleetsData(fleets []*Fleet) []*Fleet {
-//     for _, f := range fleets {
-//         f.ShipSummary = f.getShipSummary()
-//     }
-//     return fleets
-// }
+func (f *Fleet) injectData() {
+    f.ShipSummary = f.getShipSummary()
+}
 
-// func (f *Fleet) getShipSummary() []FleetShipSummary {
-//     summary := make([]FleetShipSummary, 0)
-//     if err := Database.Model((*Ship)(nil)).Column("model.type").ColumnExpr("count(*) as nb_ships").Join("INNER JOIN ship__models as model ON model.id = ship.model_id").Group("model.type").Where("fleet_id = ?", f.Id).Select(&summary); err != nil {
-//         panic(NewException("Could not retrieve fleet ship summary", err))
-//     }
-//     return summary
-// }
+func (f *Fleet) getShipSummary() []FleetShipSummary {
+    summary := make([]FleetShipSummary, 0)
+    if err := Database.Model((*FleetSquadron)(nil)).Column("model.type").ColumnExpr("SUM(quantity) as nb_ships").Join("INNER JOIN ship__models as model ON model.id = fleet_squadron.ship_model_id").Group("model.type").Where("fleet_id = ?", f.Id).Select(&summary); err != nil {
+        panic(NewException("Could not retrieve fleet ship summary", err))
+    }
+    return summary
+}
 
 func (f *Fleet) delete() {
     f.DeletedAt = time.Now()
