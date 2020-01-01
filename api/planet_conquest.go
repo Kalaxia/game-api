@@ -12,6 +12,9 @@ func (f *Fleet) conquerPlanet(p *Planet) bool {
 }
 
 func (p *Planet) checkForCasusBelli(attacker *Player) {
+	if p.Player == nil {
+		return
+	}
 	attackerFaction := getFaction(attacker.FactionId)
 	defenderFaction := getFaction(p.Player.FactionId)
 
