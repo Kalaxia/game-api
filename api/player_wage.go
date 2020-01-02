@@ -27,17 +27,21 @@ func CalculatePlayersWage() {
 func (p *Player) calculateWage(wg *sync.WaitGroup) {
     defer wg.Done()
     defer CatchException(nil)
-    baseWage := int32(50)
-    serviceWageRatio := float64(2.5)
     wage := int32(0)
     for _, planet := range p.getPlanets() {
-      wage += baseWage + int32( math.Ceil( float64(planet.Settings.ServicesPoints) * serviceWageRatio))
+      wage += planet.getServiceWage()
     }
     p.updateWallet(wage)
     p.update()
 	  WsHub.sendTo(p, &WsMessage{ Action: "updateWallet", Data: map[string]uint32{
       "wallet": p.Wallet,
     }})
+}
+
+func (p *Planet) getServiceWage() int32 {
+    baseWage := int32(50)
+    serviceWageRatio := float64(2.5)
+    return baseWage + int32(math.Ceil(float64(p.Settings.ServicesPoints) * serviceWageRatio))
 }
 
 func getPlayers(offset int, limit int) []*Player {
