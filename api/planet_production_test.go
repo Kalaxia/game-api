@@ -11,8 +11,8 @@ func TestGetPlanetProducedResources(t *testing.T) {
 	reflect.ValueOf(Database).Elem().FieldByName("NextId").SetUint(1)
 	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	planet.Storage = getStorageMock()
-	planet.Buildings = []Building{
-		Building{
+	planet.Buildings = []*Building{
+		&Building{
 			Planet: planet,
 			Type: "resource",
 			Name: "ore-mine",
@@ -23,7 +23,7 @@ func TestGetPlanetProducedResources(t *testing.T) {
 				},
 			},
 		},
-		Building{
+		&Building{
 			Planet: planet,
 			Type: "resource",
 			Name: "cristal-synthetiser",

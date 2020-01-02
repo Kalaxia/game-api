@@ -126,30 +126,30 @@ func CreateBuildingCompartment(w http.ResponseWriter, r *http.Request) {
     SendJsonResponse(w, 201, planet.getBuilding(uint32(buildingId)).createCompartment(data["name"].(string)))
 }
 
-func (p *Planet) getBuildings() ([]Building, []BuildingPlan) {
-    buildings := make([]Building, 0)
-    if err := Database.Model(&buildings).Where("building.planet_id = ?", p.Id).Order("id").Relation("ConstructionState").Relation("Compartments.ConstructionState").Select(); err != nil {
+func (p *Planet) getBuildings() ([]*Building, []BuildingPlan) {
+    p.Buildings = make([]*Building, 0)
+    if err := Database.Model(&p.Buildings).Where("building.planet_id = ?", p.Id).Order("id").Relation("ConstructionState").Relation("Compartments.ConstructionState").Select(); err != nil {
         panic(NewHttpException(500, "buildings.internal_error", err))
     }
-    return buildings, getAvailableBuildings(buildings)
+    return p.Buildings, p.getAvailableBuildings()
 }
 
 func (p *Planet) getBuilding(id uint32) *Building {
     for _, b := range p.Buildings {
         if b.Id == id {
             b.Planet = p
-            return &b
+            return b
         }
     }
     panic(NewHttpException(404, "planets.buildings.not_found", nil))
 }
 
-func getAvailableBuildings(buildings []Building) []BuildingPlan {
+func (p *Planet) getAvailableBuildings() []BuildingPlan {
     availableBuildings := make([]BuildingPlan, 0)
 
     for buildingName, buildingPlan := range buildingPlansData {
         existing := false
-        for _, building := range buildings {
+        for _, building := range p.Buildings {
             if building.Name == buildingName {
                 existing = true
             }
@@ -165,13 +165,13 @@ func getAvailableBuildings(buildings []Building) []BuildingPlan {
     return availableBuildings
 }
 
-func (p *Planet) createBuilding(name string) Building {
+func (p *Planet) createBuilding(name string) *Building {
     buildingPlan, isset := buildingPlansData[name]
     if !isset {
         panic(NewHttpException(400, "unknown building plan", nil))
     }
     constructionState := p.createPointsProduction(p.payPrice(buildingPlan.Price, 1))
-    building := Building{
+    building := &Building{
         Name: name,
         Type: buildingPlan.Type,
         Planet: p,
@@ -185,7 +185,8 @@ func (p *Planet) createBuilding(name string) Building {
     if err := Database.Insert(&building); err != nil {
       panic(NewHttpException(500, "Building could not be created", err))
     }
-    p.AvailableBuildings = getAvailableBuildings(append(p.Buildings, building))
+    p.Buildings = append(p.Buildings, building)
+    p.AvailableBuildings = p.getAvailableBuildings()
     return building
 }
 
@@ -244,6 +245,12 @@ func (b *Building) finishConstruction() {
     b.Status = BuildingStatusOperational
     b.ConstructionStateId = 0
 
+    b.Planet.Player.notify(NotificationTypeBuilding, "planet.buildings.notifications.construction_success", map[string]interface{}{
+        "building_name": b.Name,
+        "planet_id": b.Planet.Id,
+        "planet_name": b.Planet.Name,
+    })
+
     b.update()
     b.ConstructionState.delete()
     b.apply()
@@ -264,6 +271,13 @@ func (c *BuildingCompartment) finishConstruction() {
 
     c.update()
     c.Building.update()
+
+    c.Building.Planet.Player.notify(NotificationTypeBuilding, "planet.buildings.notifications.compartment_success", map[string]interface{}{
+        "compartment_name": c.Name,
+        "building_name": c.Building.Name,
+        "planet_id": c.Building.Planet.Id,
+        "planet_name": c.Building.Planet.Name,
+    })
     
     c.ConstructionState.delete()
 }

@@ -94,6 +94,7 @@ func (s *System) generatePlanet(orbit *SystemOrbit) *Planet {
         Orbit: orbit,
         OrbitId: orbit.Id,
         Population: 2000000,
+        Relations: make([]*DiplomaticRelation, 0),
         Settings: settings,
         SettingsId: settings.Id,
     }
@@ -164,29 +165,27 @@ func (p *Planet) generatePlanetResource(resources *[]PlanetResource, name string
     *resources = append(*resources, *planetResource)
 }
 
-func (p *Planet) generatePlanetRelations() []DiplomaticRelation {
-    relations := make([]DiplomaticRelation, 0)
+func (p *Planet) generatePlanetRelations() {
     for _, faction := range factions {
-        p.generatePlanetRelation(faction, &relations)
+        relation := &DiplomaticRelation{
+            Planet: p,
+            PlanetId: p.Id,
+            Faction: faction,
+            FactionId: faction.Id,
+            Score: p.generatePlanetRelationScore(),
+        }
+        if err := Database.Insert(relation); err != nil {
+            panic(NewException("Planet relation could not be created", err))
+        }
+        p.Relations = append(p.Relations, relation)
     }
-    return relations
 }
 
-func (p *Planet) generatePlanetRelation(faction *Faction, relations *[]DiplomaticRelation) {
+func (p *Planet) generatePlanetRelationScore() int {
     score := rand.Intn(500) - rand.Intn(500)
 
     if score > -50 && score < 50 {
-        score = 0
+        return 0
     }
-    relation := &DiplomaticRelation{
-        Planet: p,
-        PlanetId: p.Id,
-        Faction: faction,
-        FactionId: faction.Id,
-        Score: score,
-    }
-    if err := Database.Insert(relation); err != nil {
-		panic(NewException("Planet relation could not be created", err))
-    }
-    *relations = append(*relations, *relation)
+    return score
 }

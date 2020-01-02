@@ -99,4 +99,12 @@ func (cg *ShipConstructionGroup) finishConstruction() {
     hg := cg.Location.findOrCreateHangarGroup(cg.Model)
     hg.addShips(int8(cg.Quantity))
     cg.ConstructionState.delete()
+
+    cg.Location.Player.notify(NotificationTypeShipyard, "ships.notifications.construction_success", map[string]interface{}{
+        "model_name": cg.Model.Name,
+        "model_type": cg.Model.Type,
+        "quantity": cg.Quantity,
+        "planet_name": cg.Location.Name,
+        "planet_id": cg.Location.Id,
+    })
 }

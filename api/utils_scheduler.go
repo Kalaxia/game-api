@@ -48,7 +48,7 @@ func (s *Scheduling) AddDailyTask(callback func()) {
 
 func (s *Scheduling) AddHourlyTask(callback func()) {
     now := time.Now()
-    nextHour := time.Date(now.Year(), now.Month(), now.Day(), now.Hour() + 1, 0, 0, 0, time.UTC)
+    nextHour := time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), now.Minute() + 1, 0, 0, time.UTC)
 
     s.AddTask(nextHour, func() {
         callback()

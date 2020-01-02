@@ -33,8 +33,8 @@ type(
   }
 )
 
-func (p *Planet) getPlanetRelations() []DiplomaticRelation {
-  relations := make([]DiplomaticRelation, 0)
+func (p *Planet) getPlanetRelations() []*DiplomaticRelation {
+  relations := make([]*DiplomaticRelation, 0)
   if err := Database.
     Model(&relations).
     Relation("Faction").
