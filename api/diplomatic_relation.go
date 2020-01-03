@@ -157,7 +157,7 @@ func (f *Faction) getRelationWith(target *Faction) *FactionRelation {
             return r
         }
     }
-    panic(NewException("Faction relation not found", nil))
+    panic(NewException(fmt.Sprintf("Faction %d relation not found with faction %d", f.Id, target.Id), nil))
 }
 
 func (f *Faction) isInWarWith(target *Faction) bool {
