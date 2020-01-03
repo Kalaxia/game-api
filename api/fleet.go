@@ -380,9 +380,10 @@ func (p *Planet) transferResourcesToFleet(f *Fleet, data map[string]interface{})
 
 func (f *Fleet) deliver(p *Planet, deliveryData map[string]interface{}) {
     totalQuantity := uint16(0)
-    for _, d := range deliveryData["resources"].(map[string]map[string]interface{}) {
-        resource := d["resource"].(string)
-        quantity := uint16(d["quantity"].(float64))
+    for _, d := range deliveryData["resources"].([]interface{}) {
+        data := d.(map[string]interface{})
+        resource := data["resource"].(string)
+        quantity := uint16(data["quantity"].(float64))
 
         f.unloadCargo(resource, quantity)
         p.Storage.storeResource(resource, int16(quantity))

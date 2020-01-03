@@ -265,6 +265,7 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
         step.Order = stepData["order"].(string)
         step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
         step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
+        step.validate()
 
         if !journeyRangeData.isOnRange(step) {
             panic(NewHttpException(400, "Step not in range", nil))
@@ -273,6 +274,24 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
         previousTime = step.TimeArrival
     }
     return steps;
+}
+
+func (step *FleetJourneyStep) validate() {
+    if !step.hasValidOrder() {
+        panic(NewHttpException(400, "fleet.journeys.invalid_order", nil))
+    }
+    if step.Order == FleetOrderDeliver && (step.Data["resources"] == nil || len(step.Data["resources"].([]interface{})) == 0) {
+        panic(NewHttpException(400, "fleet.journeys.missing_resources_for_delivery", nil))
+    }
+}
+
+func (step *FleetJourneyStep) hasValidOrder() bool {
+    for _, o := range []string{ FleetOrderPass, FleetOrderConquer, FleetOrderDeliver } {
+        if o == step.Order {
+            return true
+        }
+    }
+    return false
 }
 
 func (step *FleetJourneyStep) end() {
