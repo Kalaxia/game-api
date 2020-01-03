@@ -9,16 +9,23 @@ import(
     "strconv"
 )
 
-const ShipTypeFighter = "fighter"
-const ShipTypeBomber = "bomber"
-const ShipTypeFreighter = "freighter"
-const ShipTypeCorvette = "corvette"
-const ShipTypeFrigate = "frigate"
+const(
+    ShipTypeFighter = "fighter"
+    ShipTypeBomber = "bomber"
+    ShipTypeFreighter = "freighter"
+    ShipTypeCorvette = "corvette"
+    ShipTypeFrigate = "frigate"
 
-const ModuleTypeWeapon = "weapon"
-const ModuleTypeEngine = "engine"
-const ModuleTypeShield = "shield"
-const ModuleTypeCargo = "cargo"
+    ShipStatSpeed = "speed"
+    ShipStatShield = "power" // legacy
+    ShipStatArmor = "armor"
+    ShipStatCargo = "size" // legacy
+
+    ModuleTypeWeapon = "weapon"
+    ModuleTypeEngine = "engine"
+    ModuleTypeShield = "shield"
+    ModuleTypeCargo = "cargo"
+)
 
 var framesData map[string]ShipFrame
 var modulesData map[string]ShipModule
@@ -132,7 +139,7 @@ func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
     frame := extractFrame(data)
     slots := frame.extractSlotsData(data)
     shipType, stats := frame.getShipModelInfo(slots)
-    if speed, hasPropulsor := stats["speed"]; !hasPropulsor || speed == 0 {
+    if speed, hasPropulsor := stats[ShipStatSpeed]; !hasPropulsor || speed == 0 {
         panic(NewHttpException(400, "ships.missing_propulsion", nil))
     }
     shipModel := &ShipModel{

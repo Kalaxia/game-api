@@ -252,6 +252,20 @@ var routes = Routes{
 		api.GetFleetSteps,
 		true,
 	},
+	Route{
+		"Load fleet Cargo",
+		"PATCH",
+		"/api/fleets/{id}/load-cargo",
+		api.LoadFleetCargo,
+		true,
+	},
+	Route{
+		"Unload fleet cargo",
+		"PATCH",
+		"/api/fleets/{id}/unload-cargo",
+		api.UnloadFleetCargo,
+		true,
+	},
 	/*******************************/
 	Route{
 		"Get Hangar Groups",

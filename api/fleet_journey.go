@@ -14,14 +14,18 @@ import(
 var journeyTimeData TimeLawsContainer
 var journeyRangeData RangeContainer
 
-const FleetOrderPass = "pass"
-const FleetOrderConquer = "conquer"
-const JourneyStepTypePlanetToPlanet = "planet_to_planet"
-const JourneyStepTypeSameSystem = "same_system"
-const JourneyStepTypeSamePlanet = "same_planet"
-const JourneyStepTypePositionToPlanet = "position_to_planet"
-const JourneyStepTypePlanetToPosition = "planet_to_position"
-const JourneyStepTypePositionToPosition = "position_to_position"
+const(
+    FleetOrderPass = "pass"
+    FleetOrderConquer = "conquer"
+    FleetOrderDeliver = "deliver"
+
+    JourneyStepTypePlanetToPlanet = "planet_to_planet"
+    JourneyStepTypeSameSystem = "same_system"
+    JourneyStepTypeSamePlanet = "same_planet"
+    JourneyStepTypePositionToPlanet = "position_to_planet"
+    JourneyStepTypePlanetToPosition = "planet_to_position"
+    JourneyStepTypePositionToPosition = "position_to_position"
+)
 
 type(
     FleetJourney struct {
@@ -60,6 +64,7 @@ type(
         //
         StepNumber uint32 `json:"step_number"`
         Order string `json:"order" pg:"mission_order"`
+        Data map[string]interface{} `json:"data" pg:",use_zero,notnull"`
     }
     
     TimeDistanceLaw struct {
@@ -240,6 +245,9 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
 
             StepNumber: uint32(firstNumber + 1 + uint8(i)),
         }
+        if d, ok := stepData["data"]; ok {
+            step.Data = d.(map[string]interface{})
+        }
     
         planetId := uint16(stepData["planetId"].(float64))
 
@@ -297,11 +305,16 @@ func (s *FleetJourneyStep) processOrder() (continueJourney bool) {
             break
         case FleetOrderConquer:
             fleet := s.Journey.getFleet()
-            continueJourney = fleet.conquerPlanet(getPlanet(s.EndPlace.Planet.Id))
+            continueJourney = fleet.conquerPlanet(getPlanet(s.EndPlace.PlanetId))
             if !continueJourney {
                 fleet.delete()
             }
             break;
+        case FleetOrderDeliver:
+            fleet := s.Journey.getFleet()
+            fleet.deliver(getPlanet(s.EndPlace.PlanetId), s.Data)
+            continueJourney = true
+            break
         default:
             continueJourney = true
             break
@@ -456,8 +469,8 @@ func (s *FleetJourneyStep) delete() {
     }
 }
 
-func (f *Fleet) isOnPlanet() bool {
-    return f.Place != nil && f.Place.Planet != nil
+func (f *Fleet) isOnPlanet(p *Planet) bool {
+    return f.Place != nil && f.Place.Planet != nil && (p == nil || p.Id == f.Place.PlanetId)
 }
 
 func (f *Fleet) isOnJourney() bool {

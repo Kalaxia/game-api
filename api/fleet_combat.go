@@ -333,7 +333,7 @@ func (r *FleetCombatRound) processInitiative() {
 }
 
 func (s *FleetCombatSquadron) calculateInitiative() uint16 {
-	speed := s.ShipModel.Stats["speed"]
+	speed := s.ShipModel.Stats[ShipStatSpeed]
 
 	return speed + uint16(rand.Intn(100))
 }

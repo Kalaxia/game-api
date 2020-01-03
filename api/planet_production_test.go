@@ -103,8 +103,10 @@ func TestGetMissingPoints(t *testing.T) {
 
 func TestSpendPoints(t *testing.T) {
 	InitDatabaseMock()
+	InitWsHubMock()
 	building := &Building{
 		Status: BuildingStatusConstructing,
+		Planet: &Planet{ Id: 1, Player: &Player{ Id: 1 } },
 		ConstructionStateId: 1,
 		ConstructionState: &PointsProduction{
 			Id: 1,

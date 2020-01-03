@@ -38,7 +38,7 @@ func CreateFleetSquadron(w http.ResponseWriter, r *http.Request) {
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "fleets.access_denied", nil))
 	}
-    if !fleet.isOnPlanet() {
+    if !fleet.isOnPlanet(nil) {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_journey", nil))
     }
     if fleet.Place.Planet.Player.Id != player.Id {
@@ -69,7 +69,7 @@ func AssignFleetSquadronShips(w http.ResponseWriter, r *http.Request) {
 	if fleet.Player.Id != player.Id {
 		panic(NewHttpException(http.StatusForbidden, "fleets.access_denied", nil))
 	}
-    if !fleet.isOnPlanet() {
+    if !fleet.isOnPlanet(nil) {
         panic(NewHttpException(http.StatusBadRequest, "fleet.errors.ship_transfer_on_journey", nil))
     }
     if fleet.Place.Planet.Player.Id != player.Id {

@@ -38,7 +38,7 @@ func TestCreateShipModel(t *testing.T) {
 	if armor := shipModel.Stats["armor"]; armor != 60 {
 		t.Errorf("Ship model armor should equal 60, got %d", armor)
 	}
-	if speed := shipModel.Stats["speed"]; speed != 225 {
+	if speed := shipModel.Stats[ShipStatSpeed]; speed != 225 {
 		t.Errorf("Ship model speed should equal 115, got %d", speed)
 	}
 	if category := shipModel.Type; category != ShipTypeFighter {
@@ -144,18 +144,18 @@ func TestExtractSlotData(t *testing.T) {
 func TestAddFrameStats(t *testing.T) {
 	frame := getShipFrameMock()
 	stats := map[string]uint16{
-		"armor": 20,
-		"power": 75,
+		ShipStatArmor: 20,
+		ShipStatShield: 75,
 	}
 	frame.addStats(stats)
 
-	if armor := stats["armor"]; armor != 60 {
+	if armor := stats[ShipStatArmor]; armor != 60 {
 		t.Errorf("Ship frame armor should equal 60, got %d", armor)
 	}
-	if power := stats["power"]; power != 75 {
+	if power := stats[ShipStatShield]; power != 75 {
 		t.Errorf("Ship frame power should equal 75, got %d", power)
 	}
-	if speed := stats["speed"]; speed != 50 {
+	if speed := stats[ShipStatSpeed]; speed != 50 {
 		t.Errorf("Ship frame speed should equal 50, got %d", speed)
 	}
 }
@@ -182,20 +182,20 @@ func TestAddModuleScores(t *testing.T) {
 func TestAddModuleStats(t *testing.T) {
 	module := getShipModuleMock()
 	stats := map[string]uint16{
-		"armor": 20,
-		"power": 20,
+		ShipStatArmor: 20,
+		ShipStatShield: 20,
 	}
 
 	module.addStats(stats)
 
-	if armor := stats["armor"]; armor != 20 {
+	if armor := stats[ShipStatArmor]; armor != 20 {
 		t.Errorf("Armor should equal 20, not %d", armor)
 	}
-	if power := stats["power"]; power != 70 {
+	if power := stats[ShipStatShield]; power != 70 {
 		t.Errorf("Power should equal 70, not %d", power)
 	}
-	if damage := stats["size"]; damage != 500 {
-		t.Errorf("Damage should equal 500, not %d", damage)
+	if cargo := stats[ShipStatCargo]; cargo != 500 {
+		t.Errorf("Cargo should equal 500, not %d", cargo)
 	}
 }
 
@@ -265,8 +265,8 @@ func getShipModuleMock() *ShipModule {
 		Shape: "square",
 		Size: "small",
 		ShipStats: map[string]uint16{
-			"size": 500,
-			"power": 50,
+			ShipStatCargo: 500,
+			ShipStatShield: 50,
 		},
 		Scores: map[string]uint8{
 			ShipTypeFreighter: 20,

@@ -37,14 +37,22 @@ func TestIsOnJourney(t *testing.T) {
 }
 
 func TestIsOnPlanet(t *testing.T) {
+	planet := getPlayerPlanetMock(getPlayerMock(getFactionMock()))
 	travellingFleet := &Fleet{}
-	orbitingFleet := &Fleet{ Place: &Place{ Planet: getPlayerPlanetMock(getPlayerMock(getFactionMock())) } }
+	orbitingFleet := &Fleet{ Place: &Place{ PlanetId: 1, Planet: planet } }
+	elsewhereFleet := &Fleet{ Place: &Place{ PlanetId: 50, Planet: &Planet{ Id: 50 } }}
 
-	if travellingFleet.isOnPlanet() {
+	if travellingFleet.isOnPlanet(nil) {
 		t.Errorf("Travelling fleet is not on planet")
 	}
-	if !orbitingFleet.isOnPlanet() {
+	if !orbitingFleet.isOnPlanet(nil) {
 		t.Errorf("Orbiting fleet is on planet")
+	}
+	if !orbitingFleet.isOnPlanet(planet) {
+		t.Errorf("Orbiting fleet is on planet")
+	}
+	if elsewhereFleet.isOnPlanet(planet) {
+		t.Errorf("This fleet is not on this planet")
 	}
 }
 

@@ -21,6 +21,7 @@ type(
         JourneyId uint16 `json:"-"`
         Squadrons []*FleetSquadron `json:"squadrons" pg:",use_zero"`
         ShipSummary []FleetShipSummary `json:"ship_summary,omitempty" pg:"-"`
+	    Cargo map[string]uint16 `json:"cargo" pg:",notnull,use_zero"`
         CreatedAt time.Time `json:"created_at"`
         DeletedAt time.Time `json:"deleted_at"`
     }
@@ -103,6 +104,48 @@ func GetPlanetFleets(w http.ResponseWriter, r *http.Request) {
 		panic(NewHttpException(http.StatusForbidden, "", nil))
 	}
 	SendJsonResponse(w, 200, planet.getFleets(player))
+}
+
+func LoadFleetCargo(w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*Player)
+    fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    
+    data := DecodeJsonRequest(r)
+	planetId := uint16(data["planet_id"].(float64))
+	planet := player.getPlanet(uint16(planetId))
+    fleet := getFleet(uint16(fleetId))
+
+    if fleet.Player.Id != player.Id || planet.Player.Id != player.Id {
+        panic(NewHttpException(403, "access_denied", nil))
+    }
+    if !fleet.isOnPlanet(planet) {
+        panic(NewHttpException(400, "fleet.delivery.not_on_planet", nil))
+    }
+    planet.transferResourcesToFleet(fleet, data)
+
+    w.WriteHeader(204)
+    w.Write([]byte(""))
+}
+
+func UnloadFleetCargo(w http.ResponseWriter, r *http.Request) {
+	player := context.Get(r, "player").(*Player)
+    fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    
+    data := DecodeJsonRequest(r)
+	planetId := uint16(data["planet_id"].(float64))
+	planet := player.getPlanet(uint16(planetId))
+    fleet := getFleet(uint16(fleetId))
+
+    if fleet.Player.Id != player.Id {
+        panic(NewHttpException(403, "access_denied", nil))
+    }
+    if !fleet.isOnPlanet(planet) {
+        panic(NewHttpException(400, "fleet.delivery.not_on_planet", nil))
+    }
+    fleet.transferResourcesToPlanet(planet, data)
+
+    w.WriteHeader(204)
+    w.Write([]byte(""))
 }
 
 func DeleteFleet(w http.ResponseWriter, r *http.Request){
@@ -309,6 +352,107 @@ func (f *Fleet) getShipSummary() []FleetShipSummary {
         panic(NewException("Could not retrieve fleet ship summary", err))
     }
     return summary
+}
+
+func (f *Fleet) transferResourcesToPlanet(p *Planet, data map[string]interface{}) {
+    resource := data["resource"].(string)
+    quantity := uint16(data["quantity"].(float64))
+
+    f.unloadCargo(resource, quantity)
+    p.Storage.storeResource(resource, int16(quantity))
+    p.Storage.update()
+    f.update()
+    f.notifyDelivery(p, quantity, true)
+}
+
+func (p *Planet) transferResourcesToFleet(f *Fleet, data map[string]interface{}) {
+    resource := data["resource"].(string)
+    quantity := uint16(data["quantity"].(float64))
+
+    if !p.Storage.hasResource(resource, quantity) {
+        panic(NewHttpException(400, "planet.storage.not_enough_resources", nil))
+    }
+    f.loadCargo(resource, quantity)
+    p.Storage.storeResource(resource, -int16(quantity))
+    p.Storage.update()
+    f.update()
+}
+
+func (f *Fleet) deliver(p *Planet, deliveryData map[string]interface{}) {
+    totalQuantity := uint16(0)
+    for _, d := range deliveryData["resources"].(map[string]map[string]interface{}) {
+        resource := d["resource"].(string)
+        quantity := uint16(d["quantity"].(float64))
+
+        f.unloadCargo(resource, quantity)
+        p.Storage.storeResource(resource, int16(quantity))
+        totalQuantity += quantity
+    }
+    f.notifyDelivery(p, totalQuantity, false)
+    f.update()
+    p.Storage.update()
+}
+
+func (f *Fleet) notifyDelivery(p *Planet, quantity uint16, manualDelivery bool) {
+    data := map[string]interface{}{
+        "fleet_name": f.Id,
+        "owner_name": f.Player.Pseudo,
+        "planet_name": p.Name,
+        "player_name": p.Player.Pseudo,
+        "quantity": quantity,
+    }
+    if f.PlayerId != p.PlayerId {
+        p.Player.notify(NotificationTypeTrade, "fleet.delivery.received", data)
+    }
+    if !manualDelivery {
+        f.Player.notify(NotificationTypeTrade, "fleet.delivery.success", data)
+    }
+}
+
+func (f *Fleet) loadCargo(resource string, quantity uint16) {
+    if quantity > f.getAvailableCargoCapacity() {
+        panic(NewHttpException(400, "fleet.delivery.cargo_overload", nil))
+    }
+    if f.Cargo == nil {
+        f.Cargo = make(map[string]uint16, 0)
+    }
+    if _, ok := f.Cargo[resource]; !ok {
+        f.Cargo[resource] = 0
+    }
+    f.Cargo[resource] += quantity
+}
+
+func (f *Fleet) unloadCargo(resource string, quantity uint16) {
+    if _, ok := f.Cargo[resource]; !ok {
+        panic(NewHttpException(400, "fleet.delivery.missing_resource", nil))
+    }
+    if f.Cargo[resource] < quantity {
+        panic(NewHttpException(400, "fleet.delivery.not_enough_resources", nil))
+    } else if f.Cargo[resource] == quantity {
+        delete(f.Cargo, resource)
+    } else {
+        f.Cargo[resource] -= quantity
+    }
+}
+
+func (f *Fleet) getAvailableCargoCapacity() (capacity uint16) {
+    capacity = f.getCargoCapacity()
+    for _, quantity := range f.Cargo {
+        capacity -= quantity
+    }
+    return
+}
+
+func (f *Fleet) hasResource(resource string, quantity uint16) bool {
+    q, ok := f.Cargo[resource]
+    return ok && q >= quantity
+}
+
+func (f *Fleet) getCargoCapacity() (capacity uint16) {
+    for _, s := range f.getSquadrons() {
+        capacity += s.ShipModel.Stats[ShipStatCargo] * uint16(s.Quantity)
+    }
+    return
 }
 
 func (f *Fleet) delete() {
