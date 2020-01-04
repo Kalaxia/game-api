@@ -202,9 +202,9 @@ func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey.StartPlaceId = f.Journey.StartPlace.Id
     f.Journey.EndPlace = steps[len(steps) - 1].EndPlace
     f.Journey.EndPlaceId = f.Journey.EndPlace.Id
-	
     f.Journey.EndedAt = steps[len(steps)-1].TimeArrival
-	
+    f.validateJourney(steps)
+    
     if err := Database.Insert(f.Journey); err != nil {
 		panic(NewHttpException(500, "Journey could not be created", err))
     }
@@ -282,6 +282,32 @@ func (step *FleetJourneyStep) validate() {
     }
     if step.Order == FleetOrderDeliver && (step.Data["resources"] == nil || len(step.Data["resources"].([]interface{})) == 0) {
         panic(NewHttpException(400, "fleet.journeys.missing_resources_for_delivery", nil))
+    }
+}
+
+func (f *Fleet) validateJourney(steps []*FleetJourneyStep) {
+    f.validateDeliveryMissions(steps)
+}
+
+func (f *Fleet) validateDeliveryMissions(steps []*FleetJourneyStep) {
+    resources := make(map[string]uint16, 0)
+    for _, s := range steps {
+        if s.Order != FleetOrderDeliver {
+            continue
+        }
+        for _, r := range s.Data["resources"].([]map[string]interface{}) {
+            resource := r["resource"].(string)
+            quantity := uint16(r["quantity"].(float64))
+            if _, ok := resources[resource]; !ok {
+                resources[resource] = 0
+            }
+            resources[resource] += quantity
+        }
+    }
+    for resource, quantity := range resources {
+        if !f.hasResource(resource, quantity) {
+            panic(NewHttpException(400, "fleet.delivery.not_enough_resources_for_all_steps", nil))
+        }
     }
 }
 
