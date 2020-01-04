@@ -399,8 +399,10 @@ func (f *Fleet) notifyDelivery(p *Planet, quantity uint16, manualDelivery bool) 
         "fleet_name": f.Id,
         "owner_name": f.Player.Pseudo,
         "planet_name": p.Name,
-        "player_name": p.Player.Pseudo,
         "quantity": quantity,
+    }
+    if p.Player != nil {
+        data["player_name"] =  p.Player.Pseudo
     }
     if p.Player != nil && f.PlayerId != p.PlayerId {
         p.Player.notify(NotificationTypeTrade, "fleet.delivery.received", data)
