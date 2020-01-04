@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -10,7 +11,7 @@ type(
 
 		TerritoryId uint16 `json:"-" pg:",pk"`
 		Territory *Territory `json:"territory"`
-		SystemId uint16 `json:"-", pg:",pk"`
+		SystemId uint16 `json:"-" pg:",pk"`
 		System *System `json:"system"`
 		Status string `json:"status"`
 	}
@@ -98,13 +99,22 @@ func (s *System) checkTerritories() {
 	var dominantTerritory *SystemTerritory
 	dominantInfluence := uint16(0)
 
+	fmt.Println("System ", s.Id, " territories")
 	for _, st := range s.Territories {
+		fmt.Println(st, TerritoryStatusContest)
+		if st == nil {
+			fmt.Println("aaaah", s.Id)
+		}
 		st.Status = TerritoryStatusContest
+		fmt.Println("ok")
 		if influence := st.getTotalInfluence(); influence > dominantInfluence {
 			dominantInfluence = influence
 			dominantTerritory = st
 		}
+		fmt.Println("Definitely ok")
 	}
+	fmt.Println(dominantTerritory, dominantInfluence)
+	fmt.Println("Dominant territory for system ", s.Id, "is ", dominantTerritory.Territory.Id)
 	dominantTerritory.Status = TerritoryStatusPledge
 	s.Faction = dominantTerritory.Territory.Planet.Player.Faction
 	s.FactionId = s.Faction.Id

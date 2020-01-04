@@ -182,7 +182,7 @@ func (p *Planet) createBuilding(name string) *Building {
         ConstructionState: constructionState,
         ConstructionStateId: constructionState.Id,
     }
-    if err := Database.Insert(&building); err != nil {
+    if err := Database.Insert(building); err != nil {
       panic(NewHttpException(500, "Building could not be created", err))
     }
     p.Buildings = append(p.Buildings, building)
