@@ -361,8 +361,11 @@ func (o *ResourceOffer) notifyAcceptation(p *Player, quantity uint16, price int3
         NotificationTypeTrade,
         "notifications.trade.accepted_offer",
         map[string]interface{}{
-            "offer": o,
-            "player": p,
+            "offer_resource": o.Resource,
+            "player_id": p.Id,
+            "player_pseudo": p.Pseudo,
+            "player_faction_id": p.Faction.Id,
+            "player_faction_name": p.Faction.Name,
             "quantity": quantity,
             "price": price,
         },

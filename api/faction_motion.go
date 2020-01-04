@@ -198,7 +198,9 @@ func (f *Faction) createMotion(author *Player, mType string, data map[string]int
 		motion.processResults()
 	})
 	f.notify(NotificationTypeFaction, "faction.motions.new_motion", map[string]interface{}{
-		"motion": motion,
+		"motion_id": motion.Id,
+		"motion_type": motion.Type,
+		"faction_id": motion.Faction.Id,
 	})
 	return motion
 }
@@ -279,7 +281,9 @@ func (m *FactionMotion) processResults() {
 	}
 	m.update()
 	m.Faction.notify(NotificationTypeFaction, "faction.motions.motion_results", map[string]interface{}{
-		"motion": m,
+		"motion_id": m.Id,
+		"motion_type": m.Type,
+		"faction_id": m.Faction.Id,
 	})
 }
 

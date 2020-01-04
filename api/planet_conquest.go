@@ -30,8 +30,10 @@ func (p *Planet) notifyConquest(f *Fleet) {
 		NotificationTypeMilitary,
 		"notifications.military.planet_conquest",
 		map[string]interface{}{
-			"planet": p,
-			"opponent": p.Player,
+			"planet_id": p.Id,
+			"planet_name": p.Name,
+			"opponent_id": p.Player.Id,
+			"opponent_pseudo": p.Player.Pseudo,
 		},
 	)
 	if p.Player != nil {
@@ -39,8 +41,10 @@ func (p *Planet) notifyConquest(f *Fleet) {
 			NotificationTypeMilitary,
 			"notifications.military.planet_conquerred",
 			map[string]interface{}{
-				"planet": p,
-				"opponent": f.Player,
+				"planet_id": p.Id,
+				"planet_name": p.Name,
+				"opponent_id": f.Player.Id,
+				"opponent_pseudo": f.Player.Pseudo,
 			},
 		)
 	}

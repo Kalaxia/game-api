@@ -96,10 +96,10 @@ func (f *Faction) createWar(target *Faction) *FactionWar {
 		cb.update()
 	}
 	f.notify(NotificationTypeFaction, "faction.war.war_declared", map[string]interface{}{
-		"enemy": target,
+		"enemy_name": target.Name,
 	})
 	target.notify(NotificationTypeFaction, "faction.war.war_alert", map[string]interface{}{
-		"enemy": f,
+		"enemy_name": f.Name,
 	})
 	return war
 }
@@ -111,10 +111,10 @@ func (f *Faction) endWar(target *Faction) {
 	war.update()
 
 	f.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
-		"enemy": target,
+		"enemy_name": target.Name,
 	})
 	target.notify(NotificationTypeFaction, "faction.war.war_ended", map[string]interface{}{
-		"enemy": f,
+		"enemy_name": f.Name,
 	})
 }
 

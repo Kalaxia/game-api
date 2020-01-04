@@ -1,5 +1,7 @@
 package api
 
+import "fmt"
+
 const(
     RelationAlly = "ally"
     RelationNeutral = "neutral"
