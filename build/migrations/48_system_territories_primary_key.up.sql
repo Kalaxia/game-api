@@ -1,0 +1,1 @@
+ALTER TABLE map__system_territories ADD CONSTRAINT territory_system_key PRIMARY KEY (territory_id, system_id);

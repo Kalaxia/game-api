@@ -1,0 +1,1 @@
+ALTER TABLE map__system_territories DROP CONSTRAINT territory_system_key;
