@@ -174,7 +174,6 @@ func (p *Planet) createBuilding(name string) *Building {
     building := &Building{
         Name: name,
         Type: buildingPlan.Type,
-        Planet: p,
         PlanetId: p.Id,
         Status: BuildingStatusConstructing,
         CreatedAt: time.Now(),
