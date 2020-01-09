@@ -214,7 +214,7 @@ func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer
 }
 
 func (p *Planet) createShipOffer(data map[string]interface{}) *ShipOffer {
-    shipModel := p.Player.getShipModel(data["model"].(uint32))
+    shipModel := getShipModel(data["model"].(uint32))
 
     offer := &ShipOffer{
         Offer: p.newOffer(data),
@@ -230,7 +230,7 @@ func (p *Planet) createShipOffer(data map[string]interface{}) *ShipOffer {
 }
 
 func (p *Planet) createModelOffer(data map[string]interface{}) *ModelOffer {
-    shipModel := p.Player.getShipModel(data["model"].(uint32))
+    shipModel := getShipModel(data["model"].(uint32))
 
     offer := &ModelOffer{
         Offer: p.newOffer(data),

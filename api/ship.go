@@ -58,7 +58,10 @@ func GetHangarGroups(w http.ResponseWriter, r *http.Request) {
 func (p *Planet) createShips(data map[string]interface{}) *ShipConstructionGroup {
     modelId := uint32(data["model"].(map[string]interface{})["id"].(float64))
     quantity := uint8(data["quantity"].(float64))
-    shipModel := p.Player.getShipModel(modelId)
+    shipModel := getShipModel(modelId)
+    if spm := p.Player.getShipModel(shipModel); spm ==  nil || !spm.CanBuild {
+        panic(NewHttpException(403, "you cannot build this model", nil))
+    }
 
     constructionState := p.createPointsProduction(p.payPrice(shipModel.Price, quantity))
     cg := &ShipConstructionGroup{

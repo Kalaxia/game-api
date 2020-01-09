@@ -131,10 +131,13 @@ func GetPlayerShipModels(w http.ResponseWriter, r *http.Request) {
 
 func GetShipModel(w http.ResponseWriter, r *http.Request) {
     id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 32)
+    player := context.Get(r, "player").(*Player)
+    model := getShipModel(uint32(id))
 
-    SendJsonResponse(w, 200, context.Get(r, "player").(*Player).getShipModel(
-        uint32(id),
-    ))
+    if player.getShipModel(model) == nil {
+        panic(NewHttpException(403, "you do now own this model", nil))
+    }
+    SendJsonResponse(w, 200, model)
 }
 
 func CreateShipModel(w http.ResponseWriter, r *http.Request) {
@@ -215,13 +218,21 @@ func (p *Player) getShipModels() []*ShipModel {
     return models
 }
 
-func (p *Player) getShipModel(modelId uint32) *ShipModel {
-    shipPlayerModel := &ShipPlayerModel{}
-    if err := Database.Model(shipPlayerModel).Relation("Model").Where("Model.player_id = ?", p.Id).Where("Model.id = ?", modelId).Select(); err != nil {
-        panic(NewHttpException(404, "Player ship model not found", err))
+func getShipModel(modelId uint32) *ShipModel {
+    shipModel := &ShipModel{}
+    if err := Database.Model(shipModel).Where("id = ?", modelId).Select(); err != nil {
+        panic(NewHttpException(404, "Ship model not found", err))
     }
-    shipPlayerModel.Model.loadSlots()
-    return shipPlayerModel.Model
+    shipModel.loadSlots()
+    return shipModel
+}
+
+func (p *Player) getShipModel(sm *ShipModel) *ShipPlayerModel {
+    spm := &ShipPlayerModel{}
+    if err := Database.Model(spm).Where("player_id = ?", p.Id).Where("model_id = ?", sm.Id).Select(); err != nil {
+        return nil
+    }
+    return spm
 }
 
 func (frame *ShipFrame) getShipModelInfo(slots []ShipSlot) (string, uint8, map[string]uint16) {
