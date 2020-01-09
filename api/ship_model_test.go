@@ -5,11 +5,12 @@ import(
 )
 
 func TestCreateShipModel(t *testing.T) {
+	InitCultures()
 	InitShipConfiguration()
 
 	player := getPlayerMock(getFactionMock())
 	shipModel := player.createShipModel(map[string]interface{}{
-		"name": "XFB-1",
+		"name": "Mon bô vaissô",
 		"frame": "battle-runner",
 		"slots": []interface{} {
 			map[string]interface{}{
@@ -26,7 +27,7 @@ func TestCreateShipModel(t *testing.T) {
 			},
 		},
 	})
-	if name := shipModel.Name; name != "XFB-1" {
+	if name := shipModel.Name; name != "BIK-109" {
 		t.Errorf("Ship model name should be XFB-1, got %s", name)
 	}
 	if slug := shipModel.Frame.Slug; slug != "battle-runner" {
