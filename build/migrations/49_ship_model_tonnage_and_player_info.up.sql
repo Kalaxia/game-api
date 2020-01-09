@@ -1,0 +1,3 @@
+ALTER TABLE ship__models ADD tonnage SMALLINT NOT NULL DEFAULT 0;
+
+ALTER TABLE ship__player_models ADD can_build BOOLEAN NOT NULL DEFAULT true, ADD nickname VARCHAR(80) DEFAULT NULL;

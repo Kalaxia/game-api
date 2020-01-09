@@ -7,6 +7,7 @@
         "type": "weapon",
         "shape": "triangle",
         "size": "small",
+        "tonnage": 1,
         "scores": {
             "fighter": 50,
             "bomber": 20
@@ -40,6 +41,7 @@
         "type": "engine",
         "shape": "triangle",
         "size": "medium",
+        "tonnage": 3,
         "scores": {
             "fighter": 25,
             "bomber": 20,
@@ -77,6 +79,7 @@
         "type": "engine",
         "shape": "triangle",
         "size": "small",
+        "tonnage": 2,
         "scores": {
             "fighter": 40,
             "bomber": 35,
@@ -114,6 +117,7 @@
         "type": "weapon",
         "shape": "circle",
         "size": "small",
+        "tonnage": 1,
         "scores": {
             "fighter": 40,
             "bomber": 35,
@@ -148,6 +152,7 @@
         "type": "shield",
         "shape": "square",
         "size": "medium",
+        "tonnage": 5,
         "scores": {
             "fighter": 10,
             "bomber": 15,
@@ -192,6 +197,7 @@
         "type": "cargo",
         "shape": "square",
         "size": "medium",
+        "tonnage": 5,
         "scores": {
             "freighter": 60
         },
@@ -217,6 +223,7 @@
         "type": "weapon",
         "shape": "circle",
         "size": "medium",
+        "tonnage": 2,
         "scores": {
             "corvette": 40,
             "frigate": 75,
@@ -256,6 +263,7 @@
         "type": "weapon",
         "shape": "circle",
         "size": "medium",
+        "tonnage": 3,
         "scores": {
             "corvette": 40,
             "frigate": 50,
@@ -295,6 +303,7 @@
         "type": "weapon",
         "shape": "circle",
         "size": "large",
+        "tonnage": 3,
         "scores": {
             "cruiser": 120
         },
@@ -332,6 +341,7 @@
         "type": "weapon",
         "shape": "circle",
         "size": "large",
+        "tonnage": 4,
         "scores": {
             "cruiser": 80
         },

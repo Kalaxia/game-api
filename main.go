@@ -20,6 +20,7 @@ func initConfigurations() {
 	api.InitDatabase()
 	api.InitRedisClient()
 	api.InitRsaVault()
+	api.InitCultures()
 	api.InitShipConfiguration()
 	api.InitPlanetConstructions()
 	api.InitFactionMotions()

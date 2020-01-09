@@ -1,7 +1,10 @@
 {
     "light-hunter": {
+        "identifier": "L",
+        "culture": "adranite",
         "slug": "light-hunter",
         "picture": "light_hunter.svg",
+        "tonnage": 2,
         "slots": [
             {
                 "position": 1,
@@ -33,8 +36,11 @@
         ]
     },
     "battle-runner": {
+        "identifier": "B",
+        "culture": "kalankar",
         "slug": "battle-runner",
         "picture": "battle_runner.svg",
+        "tonnage": 4,
         "slots": [
             {
                 "position": 1,
@@ -73,8 +79,11 @@
         ]
     },
     "fray-breaker": {
+        "identifier": "F",
+        "culture": "kalankar",
         "slug": "fray-breaker",
         "picture": "fray_breaker.svg",
+        "tonnage": 25,
         "slots": [
             {
                 "position": 1,
@@ -127,8 +136,11 @@
         ]
     },
     "zartanyas-eye": {
+        "identifier": "Z",
+        "culture": "adranite",
         "slug": "zartanyas-eye",
         "picture": "zartanyas_eye.svg",
+        "tonnage": 5,
         "slots": [
             {
                 "position": 1,
@@ -160,8 +172,11 @@
         ]
     },
     "sullern-terror": {
+        "identifier": "S",
+        "culture": "kalankar",
         "slug": "sullern-terror",
         "picture": "sullern_terror.svg",
+        "tonnage": 15,
         "slots": [
             {
                 "position": 1,
@@ -214,8 +229,11 @@
         ]
     },
     "tenium-bane": {
+        "identifier": "T",
+        "culture": "kalankar",
         "slug": "tenium-bane",
         "picture": "tenium_bane.svg",
+        "tonnage": 120,
         "slots": [
             {
                 "position": 1,

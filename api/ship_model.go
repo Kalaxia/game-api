@@ -15,6 +15,7 @@ const(
     ShipTypeFreighter = "freighter"
     ShipTypeCorvette = "corvette"
     ShipTypeFrigate = "frigate"
+    ShipTypeCruiser = "cruiser"
 
     ShipStatSpeed = "speed"
     ShipStatShield = "power" // legacy
@@ -50,9 +51,12 @@ func InitShipConfiguration() {
 
 type(
 	ShipFrame struct {
+        Identifier string `json:"identifier"`
+        Culture string `json:"culture"`
 		Slug string `json:"slug"`
 		Picture string `json:"picture"`
-		Picto string `json:"picto"`
+        Picto string `json:"picto"`
+        Tonnage uint8 `json:"tonnage"`
 		Slots []ShipSlotPlan `json:"slots"`
 		Stats map[string]uint16 `json:"stats"`
 		Price []Price `json:"price"`
@@ -65,6 +69,7 @@ type(
 		Type string `json:"type"`
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
+        Tonnage uint8 `json:"tonnage"`
 		FrameSlug string `json:"frame"`
 		Frame *ShipFrame `json:"-" pg:"-"`
 		Slots []ShipSlot `json:"slots" pg:"-"`
@@ -75,6 +80,7 @@ type(
 		Picture string `json:"picture"`
 		PictureFlipX bool `json:"picture_flip_x"`
 		PictureFlipY bool `json:"picture_flip_y"`
+        Tonnage uint8 `json:"tonnage"`
 		Slug string `json:"slug"`
 		Type string `json:"type"`
 		Shape string `json:"shape"`
@@ -91,6 +97,8 @@ type(
 		Player *Player `json:"player"`
 		ModelId uint `json:"-"`
 		Model *ShipModel `json:"model"`
+        CanBuild bool `json:"can_build"`
+        Nickname string `json:"nickname"`
 	}
 	ShipPlayerModule struct {
 		tableName struct{} `pg:"ship__player_modules"`
@@ -98,7 +106,7 @@ type(
 		PlayerId uint16 `json:"-"`
 		Player *Player `json:"player"`
 		ModuleSlug string `json:"-"`
-		Module *ShipModule `json:"module"`
+        Module *ShipModule `json:"module"`
 	}
     ShipSlot struct {
         tableName struct{} `pg:"ship__slots"`
@@ -138,12 +146,13 @@ func CreateShipModel(w http.ResponseWriter, r *http.Request) {
 func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
     frame := extractFrame(data)
     slots := frame.extractSlotsData(data)
-    shipType, stats := frame.getShipModelInfo(slots)
+    shipType, tonnage, stats := frame.getShipModelInfo(slots)
     if speed, hasPropulsor := stats[ShipStatSpeed]; !hasPropulsor || speed == 0 {
         panic(NewHttpException(400, "ships.missing_propulsion", nil))
     }
     shipModel := &ShipModel{
-        Name: data["name"].(string),
+        Name: frame.generateShipModelName(p, tonnage, shipType),
+        Tonnage: tonnage,
         Type: shipType,
         PlayerId: p.Id,
         Player: p,
@@ -157,7 +166,7 @@ func (p *Player) createShipModel(data map[string]interface{}) *ShipModel {
       panic(NewHttpException(500, "Ship model could not be created", err))
     }
     shipModel.createShipModelSlots()
-    p.addShipModel(shipModel)
+    p.addShipModel(shipModel, data["name"].(string), true)
     return shipModel
 }
 
@@ -168,12 +177,14 @@ func extractFrame(data map[string]interface{}) *ShipFrame {
     panic(NewHttpException(400, "The given ship frame does not exists", nil))
 }
 
-func (p *Player) addShipModel(sm *ShipModel) *ShipPlayerModel {
+func (p *Player) addShipModel(sm *ShipModel, nickname string, canBuild bool) *ShipPlayerModel {
     playerShipModel := &ShipPlayerModel{
         ModelId: sm.Id,
         Model: sm,
         PlayerId: p.Id,
         Player: p,
+        Nickname: nickname,
+        CanBuild: canBuild,
     }
     if err := Database.Insert(playerShipModel); err != nil {
       panic(NewHttpException(500, "Player ship model could not be created", err))
@@ -213,18 +224,20 @@ func (p *Player) getShipModel(modelId uint32) *ShipModel {
     return shipPlayerModel.Model
 }
 
-func (frame *ShipFrame) getShipModelInfo(slots []ShipSlot) (string, map[string]uint16) {
+func (frame *ShipFrame) getShipModelInfo(slots []ShipSlot) (string, uint8, map[string]uint16) {
     scores := make(map[string]uint8, 0)
     stats := make(map[string]uint16, 0)
+    tonnage := frame.Tonnage
     
     frame.addStats(stats)
     for _, slot := range slots {
         if module, ok := modulesData[slot.ModuleSlug]; ok {
             module.addScores(scores)
             module.addStats(stats)
+            tonnage += module.Tonnage
         }
     }
-    return getShipModelType(scores), stats
+    return getShipModelType(scores), tonnage, stats
 }
 
 func (f *ShipFrame) addStats(stats map[string]uint16) {
