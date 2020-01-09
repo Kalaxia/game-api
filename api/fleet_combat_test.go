@@ -26,7 +26,10 @@ func TestCreateCombatCopy(t *testing.T) {
 		Id: 4,
 	}
 
-	copy := squadron.createCombatCopy(round)
+	copy := squadron.createCombatCopy(round, map[uint32]uint8{
+		20: 4,
+		16: 3,
+	})
 
 	if id := copy.Squadron.Id; id != 13 {
 		t.Errorf("Id should equal 13, got %d", id)
@@ -55,13 +58,20 @@ func TestCreateCombatCopy(t *testing.T) {
 		Y: 30,
 	}
 
-	copy = squadron.createCombatCopy(round)
+	copy = squadron.createCombatCopy(round, map[uint32]uint8{
+		20: 17,
+		13: 5,
+		8: 1,
+	})
 
 	if x := copy.Position.X; x != 20 {
 		t.Errorf("X position should equal 20, got %d", x)
 	}
 	if y := copy.Position.Y; y != 30 {
 		t.Errorf("Y position should equal 30, got %d", y)
+	}
+	if damage := copy.Damage; damage != 5 {
+		t.Errorf("Damage should equal 5, got %d", damage)
 	}
 }
 

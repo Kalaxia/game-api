@@ -61,10 +61,12 @@ type(
 		Initiative uint16 `json:"-"`
 		ShipModelId uint `json:"-"`
 		ShipModel *ShipModel `json:"ship_model"`
+		SquadId uint32 `json:"-" pg:"-"`
 		Squadron *FleetSquadron `json:"-" pg:"-"`
 		Action *FleetSquadronAction `json:"action" pg:"fk:squadron_id"`
 		Round *FleetCombatRound `json:"round"`
 		RoundId uint32 `json:"-"`
+		Damage uint8 `json:"damage" pg:"-"`
 		Quantity uint8 `json:"quantity"`
 		Position *FleetGridPosition `json:"position" pg:"type:jsonb"`
 	}
@@ -160,8 +162,11 @@ func (attacker *Fleet) engage(defender *Fleet) *FleetCombat {
 	}
 	WsHub.sendTo(attacker.Player, wsMessage)
 	WsHub.sendTo(defender.Player, wsMessage)
+	// data to persist between rounds for squadrons
+	damages := make(map[uint32]uint8, 0) 
 	for attacker.hasSquadrons() && defender.hasSquadrons() {
-		combat.fightRound(attacker, defender)
+		round := combat.fightRound(attacker, defender, damages)
+		damages = round.getSquadronsDamage()
 	}
 	combat.IsVictory = attacker.hasSquadrons()
 	combat.AttackerLosses = attacker.calculateLosses(combat.AttackerShips)
@@ -246,10 +251,10 @@ func (f *Fleet) notifyCombatEnding(report *FleetCombat, opponent *Fleet, state s
 	)
 }
 
-func (c *FleetCombat) fightRound(attacker *Fleet, defender *Fleet) {
+func (c *FleetCombat) fightRound(attacker *Fleet, defender *Fleet, damages map[uint32]uint8) *FleetCombatRound {
 	round := c.newRound(attacker, defender)
-	round.initSquadrons(attacker)
-	round.initSquadrons(defender)
+	round.initSquadrons(attacker, damages)
+	round.initSquadrons(defender, damages)
 	round.processInitiative()
 
 	nbActions := len(round.Squadrons)
@@ -260,6 +265,12 @@ func (c *FleetCombat) fightRound(attacker *Fleet, defender *Fleet) {
 	for i := 0; i < nbActions; i++ {
 		round.Squadrons[i].act()
 	}
+	round.notify(attacker, defender)
+	time.Sleep(time.Duration(1000 * nbActions) * time.Millisecond)
+	return round
+}
+
+func (r *FleetCombatRound) notify(attacker *Fleet, defender *Fleet) {
 	// We reload the round data to avoid circular dependencies while serializing the data
 	wsMessage := &WsMessage{
 		Action: "combat_round",
@@ -267,13 +278,22 @@ func (c *FleetCombat) fightRound(attacker *Fleet, defender *Fleet) {
 			Combat *FleetCombat `json:"combat"`
 			Round *FleetCombatRound `json:"round"`
 		}{
-			Combat: getCombatReport(c.Id),
-			Round: c.getRound(round.Id),
+			Combat: getCombatReport(r.Combat.Id),
+			Round: r.Combat.getRound(r.Id),
 		},
 	}
 	WsHub.sendTo(attacker.Player, wsMessage)
 	WsHub.sendTo(defender.Player, wsMessage)
-	time.Sleep(time.Duration(1000 * nbActions) * time.Millisecond)
+}
+
+func (r *FleetCombatRound) getSquadronsDamage() map[uint32]uint8 {
+	damage := make(map[uint32]uint8, 0)
+	for _, s := range r.Squadrons {
+		if s.Damage > 0 {
+			damage[s.SquadId] = s.Damage
+		}
+	}
+	return damage
 }
 
 func (c *FleetCombat) newRound(attacker *Fleet, defender *Fleet) *FleetCombatRound {
@@ -295,15 +315,15 @@ func (c *FleetCombat) getRound(roundId uint32) *FleetCombatRound {
 	return round
 }
 
-func (r *FleetCombatRound) initSquadrons(f *Fleet) {
+func (r *FleetCombatRound) initSquadrons(f *Fleet, damages map[uint32]uint8) {
 	for _, s := range f.Squadrons {
 		s.Fleet = f
 		s.FleetId = f.Id
-		r.Squadrons = append(r.Squadrons, s.createCombatCopy(r))
+		r.Squadrons = append(r.Squadrons, s.createCombatCopy(r, damages))
 	}
 }
 
-func (s *FleetSquadron) createCombatCopy(r *FleetCombatRound) *FleetCombatSquadron {
+func (s *FleetSquadron) createCombatCopy(r *FleetCombatRound, damages map[uint32]uint8) *FleetCombatSquadron {
 	squadron := &FleetCombatSquadron{
 		Fleet: s.Fleet,
 		FleetId: s.FleetId,
@@ -314,6 +334,11 @@ func (s *FleetSquadron) createCombatCopy(r *FleetCombatRound) *FleetCombatSquadr
 		ShipModel: s.ShipModel,
 		ShipModelId: s.ShipModelId,
 		Squadron: s,
+		SquadId: s.Id,
+		Damage: uint8(0),
+	}
+	if d, ok := damages[s.Id]; ok {
+		squadron.Damage = d
 	}
 	if s.CombatPosition != nil {
 		squadron.Position = s.CombatPosition
@@ -424,18 +449,22 @@ func (s *FleetCombatSquadron) receiveDamage(damage uint16) uint8 {
 	loss := uint8(0)
 	armor := s.ShipModel.Stats["armor"]
 	hitPoints := s.ShipModel.getHitPoints()
+	damage += uint16(s.Damage)
 
 	for damage > 0 {
 		if armor >= damage {
+			s.Damage += uint8(math.Floor(float64(damage) / 2))
 			break
 		}
 		takenDamage := int32(damage) - int32(armor)
 		if takenDamage <= 0 {
 			break
 		}
-		if float64(takenDamage) > hitPoints {
+		if float64(takenDamage) >= hitPoints {
 			takenDamage = int32(hitPoints)
 			loss++
+		} else {
+			s.Damage += uint8(takenDamage)
 		}
 		if s.Quantity == loss {
 			break
