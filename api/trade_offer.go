@@ -197,6 +197,9 @@ func (p *Planet) createResourceOffer(data map[string]interface{}) *ResourceOffer
     if quantity < 100 {
         panic(NewHttpException(400, "trade.offers.invalid_quantity", nil))
     }
+    if offer.LotQuantity < 1 {
+        panic(NewHttpException(400, "trade.offers.invalid_lot_quantity", nil))
+    }
     if offer.Price < 1 || offer.Price > 1000 {
         panic(NewHttpException(400, "trade.offers.invalid_price", nil))
     }
