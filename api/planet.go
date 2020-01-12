@@ -22,7 +22,11 @@ type(
 		Id uint16 `json:"id"`
 		Name string `json:"name"`
 		Type string `json:"type"`
-		Population uint `json:"population" pg:",use_zero,notnull"`
+        Population uint `json:"population" pg:",use_zero,notnull"`
+        PublicOrder uint8 `json:"public_order" pg:",use_zero,notnull"`
+        TaxRate uint8 `json:"tax_rate" pg:",use_zero,notnull"`
+        FactionId uint16 `json:"-"`
+        Faction *Faction `json:"faction"`
 		SystemId uint16 `json:"-"`
 		System *System `json:"system"`
 		OrbitId uint16 `json:"-"`
@@ -161,6 +165,16 @@ func (p *Planet) getResource(name string) *PlanetResource {
         if r.Name == name {
             return &r
         }
+    }
+    return nil
+}
+
+func (p *Planet) getFaction() *Faction {
+    if p.Player != nil {
+        return p.Player.Faction
+    }
+    if p.Faction != nil {
+        return p.Faction
     }
     return nil
 }

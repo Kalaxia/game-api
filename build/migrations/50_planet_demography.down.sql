@@ -1,0 +1,1 @@
+ALTER TABLE map__planets DROP faction_id, DROP public_order, DROP tax_rate;
