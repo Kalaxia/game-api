@@ -3,6 +3,7 @@ package api
 import(
   "encoding/json"
   "io/ioutil"
+  "math"
   "math/rand"
 )
 
@@ -85,7 +86,6 @@ func (m *Map) generateSystem(x uint16, y uint16) {
 }
 
 func (s *System) generatePlanet(orbit *SystemOrbit) *Planet {
-    settings := generateSettings()
     planet := &Planet{
         Name: generatePlanetName(planetsNameFrequencies),
         Type: orbit.generatePlanetType(),
@@ -93,32 +93,45 @@ func (s *System) generatePlanet(orbit *SystemOrbit) *Planet {
         SystemId: s.Id,
         Orbit: orbit,
         OrbitId: orbit.Id,
-        Population: 2000000,
+        Population: generatePlanetPopulation(),
         Relations: make([]*DiplomaticRelation, 0),
-        Settings: settings,
-        SettingsId: settings.Id,
     }
+    planet.generateSettings()
     if err := Database.Insert(planet); err != nil {
 		panic(NewException("Planet could not be created", err))
     }
     planet.createStorage()
     planet.Resources = planet.generatePlanetResources()
     s.Planets = append(s.Planets, *planet)
-    planet.generatePlanetRelations()
+    if planet.Population > 0 {
+        planet.generatePlanetRelations()
+    }
     return planet
 }
 
-func generateSettings() *PlanetSettings {
-    settings := &PlanetSettings{
-        ServicesPoints: 5,
-        BuildingPoints: 5,
-        MilitaryPoints: 5,
-        ResearchPoints: 5,
+func generatePlanetPopulation() uint {
+    population := uint(rand.Intn(25))
+    if population < 15 {
+        population = 0
     }
+    return population * populationPointRatio
+}
+
+func (p *Planet) generateSettings() {
+    points := p.calculatePopulationPoints()
+    equalPart := uint8(math.Floor(float64(points) / 4.0))
+    settings := &PlanetSettings{
+        ServicesPoints: equalPart,
+        BuildingPoints: equalPart,
+        MilitaryPoints: equalPart,
+        ResearchPoints: equalPart,
+    }
+    settings.ServicesPoints += uint8(points % 4)
     if err := Database.Insert(settings); err != nil {
 		panic(NewException("Planet settings could not be created", err))
     }
-    return settings
+    p.Settings = settings
+    p.SettingsId = settings.Id
 }
 
 func (o *SystemOrbit) generatePlanetType() string {

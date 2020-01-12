@@ -98,7 +98,7 @@ func getFactionPlanetChoices(factionId uint16) []*Planet {
 		FROM map__planets p
 		INNER JOIN map__systems s ON p.system_id = s.id
 		LEFT JOIN diplomacy__relations d ON d.planet_id = p.id
-		WHERE p.player_id IS NULL AND d.faction_id = ?
+		WHERE p.player_id IS NULL AND d.faction_id = ? AND p.population > 0
 		ORDER BY d.score DESC
 		LIMIT 3`, factionId); err != nil {
 			return planets

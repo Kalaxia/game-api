@@ -58,5 +58,5 @@ func (p *Planet) affectPopulationPoints(settings *PlanetSettings) {
 }
 
 func (p *Planet) calculatePopulationPoints() uint8 {
-    return uint8(math.Ceil(float64(p.Population / 100000)))
+    return uint8(math.Ceil(float64(p.Population / populationPointRatio)))
 }

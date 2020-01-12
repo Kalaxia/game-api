@@ -22,7 +22,7 @@ type(
 		Id uint16 `json:"id"`
 		Name string `json:"name"`
 		Type string `json:"type"`
-		Population uint `json:"population"`
+		Population uint `json:"population" pg:",use_zero,notnull"`
 		SystemId uint16 `json:"-"`
 		System *System `json:"system"`
 		OrbitId uint16 `json:"-"`
