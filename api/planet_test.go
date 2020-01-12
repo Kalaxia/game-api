@@ -26,7 +26,7 @@ func getPlayerPlanetMock(player *Player) *Planet {
 		Type: PlanetTypeArctic,
 		Player: player,
 		PlayerId: player.Id,
-		Population: 2000000,
+		Population: 20 * populationPointRatio,
 		Settings: &PlanetSettings{
 			ServicesPoints: 5,
 			MilitaryPoints: 7,
