@@ -74,7 +74,7 @@ func (s *System) getNewTerritoryStatus(t *Territory) string {
 
 func (s *System) hasRivalPlanets(t *Territory) bool {
 	for _, p := range s.Planets {
-		if p.Player != nil && p.Player.Faction.Id != t.Planet.Player.Faction.Id {
+		if f := p.getFaction(); f != nil && f.Id != t.Planet.Player.Faction.Id {
 			return true
 		}
 	}
@@ -83,7 +83,7 @@ func (s *System) hasRivalPlanets(t *Territory) bool {
 
 func (s *System) hasFriendlyPlanets(t *Territory) bool {
 	for _, p := range s.Planets {
-		if p.Player != nil && p.Player.Faction.Id == t.Planet.Player.Faction.Id {
+		if f := p.getFaction(); f != nil && f.Id == t.Planet.Player.Faction.Id {
 			return true
 		}
 	}

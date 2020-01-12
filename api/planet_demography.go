@@ -29,3 +29,25 @@ func (p *Planet) calculatePopulationDeclineRate() float64 {
 func (p *Planet) calculatePopulationGrowthRate() float64 {
 	return 0.015
 }
+
+func (p *Planet) calculateTaxes() {
+	wage := int32(math.Floor(float64(p.Population) * 0.0001 * float64(p.TaxRate)))
+	p.Player.updateWallet(wage)
+	p.Player.update()
+
+	po := int8(p.PublicOrder) + p.processTaxesPublicOrderEffect()
+	if po < 0 {
+		po = 0
+	}
+	p.PublicOrder = uint8(po)
+}
+
+func (p *Planet) processTaxesPublicOrderEffect() int8 {
+	return map[uint8]int8{
+		planetTaxRateVeryLow: 2,
+		planetTaxRateLow: 1,
+		planetTaxRateNormal: 0,
+		planetTaxRateHigh: -1,
+		planetTaxRateVeryHigh: -2,
+	}[p.TaxRate]
+}

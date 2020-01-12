@@ -74,9 +74,14 @@ func (p *Planet) calculateProduction(wg *sync.WaitGroup) {
         p.Storage.storeResource(rp.Name, int16(rp.FinalQuantity))
     }
     p.produceBuildingPoints()
-    p.calculatePopulationGrowth()
     p.Storage.update()
-    p.update()
+    if p.Population > 0 {
+        if p.Player != nil {
+            p.calculateTaxes()
+        }
+        p.calculatePopulationGrowth()
+        p.update()
+    }
 }
 
 func (p *Planet) getAvailablePoints() map[string]uint8 {
