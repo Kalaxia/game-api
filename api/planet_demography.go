@@ -18,8 +18,12 @@ const(
 	planetTaxRateVeryHigh = 5
 )
 
-func (p *Planet) calculatePopulationGrowth() {
-	p.Population = uint(math.Ceil(float64(p.Population) * (1.0 + p.calculatePopulationGrowthRate() - p.calculatePopulationDeclineRate())))
+func (p *Planet) processPopulationGrowth() {
+	p.Population = uint(math.Ceil(float64(p.Population) * (1.0 + p.calculatePopulationGrowth())))
+}
+
+func (p *Planet) calculatePopulationGrowth() float64 {
+	return p.calculatePopulationGrowthRate() - p.calculatePopulationDeclineRate()
 }
 
 func (p *Planet) calculatePopulationDeclineRate() float64 {
