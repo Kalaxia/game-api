@@ -1,7 +1,11 @@
 package api
 
 import(
+	"github.com/gorilla/context"
+	"github.com/gorilla/mux"
+	"net/http"
 	"math"
+	"strconv"
 )
 
 const(
@@ -17,6 +21,19 @@ const(
 	planetTaxRateHigh = 4
 	planetTaxRateVeryHigh = 5
 )
+
+func UpdatePlanetTaxRate(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*Player)
+    id, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+	planet := getPlanet(uint16(id))
+	
+	if planet.PlayerId != player.Id {
+		panic(NewHttpException(403, "access denied", nil))
+	}
+	planet.updateTaxRate(uint8(DecodeJsonRequest(r)["tax_rate"].(float64)))
+	w.WriteHeader(204)
+	w.Write([]byte(""))
+}
 
 func (p *Planet) processPopulationGrowth() {
 	p.Population = uint(math.Ceil(float64(p.Population) * (1.0 + p.calculatePopulationGrowth())))
@@ -54,4 +71,9 @@ func (p *Planet) processTaxesPublicOrderEffect() int8 {
 		planetTaxRateHigh: -1,
 		planetTaxRateVeryHigh: -2,
 	}[p.TaxRate]
+}
+
+func (p *Planet) updateTaxRate(taxRate uint8) {
+	p.TaxRate = taxRate
+	p.update()
 }

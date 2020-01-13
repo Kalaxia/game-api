@@ -113,6 +113,13 @@ var routes = Routes{
 		true,
 	},
 	Route{
+		"Update planet tax rate",
+		"PATCH",
+		"/api/planets/{id}/tax-rate",
+		api.UpdatePlanetTaxRate,
+		true,
+	},
+	Route{
 		"Launch Building Construction",
 		"POST",
 		"/api/planets/{id}/buildings",
