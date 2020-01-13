@@ -25,6 +25,7 @@ type(
         Population uint `json:"population" pg:",use_zero,notnull"`
         PopulationGrowth float64 `json:"population_growth" pg:"-"`
         PublicOrder uint8 `json:"public_order" pg:",use_zero,notnull"`
+        PublicOrderGrowth int8 `json:"public_order_growth" pg:"-"`
         TaxRate uint8 `json:"tax_rate" pg:",use_zero,notnull"`
         FactionId uint16 `json:"-"`
         Faction *Faction `json:"faction"`
@@ -160,6 +161,7 @@ func (p *Planet) getOwnerData() {
     p.NbBuildings = 7
     p.ResourcesProduction = p.getProducedResources()
     p.PopulationGrowth = p.calculatePopulationGrowth()
+    p.PublicOrderGrowth = p.calculatePublicOrderGrowth()
 }
 
 func (p *Planet) getResource(name string) *PlanetResource {

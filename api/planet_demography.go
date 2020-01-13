@@ -77,3 +77,7 @@ func (p *Planet) updateTaxRate(taxRate uint8) {
 	p.TaxRate = taxRate
 	p.update()
 }
+
+func (p *Planet) calculatePublicOrderGrowth() int8 {
+	return p.processTaxesPublicOrderEffect()
+}
