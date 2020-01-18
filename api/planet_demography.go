@@ -60,6 +60,9 @@ func (p *Planet) calculateTaxes() {
 	if po < 0 {
 		po = 0
 	}
+	if po > 100 {
+		po = 100
+	}
 	p.PublicOrder = uint8(po)
 }
 
