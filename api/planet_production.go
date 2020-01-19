@@ -67,8 +67,10 @@ func (p *Planet) calculateProduction(wg *sync.WaitGroup) {
 
     points := p.getAvailablePoints()
     for _, b := range p.Buildings {
-        b.Planet = p
-        points = b.produce(points)
+        if b.Status == BuildingStatusOperational {
+            b.Planet = p
+            points = b.produce(points)
+        }
     }
     for _, rp := range p.getProducedResources() {
         p.Storage.storeResource(rp.Name, int16(rp.FinalQuantity))
@@ -230,10 +232,9 @@ func (p *Planet) getProducedResources() map[string]*ResourceProduction {
         }
     }
     for _, b := range p.Buildings {
-        if b.Type != BuildingTypeResource {
-            continue
+        if b.Type == BuildingTypeResource && b.Status == BuildingStatusOperational  {
+            resourcesProduction = b.getProducedResources(resourcesProduction)
         }
-        resourcesProduction = b.getProducedResources(resourcesProduction)
     }
     for _, rp := range resourcesProduction {
         rp.calculateFinalQuantity()
