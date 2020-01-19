@@ -16,6 +16,7 @@ func TestGetPlanetProducedResources(t *testing.T) {
 			Planet: planet,
 			Type: "resource",
 			Name: "ore-mine",
+			Status: BuildingStatusOperational,
 			Compartments: []*BuildingCompartment{
 				&BuildingCompartment{
 					Name: "ore-well",
@@ -27,6 +28,7 @@ func TestGetPlanetProducedResources(t *testing.T) {
 			Planet: planet,
 			Type: "resource",
 			Name: "cristal-synthetiser",
+			Status: BuildingStatusOperational,
 		},
 	}
 	planetResources := planet.getProducedResources()
