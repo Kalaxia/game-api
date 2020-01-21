@@ -67,8 +67,8 @@ func (p *Planet) calculateProduction(wg *sync.WaitGroup) {
 
     points := p.getAvailablePoints()
     for _, b := range p.Buildings {
+        b.Planet = p
         if b.Status == BuildingStatusOperational {
-            b.Planet = p
             points = b.produce(points)
         }
     }
