@@ -140,6 +140,7 @@ func (s *Server) createFactions(factions []interface{}) []*Faction {
 		}
 		results = append(results, faction)
 	}
+	createFactionSettings(results)
 	createFactionsRelations(results)
 	return results
 }

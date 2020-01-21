@@ -19,7 +19,7 @@ type(
 )
 
 const(
-	FactionRegimeDemocracy = "democracy"
+	FactionRegimeDemocracy = 1
 	FactionSettingsRegime = "regime"
 	FactionSettingsMotionDuration = "motion_duration"
 	FactionSettingsPlanetTaxes = "planet_taxes"
@@ -52,4 +52,45 @@ func (f *Faction) getAllSettings(publicOnly bool) []*FactionSettings {
 		panic(NewException("Could not retrieve all faction settings", err))
 	}
 	return settings
+}
+
+func createFactionSettings(factions []*Faction) {
+	defaultSettings := map[string]map[string]int{
+		FactionSettingsRegime: map[string]int{
+			"is_public": 1,
+			"value": FactionRegimeDemocracy,
+		},
+		FactionSettingsMotionDuration: map[string]int{
+			"is_public": 0,
+			"value": 6,
+		},
+		FactionSettingsPlanetTaxes: map[string]int{
+			"is_public": 0,
+			"value": 100,
+		},
+		FactionSettingsPurchaseTaxes: map[string]int{
+			"is_public": 0,
+			"value": 4,
+		},
+		FactionSettingsSalesTaxes: map[string]int{
+			"is_public": 0,
+			"value": 2,
+		},
+	} 
+
+	for _, f := range factions {
+		for name, data := range defaultSettings {
+			s := &FactionSettings{
+				Faction: f,
+				FactionId: f.Id,
+				Name: name,
+				Value: data["value"],
+				IsPublic: data["is_public"] == 1,
+			}
+			if err := Database.Insert(s); err != nil {
+				panic(NewException("Could not create faction settings", err))
+			}
+			f.Settings = append(f.Settings, s)
+		}
+	}
 }
