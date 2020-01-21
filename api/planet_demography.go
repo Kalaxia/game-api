@@ -56,14 +56,7 @@ func (p *Planet) calculateTaxes() {
 	p.Player.updateWallet(wage)
 	p.Player.update()
 
-	po := int8(p.PublicOrder) + p.processTaxesPublicOrderEffect()
-	if po < 0 {
-		po = 0
-	}
-	if po > 100 {
-		po = 100
-	}
-	p.PublicOrder = uint8(po)
+	p.updatePublicOrder(p.processTaxesPublicOrderEffect())
 }
 
 func (p *Planet) processTaxesPublicOrderEffect() int8 {
@@ -74,6 +67,17 @@ func (p *Planet) processTaxesPublicOrderEffect() int8 {
 		planetTaxRateHigh: -1,
 		planetTaxRateVeryHigh: -2,
 	}[p.TaxRate]
+}
+
+func (p *Planet) updatePublicOrder(publicOrder int8) {
+	po := int8(p.PublicOrder) + publicOrder
+	if po < 0 {
+		po = 0
+	}
+	if po > 100 {
+		po = 100
+	}
+	p.PublicOrder = uint8(po)
 }
 
 func (p *Planet) updateTaxRate(taxRate uint8) {
