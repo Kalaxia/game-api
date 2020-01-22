@@ -56,6 +56,110 @@ func TestIsOnPlanet(t *testing.T) {
 	}
 }
 
+func TestValidateStep(t *testing.T) {
+	fleet := &Fleet{}
+	step := &FleetJourneyStep{
+		Order: FleetOrderPass,
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("journey step should be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateStepWithInvalidOrder(t *testing.T) {
+	fleet := &Fleet{}
+	step := &FleetJourneyStep{
+		Order: "unexisting-order",
+	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("journey step should not be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateConquestStep(t *testing.T) {
+	fleet := &Fleet{ PlayerId: 1 }
+	step := &FleetJourneyStep{
+		Order: FleetOrderConquer,
+		EndPlace: &Place{ Planet: &Planet{ PlayerId: 2 }},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("journey step should be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateConquestStepWithSamePlayer(t *testing.T) {
+	fleet := &Fleet{ PlayerId: 1 }
+	step := &FleetJourneyStep{
+		Order: FleetOrderConquer,
+		EndPlace: &Place{ Planet: &Planet{ PlayerId: 1 }},
+	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("journey step should not be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateColonizationStep(t *testing.T) {
+	fleet := &Fleet{}
+	step := &FleetJourneyStep{
+		Order: FleetOrderColonize,
+		EndPlace: &Place{ Planet: &Planet{ Population: 0 }},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("journey step should be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateColonizationStepWithInhabitedPlanet(t *testing.T) {
+	fleet := &Fleet{}
+	step := &FleetJourneyStep{
+		Order: FleetOrderColonize,
+		EndPlace: &Place{ Planet: &Planet{ Population: 1000 }},
+	}
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("journey step should not be valid")
+		}
+	}()
+	step.validate(fleet)
+}
+
+func TestValidateDeliveryStep(t *testing.T) {
+	fleet := &Fleet{}
+	step := &FleetJourneyStep{
+		Order: FleetOrderDeliver,
+		Data: map[string]interface{}{
+			"resources": []interface{}{
+				map[string]interface{}{
+					"resource": "cristal",
+					"quantity": 1000,
+				},
+			},
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("journey step should be valid")
+			t.Errorf(r.(error).Error())
+		}
+	}()
+	step.validate(fleet)
+}
+
 func TestValidateDeliveryMissions(t *testing.T) {
 	fleet := &Fleet{ Journey: getJourneyMock(1) }
 	fleet.Cargo = map[string]uint16{
@@ -65,7 +169,7 @@ func TestValidateDeliveryMissions(t *testing.T) {
 	fleet.Journey.Steps = append(fleet.Journey.Steps, &FleetJourneyStep{
 		Order: FleetOrderDeliver,
 		Data: map[string]interface{}{
-			"resources": []map[string]interface{}{
+			"resources": []interface{}{
 				map[string]interface{}{
 					"resource": "cristal",
 					"quantity": float64(1000),
@@ -75,7 +179,7 @@ func TestValidateDeliveryMissions(t *testing.T) {
 	}, &FleetJourneyStep{
 		Order: FleetOrderDeliver,
 		Data: map[string]interface{}{
-			"resources": []map[string]interface{}{
+			"resources": []interface{}{
 				map[string]interface{}{
 					"resource": "cristal",
 					"quantity": float64(500),
@@ -136,6 +240,10 @@ func TestValidateDeliveryMissionsWithInsufficientCargo(t *testing.T) {
 	}()
 
 	fleet.validateDeliveryMissions(fleet.Journey.Steps)
+}
+
+func TestValidateColonizationMissions(t *testing.T) {
+
 }
 
 func TestGetDistanceBetweenPlanets(t *testing.T) {

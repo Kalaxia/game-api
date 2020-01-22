@@ -1,13 +1,19 @@
 package api
 
+func (f *Fleet) colonizePlanet(p *Planet) {
+	p.notifyColonization(f)
+	p.changeOwner(f.Player)
+	p.System.checkTerritories()
+}
+
 func (f *Fleet) conquerPlanet(p *Planet) bool {
 	if isVictorious := f.attack(p); !isVictorious {
 		return false
 	}
 	p.checkForCasusBelli(f.Player)
-	p.System.checkTerritories()
 	p.notifyConquest(f)
 	p.changeOwner(f.Player)
+	p.System.checkTerritories()
 	return true
 }
 
@@ -55,6 +61,18 @@ func (p *Planet) notifyConquest(f *Fleet) {
 			"planet_name": p.Name,
 			"opponent_id": f.Player.Id,
 			"opponent_pseudo": f.Player.Pseudo,
+		},
+	)
+}
+
+
+func (p *Planet) notifyColonization(f *Fleet) {
+	f.Player.notify(
+		NotificationTypeMilitary,
+		"notifications.military.planet_colonization",
+		map[string]interface{}{
+			"planet_id": p.Id,
+			"planet_name": p.Name,
 		},
 	)
 }

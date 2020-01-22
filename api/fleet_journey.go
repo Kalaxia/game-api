@@ -17,6 +17,7 @@ var journeyRangeData RangeContainer
 const(
     FleetOrderPass = "pass"
     FleetOrderConquer = "conquer"
+    FleetOrderColonize = "colonize"
     FleetOrderDeliver = "deliver"
 
     JourneyStepTypePlanetToPlanet = "planet_to_planet"
@@ -265,7 +266,7 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
         step.Order = stepData["order"].(string)
         step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
         step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
-        step.validate()
+        step.validate(fleet)
 
         if !journeyRangeData.isOnRange(step) {
             panic(NewHttpException(400, "Step not in range", nil))
@@ -276,26 +277,35 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
     return steps;
 }
 
-func (step *FleetJourneyStep) validate() {
+func (step *FleetJourneyStep) validate(f *Fleet) {
     if !step.hasValidOrder() {
         panic(NewHttpException(400, "fleet.journeys.invalid_order", nil))
     }
     if step.Order == FleetOrderDeliver && (step.Data["resources"] == nil || len(step.Data["resources"].([]interface{})) == 0) {
         panic(NewHttpException(400, "fleet.journeys.missing_resources_for_delivery", nil))
     }
+    if step.Order == FleetOrderConquer && step.EndPlace.Planet.PlayerId == f.PlayerId {
+        panic(NewHttpException(400, "fleet.journeys.cannot_conquer_your_own_planet", nil))
+    }
+    if step.Order == FleetOrderColonize && step.EndPlace.Planet.Population > 0 {
+        panic(NewHttpException(400, "fleet.journeys.cannot_colonize_inhabited_planets", nil))
+    }
 }
 
 func (f *Fleet) validateJourney(steps []*FleetJourneyStep) {
     f.validateDeliveryMissions(steps)
+    f.validateColonizationMissions(steps)
 }
 
+// This method checks if the sum of the resources is really contained in the fleet cargo
 func (f *Fleet) validateDeliveryMissions(steps []*FleetJourneyStep) {
     resources := make(map[string]uint16, 0)
     for _, s := range steps {
         if s.Order != FleetOrderDeliver {
             continue
         }
-        for _, r := range s.Data["resources"].([]map[string]interface{}) {
+        for _, data := range s.Data["resources"].([]interface{}) {
+            r := data.(map[string]interface{})
             resource := r["resource"].(string)
             quantity := uint16(r["quantity"].(float64))
             if _, ok := resources[resource]; !ok {
@@ -311,8 +321,23 @@ func (f *Fleet) validateDeliveryMissions(steps []*FleetJourneyStep) {
     }
 }
 
+func (f *Fleet) validateColonizationMissions(steps []*FleetJourneyStep) {
+    neededPopulation := uint16(0)
+    for _, s := range steps {
+        if s.Order == FleetOrderColonize {
+            neededPopulation += uint16(s.Data["population"].(float64))
+        }
+    }
+    if neededPopulation == 0 {
+        return
+    }
+    if !f.hasResource("passengers", neededPopulation) {
+        panic(NewHttpException(400, "fleet.colonization.not_enough_population", nil))
+    }
+}
+
 func (step *FleetJourneyStep) hasValidOrder() bool {
-    for _, o := range []string{ FleetOrderPass, FleetOrderConquer, FleetOrderDeliver } {
+    for _, o := range []string{ FleetOrderPass, FleetOrderConquer, FleetOrderColonize, FleetOrderDeliver } {
         if o == step.Order {
             return true
         }
@@ -354,7 +379,12 @@ func (s *FleetJourneyStep) processOrder() (continueJourney bool) {
             if !continueJourney {
                 fleet.delete()
             }
-            break;
+            break
+        case FleetOrderColonize:
+            continueJourney = true
+            fleet := s.Journey.getFleet()
+            fleet.colonizePlanet(getPlanet(s.EndPlace.PlanetId))
+            break
         case FleetOrderDeliver:
             fleet := s.Journey.getFleet()
             fleet.deliver(getPlanet(s.EndPlace.PlanetId), s.Data)
