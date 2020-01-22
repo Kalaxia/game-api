@@ -10,6 +10,10 @@ tests:
 
 		go test ./...
 
+test-coverage:
+
+		go test -v -covermode=count -coverprofile=coverage.out ./...
+
 coveralls-ci:
 
 		go get golang.org/x/tools/cmd/cover
