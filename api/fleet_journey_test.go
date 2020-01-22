@@ -56,6 +56,88 @@ func TestIsOnPlanet(t *testing.T) {
 	}
 }
 
+func TestValidateDeliveryMissions(t *testing.T) {
+	fleet := &Fleet{ Journey: getJourneyMock(1) }
+	fleet.Cargo = map[string]uint16{
+		"cristal": 2000,
+		"red-ore": 1000,
+	}
+	fleet.Journey.Steps = append(fleet.Journey.Steps, &FleetJourneyStep{
+		Order: FleetOrderDeliver,
+		Data: map[string]interface{}{
+			"resources": []map[string]interface{}{
+				map[string]interface{}{
+					"resource": "cristal",
+					"quantity": float64(1000),
+				},
+			},
+		},
+	}, &FleetJourneyStep{
+		Order: FleetOrderDeliver,
+		Data: map[string]interface{}{
+			"resources": []map[string]interface{}{
+				map[string]interface{}{
+					"resource": "cristal",
+					"quantity": float64(500),
+				},
+				map[string]interface{}{
+					"resource": "red-ore",
+					"quantity": float64(1000),
+				},
+			},
+		},
+	})
+
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("Fleet cargo alert should not have been raised")
+		}
+	}()
+
+	fleet.validateDeliveryMissions(fleet.Journey.Steps)
+}
+
+func TestValidateDeliveryMissionsWithInsufficientCargo(t *testing.T) {
+	fleet := &Fleet{ Journey: getJourneyMock(1) }
+	fleet.Cargo = map[string]uint16{
+		"cristal": 1000,
+		"red-ore": 1000,
+	}
+	fleet.Journey.Steps = append(fleet.Journey.Steps, &FleetJourneyStep{
+		Order: FleetOrderDeliver,
+		Data: map[string]interface{}{
+			"resources": []map[string]interface{}{
+				map[string]interface{}{
+					"resource": "cristal",
+					"quantity": float64(1000),
+				},
+			},
+		},
+	}, &FleetJourneyStep{
+		Order: FleetOrderDeliver,
+		Data: map[string]interface{}{
+			"resources": []map[string]interface{}{
+				map[string]interface{}{
+					"resource": "cristal",
+					"quantity": float64(500),
+				},
+				map[string]interface{}{
+					"resource": "red-ore",
+					"quantity": float64(1000),
+				},
+			},
+		},
+	})
+
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Fleet cargo alert should have been raised")
+		}
+	}()
+
+	fleet.validateDeliveryMissions(fleet.Journey.Steps)
+}
+
 func TestGetDistanceBetweenPlanets(t *testing.T) {
 	initJourneyData()
 	s := &FleetJourneyStep{
