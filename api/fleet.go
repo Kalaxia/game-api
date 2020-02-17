@@ -121,7 +121,14 @@ func LoadFleetCargo(w http.ResponseWriter, r *http.Request) {
     if !fleet.isOnPlanet(planet) {
         panic(NewHttpException(400, "fleet.delivery.not_on_planet", nil))
     }
-    planet.transferResourcesToFleet(fleet, data)
+
+    resource := data["resource"].(string)
+    quantity := uint16(data["quantity"].(float64))
+    if resource == "passengers" {
+        fleet.transferPassengers(planet, int16(quantity))
+    } else {
+        planet.transferResourcesToFleet(fleet, resource, quantity)
+    }
 
     w.WriteHeader(204)
     w.Write([]byte(""))
@@ -142,7 +149,13 @@ func UnloadFleetCargo(w http.ResponseWriter, r *http.Request) {
     if !fleet.isOnPlanet(planet) {
         panic(NewHttpException(400, "fleet.delivery.not_on_planet", nil))
     }
-    fleet.transferResourcesToPlanet(planet, data)
+    resource := data["resource"].(string)
+    quantity := uint16(data["quantity"].(float64))
+    if resource == "passengers" {
+        fleet.transferPassengers(planet, -int16(quantity))
+    } else {
+        fleet.transferResourcesToPlanet(planet, resource, quantity)
+    }
 
     w.WriteHeader(204)
     w.Write([]byte(""))
@@ -354,10 +367,7 @@ func (f *Fleet) getShipSummary() []FleetShipSummary {
     return summary
 }
 
-func (f *Fleet) transferResourcesToPlanet(p *Planet, data map[string]interface{}) {
-    resource := data["resource"].(string)
-    quantity := uint16(data["quantity"].(float64))
-
+func (f *Fleet) transferResourcesToPlanet(p *Planet, resource string, quantity uint16) {
     f.unloadCargo(resource, quantity)
     p.Storage.storeResource(resource, int16(quantity))
     p.Storage.update()
@@ -365,16 +375,33 @@ func (f *Fleet) transferResourcesToPlanet(p *Planet, data map[string]interface{}
     f.notifyDelivery(p, quantity, true)
 }
 
-func (p *Planet) transferResourcesToFleet(f *Fleet, data map[string]interface{}) {
-    resource := data["resource"].(string)
-    quantity := uint16(data["quantity"].(float64))
-
+func (p *Planet) transferResourcesToFleet(f *Fleet, resource string, quantity uint16) {
     if !p.Storage.hasResource(resource, quantity) {
         panic(NewHttpException(400, "planet.storage.not_enough_resources", nil))
     }
     f.loadCargo(resource, quantity)
     p.Storage.storeResource(resource, -int16(quantity))
     p.Storage.update()
+    f.update()
+}
+
+func (f *Fleet) transferPassengers(p *Planet, quantity int16) {
+    if quantity > 0 {
+        q := uint16(quantity)
+        if p.Population < uint(q) * 1000 {
+            panic(NewHttpException(400, "planet.not_enough_population", nil))
+        }
+        f.loadCargo("passengers", q)
+        p.Population -= uint(q) * 1000
+    } else if quantity < 0 {
+        q := uint16(-quantity)
+        if !f.hasResource("passengers", q) {
+            panic(NewHttpException(400, "fleet.delivery.not_enough_passengers", nil))
+        }
+        f.unloadCargo("passengers", q)
+        p.Population += uint(q) * 1000
+    }
+    p.update()
     f.update()
 }
 
