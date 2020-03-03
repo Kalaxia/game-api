@@ -388,7 +388,8 @@ func (p *Planet) transferResourcesToFleet(f *Fleet, resource string, quantity ui
 func (f *Fleet) transferPassengers(p *Planet, quantity int16) {
     if quantity > 0 {
         q := uint16(quantity)
-        if p.Population < uint(q) * 1000 {
+        // the + 1 aims to lave some pop on the planet 
+        if p.Population < uint(q + 1) * 1000 {
             panic(NewHttpException(400, "planet.not_enough_population", nil))
         }
         f.loadCargo("passengers", q)
