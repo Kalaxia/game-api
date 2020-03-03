@@ -324,9 +324,14 @@ func (f *Fleet) validateDeliveryMissions(steps []*FleetJourneyStep) {
 func (f *Fleet) validateColonizationMissions(steps []*FleetJourneyStep) {
     neededPopulation := uint16(0)
     for _, s := range steps {
-        if s.Order == FleetOrderColonize {
-            neededPopulation += uint16(s.Data["population"].(float64))
+        if s.Order != FleetOrderColonize {
+            continue
         }
+        passengers := uint16(s.Data["resources"].([]interface{})[0].(map[string]interface{})["quantity"].(float64))
+        if passengers < 1000 {
+            panic(NewHttpException(400, "fleet.colonization.need_more_colons", nil))
+        }
+        neededPopulation += passengers
     }
     if neededPopulation == 0 {
         return
@@ -383,7 +388,7 @@ func (s *FleetJourneyStep) processOrder() (continueJourney bool) {
         case FleetOrderColonize:
             continueJourney = true
             fleet := s.Journey.getFleet()
-            fleet.colonizePlanet(getPlanet(s.EndPlace.PlanetId))
+            fleet.colonizePlanet(getPlanet(s.EndPlace.PlanetId), int16(s.Data["resources"].([]interface{})[0].(map[string]interface{})["quantity"].(float64)))
             break
         case FleetOrderDeliver:
             fleet := s.Journey.getFleet()

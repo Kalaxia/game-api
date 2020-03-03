@@ -1,9 +1,12 @@
 package api
 
-func (f *Fleet) colonizePlanet(p *Planet) {
+func (f *Fleet) colonizePlanet(p *Planet, population int16) {
 	p.notifyColonization(f)
 	p.changeOwner(f.Player)
 	p.System.checkTerritories()
+	f.transferPassengers(p, -population)
+	p.createPlayerRelation(f.Player, 400)
+	p.createFactionRelation(f.Player.Faction, 400)
 }
 
 func (f *Fleet) conquerPlanet(p *Planet) bool {

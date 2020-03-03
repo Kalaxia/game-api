@@ -82,6 +82,20 @@ func (p *Planet) createPlayerRelation(player *Player, score int) {
     }
 }
 
+func (p *Planet) createFactionRelation(faction *Faction, score int) *DiplomaticRelation {
+    relation := &DiplomaticRelation{
+        Planet: p,
+        PlanetId: p.Id,
+        Faction: faction,
+        FactionId: faction.Id,
+        Score: score,
+    }
+    if err := Database.Insert(relation); err != nil {
+        panic(NewException("Planet relation could not be created", err))
+    }
+    return relation
+}
+
 func (f *Faction) getFactionRelation(otherFaction *Faction) *FactionRelation {
     relation := &FactionRelation{}
     if err := Database.Model(relation).Where("faction_id = ?", f.Id).Where("other_faction_id = ?", otherFaction.Id).Select(); err != nil {

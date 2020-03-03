@@ -184,20 +184,11 @@ func (p *Planet) generatePlanetResource(resources *[]PlanetResource, name string
 func (p *Planet) generatePlanetRelations() {
     var bestRelation *DiplomaticRelation
     for _, faction := range factions {
-        relation := &DiplomaticRelation{
-            Planet: p,
-            PlanetId: p.Id,
-            Faction: faction,
-            FactionId: faction.Id,
-            Score: p.generatePlanetRelationScore(),
-        }
+        relation := p.createFactionRelation(faction, p.generatePlanetRelationScore())
+        p.Relations = append(p.Relations, relation)
         if bestRelation == nil || relation.Score > bestRelation.Score {
             bestRelation = relation
-        } 
-        if err := Database.Insert(relation); err != nil {
-            panic(NewException("Planet relation could not be created", err))
         }
-        p.Relations = append(p.Relations, relation)
     }
     if bestRelation.Score > 400 && rand.Intn(100) > 50 {
         p.Faction = bestRelation.Faction
