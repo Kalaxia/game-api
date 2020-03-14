@@ -194,6 +194,19 @@ func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
     SendJsonResponse(w, 201, fleet.travel(data["steps"].([]interface{})))
 }
 
+func CalculateFleetTravelDuration(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*Player)
+	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    fleet := getFleet(uint16(fleetId))
+    
+    if player.Id != fleet.Player.Id { // the player does not own the planet
+		panic(NewHttpException(http.StatusForbidden, "", nil))
+	}
+    data := DecodeJsonRequest(r)
+    
+    SendJsonResponse(w, 200, fleet.calculateTravelDuration(data))
+}
+
 func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey = &FleetJourney {
         CreatedAt: time.Now(),
@@ -237,44 +250,51 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
     previousTime := time.Now()
 
     for i, s := range data {
-        stepData := s.(map[string]interface{})
-        step := &FleetJourneyStep {
-            Journey: fleet.Journey,
-
-            StartPlace: previousPlace,
-            StartPlaceId: previousPlace.Id,
-
-            StepNumber: uint32(firstNumber + 1 + uint8(i)),
-        }
-        if d, ok := stepData["data"]; ok {
-            step.Data = d.(map[string]interface{})
-        }
-    
-        planetId := uint16(stepData["planetId"].(float64))
-
-        if planetId != 0 {
-            planet := getPlanet(planetId)
-
-            step.EndPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
-        } else {
-            step.EndPlace = NewCoordinatesPlace(stepData["x"].(float64), stepData["y"].(float64))
-        }
-        step.EndPlaceId = step.EndPlace.Id
-        previousPlace = step.EndPlace
-        //TODO implement cooldown ?
-        step.TimeStart = previousTime
-        step.Order = stepData["order"].(string)
-        step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
-        step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
-        step.validate(fleet)
+        step := fleet.createStep(s.(map[string]interface{}), previousTime, previousPlace, uint32(firstNumber + 1 + uint8(i)))
 
         if !journeyRangeData.isOnRange(step) {
             panic(NewHttpException(400, "Step not in range", nil))
         }
         steps[i] = step
+        previousPlace = step.EndPlace
         previousTime = step.TimeArrival
     }
     return steps;
+}
+
+func (f *Fleet) createStep(stepData map[string]interface{}, startTime time.Time, previousPlace *Place, stepNumber uint32) *FleetJourneyStep {
+    step := &FleetJourneyStep {
+        Journey: f.Journey,
+
+        Order: stepData["order"].(string),
+
+        StartPlace: previousPlace,
+        StartPlaceId: previousPlace.Id,
+
+        TimeStart: startTime,
+
+        StepNumber: stepNumber,
+    }
+    if d, ok := stepData["data"]; ok {
+        step.Data = d.(map[string]interface{})
+    }
+
+    endPlaceData := stepData["endPlace"].(map[string]interface{})
+
+    if endPlaceData["planet"] != nil {
+        planetId := uint16(endPlaceData["planet"].(map[string]interface{})["id"].(float64))
+        planet := getPlanet(planetId)
+
+        step.EndPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
+    } else {
+        coords := endPlaceData["coordinates"].(map[string]interface{})
+        step.EndPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
+    }
+    step.EndPlaceId = step.EndPlace.Id
+    step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
+    step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
+    step.validate(f)
+    return step
 }
 
 func (step *FleetJourneyStep) validate(f *Fleet) {
@@ -444,11 +464,6 @@ func insertSteps(steps []*FleetJourneyStep) {
     }
 }
 
-/********************************************/
-// Data Base Connection
-/*------------------------------------------*/
-// getter
-
 func getJourney(id uint16) *FleetJourney {
     journey := &FleetJourney{}
     if err := Database.
@@ -547,6 +562,28 @@ func (s *FleetJourneyStep) delete() {
     if err := Database.Delete(s); err != nil {
         panic(NewException("Journey step could not be deleted", err))
     }
+}
+
+func (f *Fleet) calculateTravelDuration(data map[string]interface{}) map[string]time.Duration {
+    var previousPlace *Place
+    previousPlaceData := data["startPlace"].(map[string]interface{})
+
+    if previousPlaceData["planet"] != nil {
+        planetId := uint16(previousPlaceData["planet"].(map[string]interface{})["id"].(float64))
+
+        planet := getPlanet(planetId)
+
+        previousPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
+    } else {
+        coords := previousPlaceData["coordinates"].(map[string]interface{})
+        previousPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
+    }
+    step := f.createStep(data, time.Now(), previousPlace, 1)
+
+    return map[string]time.Duration{
+        "warm": time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute,
+        "travel": time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute,
+    }   
 }
 
 func (f *Fleet) isOnPlanet(p *Planet) bool {
