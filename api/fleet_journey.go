@@ -290,9 +290,10 @@ func (f *Fleet) createStep(stepData map[string]interface{}, startTime time.Time,
         coords := endPlaceData["coordinates"].(map[string]interface{})
         step.EndPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
     }
+    warmTimeCoeff, travelTimeCoeff := f.getTimeCoefficients()
     step.EndPlaceId = step.EndPlace.Id
-    step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
-    step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
+    step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step, warmTimeCoeff)) * time.Minute)
+    step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step, travelTimeCoeff)) * time.Minute)
     step.validate(f)
     return step
 }
@@ -579,11 +580,26 @@ func (f *Fleet) calculateTravelDuration(data map[string]interface{}) map[string]
         previousPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
     }
     step := f.createStep(data, time.Now(), previousPlace, 1)
-
+    warmTimeCoeff, travelTimeCoeff := f.getTimeCoefficients()
     return map[string]time.Duration{
-        "warm": time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute,
-        "travel": time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute,
+        "warm": time.Duration(journeyTimeData.WarmTime.getTimeForStep(step, warmTimeCoeff)) * time.Minute,
+        "travel": time.Duration(journeyTimeData.TravelTime.getTimeForStep(step, travelTimeCoeff)) * time.Minute,
     }   
+}
+
+func (f *Fleet) getTimeCoefficients() (warmTimeCoeff, travelTimeCoeff float64) {
+    speedToCoeff := func(coeff float64, speed uint16) float64 {
+        c := float64(speed) / 100
+        if coeff == 0 || coeff > c {
+            return c
+        }
+        return coeff
+    }
+    for _, s := range f.getSquadrons() {
+        warmTimeCoeff = speedToCoeff(warmTimeCoeff, s.ShipModel.Stats["speed"])
+        travelTimeCoeff = speedToCoeff(travelTimeCoeff, s.ShipModel.Stats["speed"])
+    }
+    return
 }
 
 func (f *Fleet) isOnPlanet(p *Planet) bool {
@@ -625,23 +641,23 @@ func (s *FleetJourneyStep) getDistanceBetweenPositions() float64 {
 /*------------------------------------------*/
 // TimeDistanceLaw
 
-func (l *TimeDistanceLaw) getTime(distance float64) float64 {
-    return l.Constane + (l.Linear * distance) + (l.Quadratic * distance * distance)
+func (l *TimeDistanceLaw) getTime(distance, coeff float64) float64 {
+    return (l.Constane + (l.Linear * distance) + (l.Quadratic * distance * distance)) / coeff
 }
 
 /*------------------------------------------*/
 // TimeLawsConfig
 
-func (l *TimeLawsConfig) getTimeForStep(s *FleetJourneyStep) float64 {
+func (l *TimeLawsConfig) getTimeForStep(s *FleetJourneyStep, coeff float64) float64 {
     // I use the Euclidian metric I am too lazy to implement other metric which will probaly not be used
     // NOTE this function will need to be modified if we add other "location"
     switch (s.getType()) {
-        case JourneyStepTypeSamePlanet: return l.SamePlanet.getTime(s.getDistanceBetweenOrbitAndPlanet())
-        case JourneyStepTypeSameSystem: return l.SameSystem.getTime(s.getDistanceInsideSystem())
-        case JourneyStepTypePlanetToPlanet: return l.PlanetToPlanet.getTime(s.getDistanceBetweenPlanets())
-        case JourneyStepTypePlanetToPosition: return l.PlanetToPosition.getTime(s.getDistanceBetweenPlanetAndPosition())
-        case JourneyStepTypePositionToPlanet: return l.PositionToPlanet.getTime(s.getDistanceBetweenPositionAndPlanet())
-        case JourneyStepTypePositionToPosition: return l.PositionToPosition.getTime(s.getDistanceBetweenPositions())
+        case JourneyStepTypeSamePlanet: return l.SamePlanet.getTime(s.getDistanceBetweenOrbitAndPlanet(), coeff)
+        case JourneyStepTypeSameSystem: return l.SameSystem.getTime(s.getDistanceInsideSystem(), coeff)
+        case JourneyStepTypePlanetToPlanet: return l.PlanetToPlanet.getTime(s.getDistanceBetweenPlanets(), coeff)
+        case JourneyStepTypePlanetToPosition: return l.PlanetToPosition.getTime(s.getDistanceBetweenPlanetAndPosition(), coeff)
+        case JourneyStepTypePositionToPlanet: return l.PositionToPlanet.getTime(s.getDistanceBetweenPositionAndPlanet(), coeff)
+        case JourneyStepTypePositionToPosition: return l.PositionToPosition.getTime(s.getDistanceBetweenPositions(), coeff)
         default: panic(NewException("unknown step type", nil))
     }
 }
