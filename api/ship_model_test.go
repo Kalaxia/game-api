@@ -39,8 +39,8 @@ func TestCreateShipModel(t *testing.T) {
 	if armor := shipModel.Stats["armor"]; armor != 60 {
 		t.Errorf("Ship model armor should equal 60, got %d", armor)
 	}
-	if speed := shipModel.Stats[ShipStatSpeed]; speed != 225 {
-		t.Errorf("Ship model speed should equal 115, got %d", speed)
+	if speed := shipModel.Stats[ShipStatSpeed]; speed != 80 {
+		t.Errorf("Ship model speed should equal 80, got %d", speed)
 	}
 	if category := shipModel.Type; category != ShipTypeFighter {
 		t.Errorf("Ship model type should be fighter, got %s", category)

@@ -6,6 +6,7 @@ import(
     "encoding/json"
     "github.com/gorilla/context"
     "github.com/gorilla/mux"
+    "math"
     "strconv"
 )
 
@@ -18,6 +19,7 @@ const(
     ShipTypeCruiser = "cruiser"
 
     ShipStatSpeed = "speed"
+    ShipStatCooldown = "cooldown"
     ShipStatShield = "power" // legacy
     ShipStatArmor = "armor"
     ShipStatCargo = "size" // legacy
@@ -333,6 +335,10 @@ func (sm *ShipModel) loadSlots() {
         panic(NewHttpException(500, "Could not retrieve ship slots", err))
     }
     sm.Slots = slots
+}
+
+func (sm *ShipModel) getCombatSpeed() uint16 {
+    return uint16(math.Ceil(float64(sm.Stats[ShipStatSpeed]) / float64(sm.Tonnage)))
 }
 
 func (sm *ShipModel) calculatePrices() {

@@ -174,7 +174,7 @@ func TestProcessInitiative(t *testing.T) {
 				Initiative: 0,
 				ShipModel: &ShipModel{
 					Stats: map[string]uint16{
-						"speed": 255,
+						"speed": 80,
 					},
 				},
 			},
@@ -183,7 +183,7 @@ func TestProcessInitiative(t *testing.T) {
 				Initiative: 0,
 				ShipModel: &ShipModel{
 					Stats: map[string]uint16{
-						"speed": 100,
+						"speed": 45,
 					},
 				},
 			},
@@ -192,7 +192,7 @@ func TestProcessInitiative(t *testing.T) {
 				Initiative: 0,
 				ShipModel: &ShipModel{
 					Stats: map[string]uint16{
-						"speed": 450,
+						"speed": 95,
 					},
 				},
 			},
@@ -201,7 +201,7 @@ func TestProcessInitiative(t *testing.T) {
 				Initiative: 0,
 				ShipModel: &ShipModel{
 					Stats: map[string]uint16{
-						"speed": 225,
+						"speed": 80,
 					},
 				},
 			},
@@ -222,11 +222,11 @@ func TestCalculateInitiative(t *testing.T) {
 	squadron := FleetCombatSquadron{
 		ShipModel: &ShipModel{
 			Stats: map[string]uint16{
-				"speed": 225,
+				"speed": 80,
 			},
 		},
 	}
-	if initiative := squadron.calculateInitiative(); initiative < 225 || initiative > 325 {
-		t.Errorf("Initiative should be between 225 and 325, got %d", initiative)
+	if initiative := squadron.calculateInitiative(); initiative < 30 || initiative > 130 {
+		t.Errorf("Initiative should be between 30 and 130, got %d", initiative)
 	}
 }

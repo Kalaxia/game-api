@@ -588,16 +588,16 @@ func (f *Fleet) calculateTravelDuration(data map[string]interface{}) map[string]
 }
 
 func (f *Fleet) getTimeCoefficients() (warmTimeCoeff, travelTimeCoeff float64) {
-    speedToCoeff := func(coeff float64, speed uint16) float64 {
-        c := float64(speed) / 100
+    statToCoeff := func(coeff float64, stat uint16) float64 {
+        c := float64(stat) / 100
         if coeff == 0 || coeff > c {
             return c
         }
         return coeff
     }
     for _, s := range f.getSquadrons() {
-        warmTimeCoeff = speedToCoeff(warmTimeCoeff, s.ShipModel.Stats["speed"])
-        travelTimeCoeff = speedToCoeff(travelTimeCoeff, s.ShipModel.Stats["speed"])
+        warmTimeCoeff = statToCoeff(warmTimeCoeff, s.ShipModel.Stats[ShipStatCooldown]) * 10
+        travelTimeCoeff = statToCoeff(travelTimeCoeff, s.ShipModel.Stats[ShipStatSpeed])
     }
     return
 }
