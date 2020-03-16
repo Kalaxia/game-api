@@ -79,7 +79,7 @@ func NewPlace(p *Planet, x, y float64) *Place {
             Y: y,
         },
     }
-    place.create()
+    place.findOrCreate()
     return place
 }
 
@@ -90,8 +90,20 @@ func NewCoordinatesPlace(x, y float64) *Place {
             Y: y,
         },
     }
-    place.create()
+    place.findOrCreate()
     return place
+}
+
+func (p *Place) findOrCreate() {
+    statement := Database.Model(p)
+    if p.Planet != nil {
+        statement.Where("planet_id = ?", p.Planet.Id)
+    } else {
+        statement.Where("coordinates->>'x' = '?'", p.Coordinates.X).Where("coordinates->>'y' = '?'", p.Coordinates.Y)
+    }
+    if err := statement.Select(); err != nil {
+        p.create()
+    }
 }
 
 func (p *Place) create() {
