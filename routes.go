@@ -239,6 +239,20 @@ var routes = Routes{
 	/*******************************/
 	// journeys
 	Route{
+		"Calculate Fleet Travel Duration",
+		"POST",
+		"/api/fleets/{id}/travel-duration",
+		api.CalculateFleetTravelDuration,
+		true,
+	},
+	Route{
+		"Calculate Fleet Range",
+		"POST",
+		"/api/fleets/{id}/range",
+		api.CalculateFleetRange,
+		true,
+	},
+	Route{
 		"Send Fleet On Journey",
 		"POST",
 		"/api/fleets/{id}/journey",

@@ -48,7 +48,8 @@
             "freighter": 30
         },
         "ship_stats": {
-            "speed": 225
+            "speed": 80,
+            "cooldown": 30
         },
         "price": [
             {
@@ -86,7 +87,8 @@
             "freighter": 20
         },
         "ship_stats": {
-            "speed": 115
+            "speed": 60,
+            "cooldown": 10
         },
         "price": [
             {

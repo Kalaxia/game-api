@@ -194,6 +194,30 @@ func SendFleetOnJourney(w http.ResponseWriter, r *http.Request){
     SendJsonResponse(w, 201, fleet.travel(data["steps"].([]interface{})))
 }
 
+func CalculateFleetTravelDuration(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*Player)
+	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    fleet := getFleet(uint16(fleetId))
+    
+    if player.Id != fleet.Player.Id { // the player does not own the planet
+		panic(NewHttpException(http.StatusForbidden, "", nil))
+	}
+    data := DecodeJsonRequest(r)
+    
+    SendJsonResponse(w, 200, fleet.calculateTravelDuration(data))
+}
+
+func CalculateFleetRange(w http.ResponseWriter, r *http.Request) {
+    player := context.Get(r, "player").(*Player)
+	fleetId, _ := strconv.ParseUint(mux.Vars(r)["id"], 10, 16)
+    fleet := getFleet(uint16(fleetId))
+    
+    if player.Id != fleet.Player.Id { // the player does not own the planet
+		panic(NewHttpException(http.StatusForbidden, "", nil))
+	}
+    SendJsonResponse(w, 200, fleet.calculateRange())
+}
+
 func (f *Fleet) travel(data []interface{}) *FleetJourney {
     f.Journey = &FleetJourney {
         CreatedAt: time.Now(),
@@ -235,46 +259,55 @@ func (fleet *Fleet) createSteps(data []interface{}, firstNumber uint8) []*FleetJ
     steps := make([]*FleetJourneyStep, len(data))
     previousPlace := fleet.Place
     previousTime := time.Now()
+    fleetRange := fleet.calculateRange()
 
     for i, s := range data {
-        stepData := s.(map[string]interface{})
-        step := &FleetJourneyStep {
-            Journey: fleet.Journey,
+        step := fleet.createStep(s.(map[string]interface{}), previousTime, previousPlace, uint32(firstNumber + 1 + uint8(i)))
 
-            StartPlace: previousPlace,
-            StartPlaceId: previousPlace.Id,
-
-            StepNumber: uint32(firstNumber + 1 + uint8(i)),
-        }
-        if d, ok := stepData["data"]; ok {
-            step.Data = d.(map[string]interface{})
-        }
-    
-        planetId := uint16(stepData["planetId"].(float64))
-
-        if planetId != 0 {
-            planet := getPlanet(planetId)
-
-            step.EndPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
-        } else {
-            step.EndPlace = NewCoordinatesPlace(stepData["x"].(float64), stepData["y"].(float64))
-        }
-        step.EndPlaceId = step.EndPlace.Id
-        previousPlace = step.EndPlace
-        //TODO implement cooldown ?
-        step.TimeStart = previousTime
-        step.Order = stepData["order"].(string)
-        step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step)) * time.Minute)
-        step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step)) * time.Minute)
-        step.validate(fleet)
-
-        if !journeyRangeData.isOnRange(step) {
+        if !journeyRangeData.isOnRange(fleetRange, step) {
             panic(NewHttpException(400, "Step not in range", nil))
         }
         steps[i] = step
+        previousPlace = step.EndPlace
         previousTime = step.TimeArrival
     }
     return steps;
+}
+
+func (f *Fleet) createStep(stepData map[string]interface{}, startTime time.Time, previousPlace *Place, stepNumber uint32) *FleetJourneyStep {
+    step := &FleetJourneyStep {
+        Journey: f.Journey,
+
+        Order: stepData["order"].(string),
+
+        StartPlace: previousPlace,
+        StartPlaceId: previousPlace.Id,
+
+        TimeStart: startTime,
+
+        StepNumber: stepNumber,
+    }
+    if d, ok := stepData["data"]; ok {
+        step.Data = d.(map[string]interface{})
+    }
+
+    endPlaceData := stepData["endPlace"].(map[string]interface{})
+
+    if endPlaceData["planet"] != nil {
+        planetId := uint16(endPlaceData["planet"].(map[string]interface{})["id"].(float64))
+        planet := getPlanet(planetId)
+
+        step.EndPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
+    } else {
+        coords := endPlaceData["coordinates"].(map[string]interface{})
+        step.EndPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
+    }
+    warmTimeCoeff, travelTimeCoeff := f.getTimeCoefficients()
+    step.EndPlaceId = step.EndPlace.Id
+    step.TimeJump = step.TimeStart.Add(time.Duration(journeyTimeData.WarmTime.getTimeForStep(step, warmTimeCoeff)) * time.Minute)
+    step.TimeArrival = step.TimeJump.Add(time.Duration(journeyTimeData.TravelTime.getTimeForStep(step, travelTimeCoeff)) * time.Minute)
+    step.validate(f)
+    return step
 }
 
 func (step *FleetJourneyStep) validate(f *Fleet) {
@@ -444,11 +477,6 @@ func insertSteps(steps []*FleetJourneyStep) {
     }
 }
 
-/********************************************/
-// Data Base Connection
-/*------------------------------------------*/
-// getter
-
 func getJourney(id uint16) *FleetJourney {
     journey := &FleetJourney{}
     if err := Database.
@@ -549,6 +577,65 @@ func (s *FleetJourneyStep) delete() {
     }
 }
 
+func (f *Fleet) calculateTravelDuration(data map[string]interface{}) map[string]time.Duration {
+    var previousPlace *Place
+    previousPlaceData := data["startPlace"].(map[string]interface{})
+
+    if previousPlaceData["planet"] != nil {
+        planetId := uint16(previousPlaceData["planet"].(map[string]interface{})["id"].(float64))
+
+        planet := getPlanet(planetId)
+
+        previousPlace = NewPlace(planet, float64(planet.System.X), float64(planet.System.Y))
+    } else {
+        coords := previousPlaceData["coordinates"].(map[string]interface{})
+        previousPlace = NewCoordinatesPlace(coords["x"].(float64), coords["y"].(float64))
+    }
+    step := f.createStep(data, time.Now(), previousPlace, 1)
+    warmTimeCoeff, travelTimeCoeff := f.getTimeCoefficients()
+    return map[string]time.Duration{
+        "warm": time.Duration(journeyTimeData.WarmTime.getTimeForStep(step, warmTimeCoeff)) * time.Minute,
+        "travel": time.Duration(journeyTimeData.TravelTime.getTimeForStep(step, travelTimeCoeff)) * time.Minute,
+    }   
+}
+
+func (f *Fleet) calculateRange() map[string]float64 {
+    coeff := math.Sqrt(f.getRangeCoefficient())
+    return map[string]float64{
+        JourneyStepTypeSamePlanet: coeff * journeyRangeData.SamePlanet,
+        JourneyStepTypeSameSystem: coeff * journeyRangeData.SameSystem,
+        JourneyStepTypePlanetToPlanet: coeff * journeyRangeData.PlanetToPlanet,
+        JourneyStepTypePlanetToPosition: coeff * journeyRangeData.PlanetToPosition,
+        JourneyStepTypePositionToPlanet: coeff * journeyRangeData.PositionToPlanet,
+        JourneyStepTypePositionToPosition: coeff * journeyRangeData.PositionToPosition,
+    }
+}
+
+func (f *Fleet) getTimeCoefficients() (warmTimeCoeff, travelTimeCoeff float64) {
+    statToCoeff := func(coeff float64, stat uint16) float64 {
+        c := float64(stat) / 100
+        if coeff == 0 || coeff > c {
+            return c
+        }
+        return coeff
+    }
+    for _, s := range f.getSquadrons() {
+        warmTimeCoeff = statToCoeff(warmTimeCoeff, s.ShipModel.Stats[ShipStatCooldown]) * 10
+        travelTimeCoeff = statToCoeff(travelTimeCoeff, s.ShipModel.Stats[ShipStatSpeed])
+    }
+    return
+}
+
+func (f *Fleet) getRangeCoefficient() (coeff float64) {
+    for _, s := range f.getSquadrons() {
+        c := float64(s.ShipModel.Stats[ShipStatSpeed]) / 100
+        if coeff == 0 || coeff > c {
+            coeff = c
+        }
+    }
+    return
+}
+
 func (f *Fleet) isOnPlanet(p *Planet) bool {
     return f.Place != nil && f.Place.Planet != nil && (p == nil || p.Id == f.Place.PlanetId)
 }
@@ -588,35 +675,37 @@ func (s *FleetJourneyStep) getDistanceBetweenPositions() float64 {
 /*------------------------------------------*/
 // TimeDistanceLaw
 
-func (l *TimeDistanceLaw) getTime(distance float64) float64 {
-    return l.Constane + (l.Linear * distance) + (l.Quadratic * distance * distance)
+func (l *TimeDistanceLaw) getTime(distance, coeff float64) float64 {
+    return (l.Constane + (l.Linear * distance) + (l.Quadratic * distance * distance)) / coeff
 }
 
 /*------------------------------------------*/
 // TimeLawsConfig
 
-func (l *TimeLawsConfig) getTimeForStep(s *FleetJourneyStep) float64 {
+func (l *TimeLawsConfig) getTimeForStep(s *FleetJourneyStep, coeff float64) float64 {
     // I use the Euclidian metric I am too lazy to implement other metric which will probaly not be used
     // NOTE this function will need to be modified if we add other "location"
     switch (s.getType()) {
-        case JourneyStepTypeSamePlanet: return l.SamePlanet.getTime(s.getDistanceBetweenOrbitAndPlanet())
-        case JourneyStepTypeSameSystem: return l.SameSystem.getTime(s.getDistanceInsideSystem())
-        case JourneyStepTypePlanetToPlanet: return l.PlanetToPlanet.getTime(s.getDistanceBetweenPlanets())
-        case JourneyStepTypePlanetToPosition: return l.PlanetToPosition.getTime(s.getDistanceBetweenPlanetAndPosition())
-        case JourneyStepTypePositionToPlanet: return l.PositionToPlanet.getTime(s.getDistanceBetweenPositionAndPlanet())
-        case JourneyStepTypePositionToPosition: return l.PositionToPosition.getTime(s.getDistanceBetweenPositions())
+        case JourneyStepTypeSamePlanet: return l.SamePlanet.getTime(s.getDistanceBetweenOrbitAndPlanet(), coeff)
+        case JourneyStepTypeSameSystem: return l.SameSystem.getTime(s.getDistanceInsideSystem(), coeff)
+        case JourneyStepTypePlanetToPlanet: return l.PlanetToPlanet.getTime(s.getDistanceBetweenPlanets(), coeff)
+        case JourneyStepTypePlanetToPosition: return l.PlanetToPosition.getTime(s.getDistanceBetweenPlanetAndPosition(), coeff)
+        case JourneyStepTypePositionToPlanet: return l.PositionToPlanet.getTime(s.getDistanceBetweenPositionAndPlanet(), coeff)
+        case JourneyStepTypePositionToPosition: return l.PositionToPosition.getTime(s.getDistanceBetweenPositions(), coeff)
         default: panic(NewException("unknown step type", nil))
     }
 }
 
-func (rc *RangeContainer) isOnRange(s *FleetJourneyStep) bool {
-    switch (s.getType()) {
-        case JourneyStepTypeSamePlanet: return rc.SamePlanet >= s.getDistanceBetweenOrbitAndPlanet()
-        case JourneyStepTypeSameSystem: return rc.SameSystem >= s.getDistanceInsideSystem()
-        case JourneyStepTypePlanetToPlanet: return rc.PlanetToPlanet >= s.getDistanceBetweenPlanets()
-        case JourneyStepTypePlanetToPosition: return rc.PlanetToPosition >= s.getDistanceBetweenPlanetAndPosition()
-        case JourneyStepTypePositionToPlanet: return rc.PositionToPlanet >= s.getDistanceBetweenPositionAndPlanet()
-        case JourneyStepTypePositionToPosition: return rc.PositionToPosition >= s.getDistanceBetweenPositions()
+func (rc *RangeContainer) isOnRange(fleetRange map[string]float64, s *FleetJourneyStep) bool {
+    stepType := s.getType()
+    coeff := fleetRange[stepType]
+    switch (stepType) {
+        case JourneyStepTypeSamePlanet: return coeff >= s.getDistanceBetweenOrbitAndPlanet()
+        case JourneyStepTypeSameSystem: return coeff >= s.getDistanceInsideSystem()
+        case JourneyStepTypePlanetToPlanet: return coeff >= s.getDistanceBetweenPlanets()
+        case JourneyStepTypePlanetToPosition: return coeff >= s.getDistanceBetweenPlanetAndPosition()
+        case JourneyStepTypePositionToPlanet: return coeff >= s.getDistanceBetweenPositionAndPlanet()
+        case JourneyStepTypePositionToPosition: return coeff >= s.getDistanceBetweenPositions()
         default: panic(NewException("unknown step type", nil))
     }
 }

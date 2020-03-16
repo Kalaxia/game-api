@@ -280,10 +280,10 @@ func TestGetDistanceBetweenPlanets(t *testing.T) {
 	if sType := s.getType(); sType != JourneyStepTypePlanetToPlanet {
 		t.Errorf("Step is planet to planet, not %s", sType)
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 32.98484500494128468517 {
-		t.Errorf("Time should be 32.98484500494128468517, not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.2); time != 164.92422502470640210959 {
+		t.Errorf("Time should be 164.92422502470640210959, not %.20f", time)
 	}
-	if journeyRangeData.isOnRange(s) {
+	if journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should not be on range")
 	}
 }
@@ -308,10 +308,10 @@ func TestGetDistanceBetweenOrbitAndPlanet(t *testing.T) {
 	if s.getType() != JourneyStepTypeSamePlanet {
 		t.Errorf("Step is orbit to planet")
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 2. {
-		t.Errorf("Time should be 0., not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.5); time != 4. {
+		t.Errorf("Time should be 4., not %.20f", time)
 	}
-	if !journeyRangeData.isOnRange(s) {
+	if !journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should be on range")
 	}
 }
@@ -340,10 +340,10 @@ func TestGetDistanceInsideSystem(t *testing.T) {
 	if sType := s.getType(); sType != JourneyStepTypeSameSystem {
 		t.Errorf("Step is same system, not %s", sType)
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 5. {
-		t.Errorf("Time should be 5., not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.4); time != 12.5 {
+		t.Errorf("Time should be 12.5, not %.20f", time)
 	}
-	if !journeyRangeData.isOnRange(s) {
+	if !journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should be on range")
 	}
 }
@@ -372,10 +372,10 @@ func TestGetDistanceBetweenPlanetAndPosition(t *testing.T) {
 	if s.getType() != JourneyStepTypePlanetToPosition {
 		t.Errorf("Step is position to planet")
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 11.31370849898476116380 {
-		t.Errorf("Time should be 11.31370849898476116380, not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.8); time != 14.14213562373095101066 {
+		t.Errorf("Time should be 14.14213562373095101066, not %.20f", time)
 	}
-	if !journeyRangeData.isOnRange(s) {
+	if !journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should be on range")
 	}
 }
@@ -404,10 +404,10 @@ func TestGetDistanceBetweenPositionAndPlanet(t *testing.T) {
 	if sType := s.getType(); sType != JourneyStepTypePositionToPlanet {
 		t.Errorf("Step is position to planet, not %s", sType)
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 14.14213562373095101066 {
-		t.Errorf("Time should be 14.14213562373095101066, not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.5); time != 28.28427124746190202131 {
+		t.Errorf("Time should be 28.28427124746190202131, not %.20f", time)
 	}
-	if !journeyRangeData.isOnRange(s) {
+	if !journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should be on range")
 	}
 }
@@ -434,10 +434,10 @@ func TestGetDistanceBetweenPositions(t *testing.T) {
 	if s.getType() != JourneyStepTypePositionToPosition {
 		t.Errorf("Step is position to position")
 	}
-	if time := journeyTimeData.TravelTime.getTimeForStep(s); time != 10.77032961426900747881 {
-		t.Errorf("Time should be 10.77032961426900747881, not %.20f", time)
+	if time := journeyTimeData.TravelTime.getTimeForStep(s, 0.4); time != 26.92582403567251603249 {
+		t.Errorf("Time should be 26.92582403567251603249, not %.20f", time)
 	}
-	if !journeyRangeData.isOnRange(s) {
+	if !journeyRangeData.isOnRange(getFleetRangeMock(), s) {
 		t.Errorf("Step should be on range")
 	}
 }
@@ -482,5 +482,16 @@ func getJourneyStepMock(id uint16, journey *FleetJourney) *FleetJourneyStep {
 		TimeArrival: time.Now().Local().Add(time.Minute * time.Duration(id)),
 		Order: FleetOrderPass,
 		StepNumber: uint32(id),
+	}
+}
+
+func getFleetRangeMock() map[string]float64 {
+	return map[string]float64{
+		JourneyStepTypeSamePlanet: 2.,
+		JourneyStepTypeSameSystem: 10.,
+		JourneyStepTypePlanetToPlanet: 10.,
+		JourneyStepTypePlanetToPosition: 10.,
+		JourneyStepTypePositionToPlanet: 10.,
+		JourneyStepTypePositionToPosition: 10.,
 	}
 }
