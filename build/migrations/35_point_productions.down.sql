@@ -12,8 +12,8 @@ CREATE TABLE IF NOT EXISTS map__planet_construction_states(
     points int not null
 );
 
-ALTER TABLE map__planet_buildings MODIFY construction_state_id INT DEFAULT NULL REFERENCES map__planet_construction_states;
-ALTER TABLE ship__ships MODIFY construction_state_id INT DEFAULT NULL REFERENCES ship__construction_states;
+ALTER TABLE map__planet_buildings ALTER COLUMN construction_state_id INT DEFAULT NULL REFERENCES map__planet_construction_states;
+ALTER TABLE ship__ships ALTER COLUMN construction_state_id INT DEFAULT NULL REFERENCES ship__construction_states;
 
 CREATE OR REPLACE FUNCTION remove_ship_construction_state()
   RETURNS trigger AS

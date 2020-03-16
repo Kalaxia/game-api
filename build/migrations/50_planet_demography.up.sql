@@ -1,1 +1,1 @@
-ALTER TABLE map__planets ADD faction_id INT DEFAULT NULL REFERENCES faction__factions(id), ADD public_order SMALLINT NOT NULL DEFAULT 0, ADD tax_rate SMALLINT NOT NULL DEFAULT 0;
+ALTER TABLE map__planets ADD faction_id INT DEFAULT NULL REFERENCES faction__factions(id) ON DELETE SET NULL, ADD public_order SMALLINT NOT NULL DEFAULT 0, ADD tax_rate SMALLINT NOT NULL DEFAULT 0;

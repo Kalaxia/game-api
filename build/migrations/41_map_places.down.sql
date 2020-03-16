@@ -11,7 +11,7 @@ ALTER TABLE fleet__journeys_steps
     DROP end_place_id;
 
 ALTER TABLE fleet__fleets
-    ADD location_id INT NOT NULL REFERENCES map__planets(id),
+    ADD location_id INT REFERENCES map__planets(id),
     ADD map_pos_x FLOAT DEFAULT 0,
     ADD map_pos_y FLOAT DEFAULT 0,
     DROP place_id;
