@@ -27,6 +27,8 @@ type(
         IsActive bool `json:"is_active" pg:",notnull,use_zero"`
         Wallet uint32 `json:"wallet"`
         Notifications Notifications `json:"notifications"`
+        SkillsId uint16 `json:"-"`
+        Skills *PlayerSkills `json:"skills"`
         CurrentPlanet *Planet `json:"current_planet"`
         CurrentPlanetId uint16 `json:"-"`
         //Technologies []*PlayerTechnology `json:"technologies"`
@@ -82,6 +84,7 @@ func RegisterPlayer(w http.ResponseWriter, r *http.Request) {
         data["pseudo"].(string),
         data["gender"].(string),
         data["avatar"].(string),
+        data["class"].(string),
         uint16(data["faction_id"].(float64)),
         uint16(data["planet_id"].(float64)),
     )
@@ -135,7 +138,7 @@ func (p *Player) update() {
     }
 }
 
-func (p *Player) register(pseudo string, gender string, avatar string, factionId uint16, planetId uint16) {
+func (p *Player) register(pseudo string, gender string, avatar string, class string, factionId uint16, planetId uint16) {
     faction := getFaction(factionId)
     if faction == nil {
         panic(NewHttpException(404, "faction not found", nil))
@@ -158,6 +161,7 @@ func (p *Player) register(pseudo string, gender string, avatar string, factionId
 
     planet.increasePlayerRelation(p, 150)
 
+    p.createSkills(class)
     p.update()
     planet.update()
 }
