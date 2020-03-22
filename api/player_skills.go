@@ -42,6 +42,7 @@ func (p *Player) createSkills(class string) {
 	if err := Database.Insert(skills); err != nil {
 		panic(NewException("Could not create player skills", err))
 	}
+	p.SkillsId = skills.Id
 	p.Skills = skills
 }
 
